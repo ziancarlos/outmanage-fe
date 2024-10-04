@@ -413,6 +413,10 @@ const DetailPurchase = () => {
       return 'Harap berikan nama penerima uang tunai untuk pembayaran tunai.'
     }
 
+    if (amountPaidValue < 1) {
+      return 'Harap jumlah yang dibayarkan lebih besar dari 0.'
+    }
+
     return null
   }
 

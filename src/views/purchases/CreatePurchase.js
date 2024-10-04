@@ -130,7 +130,7 @@ const CreatePurchase = () => {
       isNaN(parseInt(pricePerUnitValue))
     ) {
       setError(
-        'Pastikan semua item memiliki inventaris, kuantitas, dan harga per satuan adalah angka.',
+        'Pastikan semua barang memiliki inventaris, kuantitas, dan harga per satuan adalah angka.',
       )
 
       return
@@ -320,11 +320,11 @@ const CreatePurchase = () => {
           !item.inventory || isNaN(parseInt(item.quantity)) || isNaN(parseInt(item.pricePerUnit)),
       )
     ) {
-      return 'Please ensure all items have inventory, quantity, and price, and both quantity and price are numbers.'
+      return 'Harap pastikan semua barang memiliki inventaris, kuantitas, dan harga, dan kuantitas serta harga adalah angka.'
     }
 
     if (items.some((item) => item.quantity < 1 || item.pricePerUnit < 1)) {
-      return 'Please ensure all items quantity and price is required and bigger than 0'
+      return 'Harap pastikan semua kuantitas dan harga barang diperlukan dan lebih besar dari 0'
     }
 
     if (amountPaid > 0) {
@@ -332,19 +332,19 @@ const CreatePurchase = () => {
         checkedPaymentMethodOptions === 'transfer' &&
         (!bankValue || !accountNumberValue || !accountNameValue)
       ) {
-        return 'Please provide valid bank and account details for transfer.'
+        return 'Harap berikan rincian bank dan rekening yang valid untuk transfer.'
       }
 
       if (checkedPaymentMethodOptions === 'cash' && !cashRecipentValue) {
-        return 'Please provide the cash recipient for cash payment.'
+        return 'Harap informasikan penerima uang tunai untuk pembayaran tunai.'
       }
       if (checkedPaymentMethodOptions === 'cash' && cashRecipentValue) {
         if (cashRecipentValue.length < 2) {
-          return 'Cash recipent cannot be smaller than 3'
+          return 'Penerima uang tunai tidak boleh lebih kecil dari 3 karakter'
         }
 
         if (cashRecipentValue > 200) {
-          return 'Cash recipent cannot be smaller than 200'
+          return 'Penerima uang tunai tidak boleh lebih besar dari 200 karakter'
         }
       }
     }
@@ -466,7 +466,7 @@ const CreatePurchase = () => {
 
                   {/* Inventory Items */}
                   <div className="mb-3">
-                    <CFormLabel className="fw-bold me-2">Item Pembelian</CFormLabel>
+                    <CFormLabel className="fw-bold me-2">Barang Pembelian</CFormLabel>
 
                     <CRow className="align-items-center mb-2">
                       <CCol lg={3} className="mb-2">
@@ -486,7 +486,7 @@ const CreatePurchase = () => {
                             if (itemExists) {
                               setInventoryOptions([])
 
-                              setError('Item ini sudah ada dalam daftar.')
+                              setError('Barang ini sudah ada dalam daftar.')
 
                               return
                             }
