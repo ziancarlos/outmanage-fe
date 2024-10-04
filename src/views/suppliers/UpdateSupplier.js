@@ -1,0 +1,287 @@
+import React, { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import useAxiosPrivate from '../../hooks/useAxiosPrivate'
+import Swal from 'sweetalert2'
+import {
+  CCard,
+  CCardBody,
+  CCardFooter,
+  CForm,
+  CFormInput,
+  CFormTextarea,
+  CButton,
+  CSpinner,
+  CAlert,
+  CRow,
+  CCol,
+  CCardHeader,
+  CBadge,
+  CFormLabel,
+} from '@coreui/react-pro'
+import useLogout from '../../hooks/useLogout'
+
+const PHONE_REGEX = /^\+62\d{8,12}$/
+const EMAIL_REGEX = /^(?=.{1,256}$)(?=.{1,64}@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+const NAME_REGEX = /^.{3,50}$/
+const ADDRESS_REGEX = /^.{5,60000}$/
+
+function UpdateSupplier() {
+  const { supplierId } = useParams()
+  const navigate = useNavigate()
+
+  const [initialSupplier, setInitialSupplier] = useState({})
+  const [nameValue, setNameValue] = useState('')
+  const [emailValue, setEmailValue] = useState('')
+  const [phoneValue, setPhoneValue] = useState('')
+  const [addressValue, setAddressValue] = useState('')
+
+  const [nameValid, setNameValid] = useState(true)
+  const [emailValid, setEmailValid] = useState(true)
+  const [phoneValid, setPhoneValid] = useState(true)
+  const [addressValid, setAddressValid] = useState(true)
+
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [updateFormLoading, setUpdateFormLoading] = useState(false)
+
+  const axiosPrivate = useAxiosPrivate()
+  const logout = useLogout()
+
+  useEffect(() => {
+    setLoading(true)
+    fetchSupplierData().finally(() => setLoading(false))
+  }, [supplierId])
+
+  useEffect(() => {
+    setNameValid(NAME_REGEX.test(nameValue))
+  }, [nameValue])
+
+  useEffect(() => {
+    setEmailValid(!emailValue || EMAIL_REGEX.test(emailValue))
+  }, [emailValue])
+
+  useEffect(() => {
+    setPhoneValid(PHONE_REGEX.test(phoneValue))
+  }, [phoneValue])
+
+  useEffect(() => {
+    setAddressValid(ADDRESS_REGEX.test(addressValue))
+  }, [addressValue])
+
+  useEffect(() => {
+    setError('')
+  }, [nameValue, emailValue, phoneValue, addressValue])
+
+  const isFormChanged =
+    nameValue !== initialSupplier.name ||
+    emailValue !== (initialSupplier.email || '') ||
+    phoneValue !== initialSupplier.phoneNumber ||
+    addressValue !== initialSupplier.address
+
+  const isFormValid = nameValid && phoneValid && (emailValue === '' || emailValid) && addressValid
+
+  async function fetchSupplierData() {
+    try {
+      const response = await axiosPrivate.get(`/api/suppliers/${supplierId}`)
+      const data = response.data.data
+      setInitialSupplier(data)
+
+      setNameValue(data.name)
+      setEmailValue(data.email || '')
+      setPhoneValue(data.phoneNumber)
+      setAddressValue(data.address)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (
+        e.response?.status === 401 ||
+        e.response?.status === 404 ||
+        e.response?.status === 400
+      ) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+
+    if (!isFormValid) {
+      return setError('Input tidak valid.')
+    }
+    if (!isFormChanged) {
+      return setError('Tidak melakukan perubahaan.')
+    }
+
+    setUpdateFormLoading(true)
+    try {
+      const request = {
+        name: nameValue,
+        email: emailValue || null,
+        phoneNumber: phoneValue,
+        address: addressValue,
+      }
+
+      await axiosPrivate.patch(`/api/suppliers/${supplierId}`, request)
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Pemasok berhasil diubah.',
+        confirmButtonText: 'OK',
+      }).then(() => {
+        navigate('/supplier/data')
+      })
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else if ([400, 409].includes(e.response?.status)) {
+        setError(e.response.data.error)
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setUpdateFormLoading(false)
+    }
+  }
+
+  return (
+    <>
+      {loading ? (
+        <div className="pt-3 text-center">
+          <CSpinner color="primary" variant="grow" />
+        </div>
+      ) : (
+        <CRow>
+          <CCol md={8} sm={7} xs={12}>
+            <CCard>
+              <CCardHeader>
+                <strong>Ubah Pemasok</strong>
+              </CCardHeader>
+              <CForm onSubmit={handleSubmit}>
+                <CCardBody>
+                  {error && <CAlert color="danger">{error}</CAlert>}
+
+                  {/* Name field */}
+                  <div className="mb-3">
+                    <CFormInput
+                      type="text"
+                      label="Nama"
+                      id="name"
+                      placeholder="Masukkan nama pemasok"
+                      autoComplete="off"
+                      value={nameValue}
+                      onChange={(e) => setNameValue(e.target.value)}
+                      className={`${
+                        nameValid && nameValue ? 'is-valid' : ''
+                      } ${nameValid || !nameValue ? '' : 'is-invalid'}`}
+                    />
+                    {nameValid && nameValue && <div className="valid-feedback">Nama valid.</div>}
+                    {!nameValid && nameValue && (
+                      <div className="invalid-feedback">
+                        Nama harus memiliki panjang 3-50 karakter
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Phone field */}
+                  <div className="mb-3">
+                    <CFormInput
+                      type="tel"
+                      label="No. Hp"
+                      id="phone"
+                      placeholder="Masukkan nomor handphone pemasok"
+                      autoComplete="off"
+                      value={phoneValue}
+                      onChange={(e) => setPhoneValue(e.target.value)}
+                      className={`${
+                        phoneValid && phoneValue ? 'is-valid' : ''
+                      } ${phoneValid || !phoneValue ? '' : 'is-invalid'}`}
+                    />
+                    {phoneValid && phoneValue && (
+                      <div className="valid-feedback">No. Hp pemasok valid.</div>
+                    )}
+                    {!phoneValid && phoneValue && (
+                      <div className="invalid-feedback">
+                        Nomor telepon harus nomor telepon Indonesia yang valid, dimulai dengan +62,
+                        diikuti sebanyak 8 hingga 12 digit.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Address field */}
+                  <div className="mb-3">
+                    <CFormTextarea
+                      label="Alamat"
+                      id="address"
+                      placeholder="Masukkan alamat pemasok"
+                      rows={2}
+                      autoComplete="off"
+                      value={addressValue}
+                      onChange={(e) => setAddressValue(e.target.value)}
+                      className={`${
+                        addressValid && addressValue ? 'is-valid' : ''
+                      } ${addressValid || !addressValue ? '' : 'is-invalid'}`}
+                    ></CFormTextarea>
+                    {addressValid && addressValue && (
+                      <div className="valid-feedback">Alamat pemasok valid.</div>
+                    )}
+                    {!addressValid && addressValue && (
+                      <div className="invalid-feedback">
+                        Alamat harus memiliki panjang 3-50 karakter
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Email field */}
+                  <div className="mb-3">
+                    <CFormLabel htmlFor="email">
+                      Email <CBadge color="success">Optional</CBadge>
+                    </CFormLabel>
+                    <CFormInput
+                      id="email"
+                      type="email"
+                      placeholder="Masukkan email pemasok"
+                      autoComplete="off"
+                      value={emailValue}
+                      onChange={(e) => setEmailValue(e.target.value)}
+                      className={`${
+                        emailValid && emailValue ? 'is-valid' : ''
+                      } ${emailValid || !emailValue ? '' : 'is-invalid'}`}
+                    />
+                    {emailValid && emailValue && (
+                      <div className="valid-feedback">Alamat email valid.</div>
+                    )}
+                    {!emailValid && emailValue && (
+                      <div className="invalid-feedback">
+                        Alamat email yang valid berupa format example@example.com
+                      </div>
+                    )}
+                  </div>
+                </CCardBody>
+                <CCardFooter>
+                  <CButton
+                    color="primary"
+                    type="submit"
+                    disabled={
+                      !!error || loading || updateFormLoading || !isFormValid || !isFormChanged
+                    }
+                  >
+                    Submit
+                    {updateFormLoading && <CSpinner size="sm" className="ms-2" />}
+                  </CButton>
+                </CCardFooter>
+              </CForm>
+            </CCard>
+          </CCol>
+        </CRow>
+      )}
+    </>
+  )
+}
+
+export default UpdateSupplier
