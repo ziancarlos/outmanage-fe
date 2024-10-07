@@ -176,7 +176,7 @@ const DataClient = () => {
                 </CForm>
 
                 <div className="table-responsive">
-                  <CTable striped bordered responsive>
+                  <CTable bordered responsive>
                     <CTableHead>
                       <CTableRow>
                         <CTableHeaderCell scope="col">Klien Id</CTableHeaderCell>
@@ -199,12 +199,13 @@ const DataClient = () => {
                           <CTableDataCell>{client.email || '-'}</CTableDataCell>
                           <CTableDataCell>{client.phoneNumber}</CTableDataCell>
                           <CTableDataCell>{client.address}</CTableDataCell>
-                          <CTableDataCell>
+                          <CTableDataCell className="d-flex align-middle">
                             {canReadClient ? (
                               <CButton
                                 color="info"
                                 size="sm"
                                 onClick={() => handleDetail(client.clientId)}
+                                className="me-1"
                               >
                                 <FontAwesomeIcon icon={faEye} />
                               </CButton>

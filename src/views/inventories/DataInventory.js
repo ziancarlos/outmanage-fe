@@ -197,15 +197,15 @@ const DataInventory = () => {
                           <CTableDataCell>#{inventory.inventoryId}</CTableDataCell>
                           <CTableDataCell>{inventory.name}</CTableDataCell>
                           <CTableDataCell>
-                            {inventory.condition === 'NEW' ? (
+                            {inventory.condition === 0 ? (
                               <CBadge color="primary">BARU</CBadge>
-                            ) : inventory.condition === 'USED' ? (
+                            ) : inventory.condition === 1 ? (
                               <CBadge color="warning">BEKAS</CBadge>
                             ) : (
                               <span>{inventory.condition}</span> // Fallback for any other condition
                             )}
                           </CTableDataCell>
-                          <CTableDataCell>{inventory.quantity}</CTableDataCell>
+                          <CTableDataCell>{inventory.quantity.toLocaleString()}</CTableDataCell>
                           <CTableDataCell>
                             {canReadInventory || canReadInventoryLogs ? (
                               <CButton

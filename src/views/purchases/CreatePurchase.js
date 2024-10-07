@@ -195,7 +195,7 @@ const CreatePurchase = () => {
 
       const options = response.data.data.map((inventory) => ({
         value: inventory.inventoryId,
-        label: `${inventory.name} | ${inventory.condition === 'NEW' ? 'BARU' : 'BEKAS'}`,
+        label: `${inventory.name} | ${inventory.condition === 0 ? 'BARU' : 'BEKAS'}`,
         name: inventory.name,
         condition: inventory.condition,
       }))
@@ -565,9 +565,10 @@ const CreatePurchase = () => {
                             <CTableRow key={index}>
                               <CTableDataCell>{item.inventory.name}</CTableDataCell>
                               <CTableDataCell>
-                                {item.inventory.condition === 'NEW' ? (
+                                {item.inventory.condition}
+                                {item.inventory.condition === 0 ? (
                                   <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 'USED' ? (
+                                ) : item.inventory.condition === 1 ? (
                                   <CBadge color="warning">BEKAS</CBadge>
                                 ) : (
                                   <span>{item.inventory.condition}</span> // Fallback for any other condition

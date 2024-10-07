@@ -117,7 +117,11 @@ function TablePurchaseLog({
                 <CTableRow key={idx}>
                   <CTableDataCell>#{log.purchaseLogId}</CTableDataCell>
                   <CTableDataCell>
-                    {<NavLink to={`/purchase/${log.purchaseId}/detail`}>{log.purchaseId}</NavLink>}
+                    {
+                      <NavLink
+                        to={`/purchases/${log.purchaseId}/detail`}
+                      >{`PO${log.purchaseId}`}</NavLink>
+                    }
                   </CTableDataCell>
                   <CTableDataCell>
                     {canReadUser ? (

@@ -72,7 +72,7 @@ const DataInventoryLog = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/clients/log`)
+      navigate(`/inventories/log`)
     }
 
     fetchData(1, searchParamsRef.current).finally(() => setSearchLoading(false))

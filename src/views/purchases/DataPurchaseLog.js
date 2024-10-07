@@ -86,7 +86,7 @@ const DataPurchaseLog = () => {
   async function fetchData(page, searchParams) {
     try {
       const response = await axiosPrivate.get('/api/purchases/logs', {
-        params: { page: page, size: 3, ...searchParams },
+        params: { page: page, size: 5, ...searchParams },
       })
 
       console.log(response)
@@ -97,7 +97,7 @@ const DataPurchaseLog = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if (e.response?.status === 401 || e.response?.status === 404) {
+      } else if ([401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
       } else if (e.response?.status === 400) {
         setError(e.response.data.error)

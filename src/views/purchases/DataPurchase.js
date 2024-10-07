@@ -329,7 +329,7 @@ const DataPurchase = () => {
                     <CTableBody>
                       {purchases.map((purchase, idx) => (
                         <CTableRow key={idx}>
-                          <CTableDataCell>#{purchase.purchaseId}</CTableDataCell>
+                          <CTableDataCell>PO{purchase.purchaseId}</CTableDataCell>
                           <CTableDataCell>
                             {canReadSupplier ? (
                               <NavLink to={`/suppliers/${purchase.supplier.supplierId}/detail`}>

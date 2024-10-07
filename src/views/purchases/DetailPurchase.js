@@ -42,7 +42,16 @@ import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useAuth from '../../hooks/useAuth'
 import TablePurchaseLog from '../../components/purchases/TablePurchaseLog'
 import Swal from 'sweetalert2'
-import { faS, faSave, faTimeline, faTimes } from '@fortawesome/free-solid-svg-icons'
+import {
+  faCheck,
+  faCircleCheck,
+  faEye,
+  faS,
+  faSave,
+  faTimeline,
+  faTimes,
+  faTimesCircle,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const typeOptions = [
@@ -58,14 +67,21 @@ const DetailPurchase = () => {
   const canReadPurchaseInventories = authorizePermissions.some(
     (perm) => perm.name === 'read-purchase-inventories',
   )
+  const canReadPurchaseInventoriesDetails = authorizePermissions.some(
+    (perm) => perm.name === 'read-purchase-inventories-details',
+  )
+
   const canReadPurchasePayments = authorizePermissions.some(
     (perm) => perm.name === 'read-purchase-payments',
   )
   const canCreatePurchasePayment = authorizePermissions.some(
     (perm) => perm.name === 'create-purchase-payment',
   )
-  const canUpdatePurchaseInventories = authorizePermissions.some(
-    (perm) => perm.name === 'update-purchase-inventories',
+  const canCreatePurchaseInventoryDetail = authorizePermissions.some(
+    (perm) => perm.name === 'create-purchase-inventory-detail',
+  )
+  const canReadPurchaseInventory = authorizePermissions.some(
+    (perm) => perm.name === 'read-purchase-inventory',
   )
   const canReadSupplier = authorizePermissions.some((perm) => perm.name === 'read-supplier')
   const canReadInventory = authorizePermissions.some((perm) => perm.name === 'read-inventory')
@@ -78,7 +94,6 @@ const DetailPurchase = () => {
   const [loading, setLoading] = useState(true)
   const searchParamsRef = useRef()
 
-  const [visibileModalArrived, setVisibileModalArrived] = useState(false)
   const [visibileModalPayment, setVisibileModalPayment] = useState(false)
 
   const [purchase, setProject] = useState({})
@@ -94,6 +109,8 @@ const DetailPurchase = () => {
 
   const [purchaseInventories, setPurchaseInventories] = useState([])
 
+  const [purchaseInventoriesDetails, setPurchaseInventoriesDetails] = useState([])
+
   const [purchasePayments, setPurchasePayments] = useState([])
   const [checkedPaymentMethodOptions, setCheckedPaymentMethodOptions] = useState('transfer')
   const [amountPaidValue, setAmountPaidValue] = useState(0)
@@ -106,10 +123,12 @@ const DetailPurchase = () => {
   const [paymentSuccess, setPaymentSuccess] = useState('')
   const [paymentLoading, setPaymentLoading] = useState(false)
 
-  const [receivedPurchaseInventories, setReceivedPurchaseInventories] = useState([])
-  const [arrivedError, setArrivedError] = useState('')
-  const [arrivedLoading, setArrivedLoading] = useState(false)
-
+  const [visibileModalArrivalInventory, setVisibileModalArrivalInventory] = useState(false)
+  const [purchaseInventoryId, setPurchaseInventoryId] = useState(null)
+  const [arrivalPurchaseInventory, setArrivalPurchaseInventory] = useState(null)
+  const [modalArrivalInventoryLoading, setModalInventoryLoading] = useState(false)
+  const [arrivalInventoryError, setArrivalInventoryError] = useState('')
+  const [receivedQuantityValue, setReceivedQuantityValue] = useState(0)
   const [refetch, setRefetch] = useState(false)
 
   useEffect(() => {
@@ -139,22 +158,12 @@ const DetailPurchase = () => {
       fetchPromises.push(fetchBankOptions())
     }
 
+    if (canReadPurchaseInventoriesDetails) {
+      fetchPromises.push(fetchPurchaseInventoriesDetails(purchaseId))
+    }
+
     Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [refetch])
-
-  useEffect(() => {
-    setArrivedError('')
-  }, [receivedPurchaseInventories])
-
-  useEffect(() => {
-    setArrivedError('')
-
-    if (visibileModalArrived) {
-      setLoading(true)
-
-      fetchReceivedPurchaseInventories(purchaseId).finally(() => setLoading(false))
-    }
-  }, [visibileModalArrived])
 
   useEffect(() => {
     clearPaymentMethodForm()
@@ -175,14 +184,60 @@ const DetailPurchase = () => {
     setPaymentSuccess('')
   }, [checkedPaymentMethodOptions, bankValue, accountNumberValue])
 
-  function handleArrivedQuantityChange(index, value) {
-    if (!isNaN(value) && Number(value) >= 0) {
-      const updatedItems = [...receivedPurchaseInventories]
+  useEffect(() => {
+    if (visibileModalArrivalInventory && purchaseInventoryId && canReadPurchaseInventory) {
+      setModalInventoryLoading(true)
 
-      updatedItems[index]['receivedQuantity'] = Number(value)
-
-      setReceivedPurchaseInventories(updatedItems)
+      fetchPurchaseInventory(purchaseId, purchaseInventoryId).finally(() =>
+        setModalInventoryLoading(false),
+      )
     }
+  }, [visibileModalArrivalInventory])
+
+  async function fetchPurchaseInventoriesDetails(purchaseId) {
+    try {
+      const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/inventories/details`)
+
+      setPurchaseInventoriesDetails(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  async function fetchPurchaseInventory(purchaseId, purchaseInventoryId) {
+    try {
+      const response = await axiosPrivate.get(
+        `/api/purchases/${purchaseId}/inventories/${purchaseInventoryId}`,
+      )
+
+      setArrivalPurchaseInventory(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  function handleShowModalArrivalInventory(purchaseInventoryId) {
+    setVisibileModalArrivalInventory(true)
+    setPurchaseInventoryId(purchaseInventoryId)
+  }
+
+  function handleCloseModalArrivalInventory() {
+    setVisibileModalArrivalInventory(false)
+    setPurchaseInventoryId(null)
+    setArrivalPurchaseInventory(null)
+    setReceivedQuantityValue(0)
   }
 
   async function fetchPurchase(purchaseId) {
@@ -246,7 +301,7 @@ const DetailPurchase = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
+      } else if ([401].includes(e.response?.status)) {
         navigate('/404', { replace: true })
       } else {
         navigate('/500')
@@ -310,34 +365,6 @@ const DetailPurchase = () => {
         navigate('/404', { replace: true })
       } else if (e.response?.status === 400) {
         setPurchaseLogError(e.response.data.error)
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  async function fetchReceivedPurchaseInventories(purchaseId) {
-    try {
-      const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/inventories`)
-
-      setReceivedPurchaseInventories(
-        response.data.data.map((item) => {
-          return {
-            inventory: item.inventory,
-            quantity: item.quantity,
-            receivedQuantity: item.arrivedQuantity,
-          }
-        }),
-      )
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if (
-        e.response?.status === 401 ||
-        e.response?.status === 404 ||
-        e.response?.status === 400
-      ) {
-        navigate('/404', { replace: true })
       } else {
         navigate('/500')
       }
@@ -495,22 +522,15 @@ const DetailPurchase = () => {
     }
   }
 
-  async function handleReceivedQuantitySubmit(e) {
+  async function handldeArrivalInventorySubmit(e) {
     e.preventDefault()
 
     try {
-      setArrivedLoading(true)
+      setModalInventoryLoading(true)
 
-      const request = {
-        receivedItems: receivedPurchaseInventories.map((item) => {
-          return {
-            inventoryId: item.inventory.inventoryId,
-            receivedQuantity: item.receivedQuantity,
-          }
-        }),
-      }
-
-      await axiosPrivate.post(`/api/purchases/${purchaseId}/inventories`, request)
+      await axiosPrivate.post(`/api/purchases/${purchaseId}/inventories/${purchaseInventoryId}`, {
+        receivedQuantity: receivedQuantityValue,
+      })
 
       Swal.fire({
         icon: 'success',
@@ -519,21 +539,23 @@ const DetailPurchase = () => {
         confirmButtonText: 'OK',
       })
 
-      setVisibileModalArrived(false)
+      setVisibileModalArrivalInventory(false)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
       } else if ([400, 404].includes(e.response?.status)) {
-        setArrivedError(e.response.data.error)
+        setArrivalInventoryError(e.response.data.error)
       } else {
         navigate('/500')
       }
     } finally {
-      setRefetch((prev) => !prev)
+      setReceivedQuantityValue(0)
 
-      setArrivedLoading(false)
+      setModalInventoryLoading(false)
+
+      setRefetch((prev) => !prev)
     }
   }
 
@@ -549,7 +571,7 @@ const DetailPurchase = () => {
             <CCard>
               <CCardBody>
                 <CCardTitle>
-                  {'#' + purchase.purchaseId}{' '}
+                  {'PO' + purchase.purchaseId}{' '}
                   <CBadge
                     className="me-2"
                     color={purchase.deliveryStatus == 1 ? 'success' : 'warning'}
@@ -606,16 +628,6 @@ const DetailPurchase = () => {
               </CListGroup>
               {(purchase.deliveryStatus === 0 || purchase.remainingBalance > 0) && (
                 <CCardFooter>
-                  {purchase.deliveryStatus === 0 && canUpdatePurchaseInventories && (
-                    <CButton
-                      color="success"
-                      className="me-2"
-                      variant="outline"
-                      onClick={() => setVisibileModalArrived(!visibileModalArrived)}
-                    >
-                      Konfirmasi Penerimaan
-                    </CButton>
-                  )}
                   {purchase.remainingBalance > 0 && canCreatePurchasePayment && (
                     <CButton
                       color="warning"
@@ -634,7 +646,7 @@ const DetailPurchase = () => {
             <CCol md={12} className="mb-4">
               <CCard>
                 <CCardHeader className="d-flex justify-content-between align-items-center">
-                  <strong>Rincian Penerimaan Barang</strong>
+                  <strong>Rincian Pembelian Barang</strong>
                 </CCardHeader>
                 <CCardBody>
                   <div className="table-responsive">
@@ -647,7 +659,8 @@ const DetailPurchase = () => {
                           <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Tanggal Diterima</CTableHeaderCell>
+
+                          <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
@@ -663,22 +676,95 @@ const DetailPurchase = () => {
                               )}
                             </CTableDataCell>
                             <CTableDataCell>
-                              {item.inventory.condition === 1 ? (
+                              {item.inventory.condition === 0 ? (
                                 <CBadge color="primary">BARU</CBadge>
-                              ) : item.inventory.condition === 0 ? (
+                              ) : item.inventory.condition === 1 ? (
                                 <CBadge color="warning">BEKAS</CBadge>
                               ) : (
                                 <span>{item.inventory.condition}</span> // Fallback for any other condition
                               )}
                             </CTableDataCell>
-                            <CTableDataCell>{item.quantity}</CTableDataCell>
+                            <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
                             <CTableDataCell>{formatRupiah(item.totalPrice)}</CTableDataCell>
                             <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
-                            <CTableDataCell>{item.arrivedQuantity}</CTableDataCell>
+                            <CTableDataCell>{item.arrivedQuantity.toLocaleString()}</CTableDataCell>
+                            <CTableDataCell className="d-flex align-middle">
+                              {item.arrivedQuantity !== item.quantity ? (
+                                <>
+                                  {canCreatePurchaseInventoryDetail && (
+                                    <CButton
+                                      color="primary"
+                                      size="sm"
+                                      className="me-1"
+                                      onClick={() => {
+                                        handleShowModalArrivalInventory(item.purchaseHasInventoryId)
+                                      }}
+                                    >
+                                      <FontAwesomeIcon color="white" icon={faCircleCheck} />
+                                    </CButton>
+                                  )}
+                                </>
+                              ) : (
+                                '-'
+                              )}
+                            </CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  </div>
+                </CCardBody>
+              </CCard>
+            </CCol>
+          )}
+
+          {canReadPurchaseInventoriesDetails && (
+            <CCol md={12} className="mb-4">
+              <CCard>
+                <CCardHeader className="d-flex justify-content-between align-items-center">
+                  <strong>Rincian Penerimaan Barang</strong>
+                </CCardHeader>
+                <CCardBody>
+                  <div className="table-responsive">
+                    <CTable striped bordered responsive>
+                      <CTableHead>
+                        <CTableRow>
+                          <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
+
+                          <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Kuantitas Belum Diterima</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Tanggal Diterima</CTableHeaderCell>
+                        </CTableRow>
+                      </CTableHead>
+                      <CTableBody>
+                        {purchaseInventoriesDetails.map((item, idx) => (
+                          <CTableRow key={idx}>
                             <CTableDataCell>
-                              {!!item.lastArrivalDate
-                                ? moment(item.lastArrivalDate).format('MMMM D, YYYY h:mm A')
-                                : '-'}
+                              {canReadInventory ? (
+                                <NavLink to={`/inventory/${item.inventory.inventoryId}/detail`}>
+                                  {item.inventory.name}
+                                </NavLink>
+                              ) : (
+                                item.inventory.name
+                              )}
+                            </CTableDataCell>
+                            <CTableDataCell>
+                              {item.inventory.condition === 0 ? (
+                                <CBadge color="primary">BARU</CBadge>
+                              ) : item.inventory.condition === 1 ? (
+                                <CBadge color="warning">BEKAS</CBadge>
+                              ) : (
+                                <span>{item.inventory.condition}</span> // Fallback for any other condition
+                              )}
+                            </CTableDataCell>
+                            <CTableDataCell>{item.arrivedQuantity.toLocaleString()}</CTableDataCell>
+                            <CTableDataCell>
+                              {item.remainingQuantity.toLocaleString()}
+                            </CTableDataCell>
+
+                            <CTableDataCell>
+                              {moment(item.arrivalDate).format('MMMM D, YYYY h:mm A')}
                             </CTableDataCell>
                           </CTableRow>
                         ))}
@@ -694,7 +780,7 @@ const DetailPurchase = () => {
             <CCol md={12}>
               <CCard className="mb-4">
                 <CCardHeader className="d-flex justify-content-between align-items-center">
-                  <strong>Rincian Pembelian Pembayaran</strong>
+                  <strong>Rincian Pembayaran</strong>
                 </CCardHeader>
                 <CCardBody>
                   <div className="table-responsive">
@@ -804,59 +890,84 @@ const DetailPurchase = () => {
             </CCol>
           )}
 
-          {canUpdatePurchaseInventories && (
+          {canCreatePurchaseInventoryDetail && (
             <CModal
-              visible={visibileModalArrived}
-              onClose={() => setVisibileModalArrived(false)}
+              visible={visibileModalArrivalInventory}
+              onClose={handleCloseModalArrivalInventory}
               aria-labelledby="LiveDemoExampleLabel"
             >
               <CModalHeader>
                 <CModalTitle id="LiveDemoExampleLabel">Konfirmasi Penerimaan Barang</CModalTitle>
               </CModalHeader>
-              <CForm noValidate onSubmit={handleReceivedQuantitySubmit}>
+              <CForm noValidate onSubmit={handldeArrivalInventorySubmit}>
                 <CModalBody>
-                  {arrivedError && <CAlert color="danger">{arrivedError}</CAlert>}
+                  {modalArrivalInventoryLoading || arrivalPurchaseInventory === null ? (
+                    <div className="pt-3 text-center">
+                      <CSpinner color="primary" variant="grow" />
+                    </div>
+                  ) : (
+                    <>
+                      {arrivalInventoryError && (
+                        <CAlert color="danger">{arrivalInventoryError}</CAlert>
+                      )}
 
-                  {receivedPurchaseInventories.map((item, index) => (
-                    <CRow key={index} className="align-items-center mb-2">
-                      <CCol lg={4} className="mb-2">
-                        <CFormLabel className="fw-bold">Nama Barang</CFormLabel>
+                      <div className="mb-3">
                         <CFormInput
-                          type="text"
-                          readOnly
-                          value={`${item.inventory.name} | ${item.inventory.condition === 1 ? 'BARU' : 'BEKAS'}`}
-                          required
+                          value={`${arrivalPurchaseInventory?.inventory.name} | ${arrivalPurchaseInventory?.inventory.condition === 0 ? 'BARU' : 'BEKAS'}`}
+                          label="Barang"
                           disabled
+                          readOnly
                         />
-                      </CCol>
-                      <CCol lg={4} className="mb-2">
-                        <CFormLabel className="fw-bold">Qty Pembelian</CFormLabel>
-                        <CFormInput type="text" readOnly value={item.quantity} disabled />
-                      </CCol>
-                      <CCol lg={4} className="mb-2">
-                        <CFormLabel className="fw-bold">Qty Diterima</CFormLabel>
+                      </div>
+
+                      <div className="mb-3">
+                        <CFormInput
+                          value={`${arrivalPurchaseInventory?.remainingQuantity.toLocaleString()}`}
+                          label="Kuantitas Belum Diterima"
+                          disabled
+                          readOnly
+                        />
+                      </div>
+                      <div className="mb-3">
                         <CFormInput
                           type="text"
-                          placeholder="Arrived Qty"
-                          value={item.receivedQuantity}
-                          disabled={arrivedLoading}
-                          onChange={(e) => handleArrivedQuantityChange(index, e.target.value)}
+                          value={`${arrivalPurchaseInventory?.arrivedQuantity.toLocaleString()}`}
+                          label="Kuantitas Diterima"
+                          disabled
+                          readOnly
                         />
-                      </CCol>
-                    </CRow>
-                  ))}
+                      </div>
+
+                      <div className="mb-3">
+                        <CFormInput
+                          label="Kuantitas Diterima Sekarang"
+                          value={receivedQuantityValue.toLocaleString()} // Display formatted number
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9.-]+/g, '') // Clean the input
+                            const numberValue = Number(value) // Convert to number
+
+                            // Only update the state if the cleaned value is a valid number and greater than 0
+                            if (!isNaN(numberValue)) {
+                              setReceivedQuantityValue(numberValue) // Update the state with the number
+                            }
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
                 </CModalBody>
+
                 <CModalFooter>
                   <CLoadingButton
-                    type="submit"
                     color="primary"
-                    loading={arrivedLoading}
-                    disabled={arrivedLoading}
+                    type="submit"
+                    disabled={modalArrivalInventoryLoading}
+                    loading={modalArrivalInventoryLoading}
                   >
                     <FontAwesomeIcon icon={faSave} />
                   </CLoadingButton>
 
-                  <CButton color="secondary" onClick={() => setVisibileModalArrived(false)}>
+                  <CButton color="secondary" onClick={() => handleCloseModalArrivalInventory()}>
                     <FontAwesomeIcon icon={faTimes} />
                   </CButton>
                 </CModalFooter>
