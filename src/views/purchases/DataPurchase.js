@@ -313,11 +313,12 @@ const DataPurchase = () => {
                     </CCol>
                   </CRow>
                 </CForm>
+
                 <div className="table-responsive">
                   <CTable striped bordered responsive>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell scope="col">Id Pembelian Id</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Id Pembelian</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Pemasok</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Jumlah Keselurahan</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Tanggal Pembelian</CTableHeaderCell>
@@ -329,7 +330,7 @@ const DataPurchase = () => {
                     <CTableBody>
                       {purchases.map((purchase, idx) => (
                         <CTableRow key={idx}>
-                          <CTableDataCell>PO{purchase.purchaseId}</CTableDataCell>
+                          <CTableDataCell>#{purchase.purchaseId}</CTableDataCell>
                           <CTableDataCell>
                             {canReadSupplier ? (
                               <NavLink to={`/suppliers/${purchase.supplier.supplierId}/detail`}>

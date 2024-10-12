@@ -15,23 +15,18 @@ const InventoryNavs = [
         to: '/inventories/data',
         permissions: ['read-inventories'],
       },
-      {
-        component: CNavItem,
-        name: 'Tambah Stok',
-        to: '/inventories/log',
-        permissions: ['read-inventories-logs'],
-      },
-      {
-        component: CNavItem,
-        name: 'Penyusutan Stok',
-        to: '/inventories/log',
-        permissions: ['read-inventories-logs'],
-      },
+
       {
         component: CNavItem,
         name: 'Tambah Barang',
         to: '/inventories/new',
         permissions: ['create-inventory'],
+      },
+      {
+        component: CNavItem,
+        name: 'Data Log Inventaris',
+        to: '/inventories/log',
+        permissions: ['read-inventories-logs'],
       },
       {
         component: CNavItem,

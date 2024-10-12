@@ -46,6 +46,7 @@ import {
   faCheck,
   faCircleCheck,
   faEye,
+  faMoneyBill1,
   faS,
   faSave,
   faTimeline,
@@ -571,7 +572,7 @@ const DetailPurchase = () => {
             <CCard>
               <CCardBody>
                 <CCardTitle>
-                  {'PO' + purchase.purchaseId}{' '}
+                  {'#' + purchase.purchaseId}{' '}
                   <CBadge
                     className="me-2"
                     color={purchase.deliveryStatus == 1 ? 'success' : 'warning'}
@@ -634,6 +635,8 @@ const DetailPurchase = () => {
                       variant="outline"
                       onClick={() => setVisibileModalPayment(!visibileModalPayment)}
                     >
+                      <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />{' '}
+                      {/* Add margin to the end */}
                       Pembayaran
                     </CButton>
                   )}
@@ -653,6 +656,7 @@ const DetailPurchase = () => {
                     <CTable striped bordered responsive>
                       <CTableHead>
                         <CTableRow>
+                          <CTableHeaderCell scope="col">Id Pembelian Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
@@ -666,6 +670,8 @@ const DetailPurchase = () => {
                       <CTableBody>
                         {purchaseInventories.map((item, idx) => (
                           <CTableRow key={idx}>
+                            <CTableDataCell>{'#' + item.purchaseHasInventoryId}</CTableDataCell>
+
                             <CTableDataCell>
                               {canReadInventory ? (
                                 <NavLink to={`/inventory/${item.inventory.inventoryId}/detail`}>
@@ -729,6 +735,7 @@ const DetailPurchase = () => {
                     <CTable striped bordered responsive>
                       <CTableHead>
                         <CTableRow>
+                          <CTableHeaderCell scope="col">Id Penerimaan Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
 
@@ -740,6 +747,9 @@ const DetailPurchase = () => {
                       <CTableBody>
                         {purchaseInventoriesDetails.map((item, idx) => (
                           <CTableRow key={idx}>
+                            <CTableDataCell>
+                              {'#' + item.purchaseHasInventoryDetailId}
+                            </CTableDataCell>
                             <CTableDataCell>
                               {canReadInventory ? (
                                 <NavLink to={`/inventory/${item.inventory.inventoryId}/detail`}>
@@ -787,6 +797,13 @@ const DetailPurchase = () => {
                     <CTable striped bordered responsive>
                       <CTableHead>
                         <CTableRow>
+                          <CTableHeaderCell
+                            scope="col"
+                            rowSpan={3}
+                            className="text-center align-middle"
+                          >
+                            Id Pembayaran
+                          </CTableHeaderCell>
                           <CTableHeaderCell
                             scope="col"
                             rowSpan={3}
@@ -841,6 +858,7 @@ const DetailPurchase = () => {
                       <CTableBody>
                         {purchasePayments.map((payment, idx) => (
                           <CTableRow key={idx}>
+                            <CTableDataCell>{'#' + payment.purchasePaymentId}</CTableDataCell>
                             <CTableDataCell>{formatRupiah(payment.amountPaid)}</CTableDataCell>
                             <CTableDataCell>
                               {formatRupiah(payment.remainingBalance)}

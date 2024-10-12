@@ -312,7 +312,7 @@ function CreateProject() {
                   )}
                   {!descriptionValid && descriptionValue && (
                     <div className="invalid-feedback">
-                      Deskripsi harus memiliki panjang 3-255 karakter
+                      Deskripsi harus memiliki panjang 3-60000 karakter
                     </div>
                   )}
                 </div>

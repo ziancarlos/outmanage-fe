@@ -120,7 +120,7 @@ function TablePurchaseLog({
                     {
                       <NavLink
                         to={`/purchases/${log.purchaseId}/detail`}
-                      >{`PO${log.purchaseId}`}</NavLink>
+                      >{`#${log.purchaseId}`}</NavLink>
                     }
                   </CTableDataCell>
                   <CTableDataCell>

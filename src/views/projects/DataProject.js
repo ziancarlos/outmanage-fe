@@ -18,7 +18,6 @@ const DataProject = () => {
   const location = useLocation()
 
   const [loading, setLoading] = useState(true)
-  const [paginationLoading, setPaginationLoading] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
 
   const [projects, setProjects] = useState([])
@@ -75,9 +74,9 @@ const DataProject = () => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
 
-      setPaginationLoading(true)
+      setLoading(true)
 
-      fetchData(newPage, searchValueRef.current).finally(() => setPaginationLoading(false))
+      fetchData(newPage, searchValueRef.current).finally(() => setLoading(false))
     }
   }
 
@@ -122,7 +121,6 @@ const DataProject = () => {
               projects={projects}
               page={page}
               totalPages={totalPages}
-              paginationLoading={paginationLoading}
               handlePageChange={handlePageChange}
               authorizePermissions={authorizePermissions}
             />
