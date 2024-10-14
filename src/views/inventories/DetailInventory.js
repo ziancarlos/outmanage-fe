@@ -584,10 +584,10 @@ const DetailInventory = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([400].includes(e.response?.status)) {
-        setInventoryQuantityLogsError(e.response.data.error)
       } else if ([400, 401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
+      } else if ([400].includes(e.response?.status)) {
+        setInventoryQuantityLogsError(e.response.data.error)
       } else {
         navigate('/500')
       }
@@ -645,8 +645,6 @@ const DetailInventory = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
       } else {
         navigate('/500')
       }
@@ -680,8 +678,6 @@ const DetailInventory = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
       } else {
         navigate('/500')
       }
@@ -718,9 +714,9 @@ const DetailInventory = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([401].includes(e.response?.status)) {
+      } else if ([401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
+      } else if ([400].includes(e.response?.status)) {
         setInventoryDepreciationError(e.response?.data.error)
       } else {
         navigate('/500')
@@ -742,9 +738,9 @@ const DetailInventory = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([401].includes(e.response?.status)) {
+      } else if ([401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
+      } else if ([400].includes(e.response?.status)) {
         setInventoryImportError(e.response?.data.error)
       } else {
         navigate('/500')
@@ -813,7 +809,7 @@ const DetailInventory = () => {
         await logout()
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
+      } else if ([400, 404, 409].includes(e.response?.status)) {
         setDepreciationError(e.response.data.error)
       } else {
         navigate('/500')
@@ -886,7 +882,7 @@ const DetailInventory = () => {
         await logout()
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
+      } else if ([400, 404, 409].includes(e.response?.status)) {
         setImportError(e.response.data.error)
       } else {
         navigate('/500')

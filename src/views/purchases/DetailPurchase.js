@@ -302,8 +302,10 @@ const DetailPurchase = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([401].includes(e.response?.status)) {
+      } else if (e.response?.status === 401 || e.response?.status === 404) {
         navigate('/404', { replace: true })
+      } else if (e.response?.status === 400) {
+        setPaymentError(e.response?.data.error)
       } else {
         navigate('/500')
       }
@@ -546,7 +548,7 @@ const DetailPurchase = () => {
         await logout()
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
+      } else if ([400, 404, 409].includes(e.response?.status)) {
         setArrivalInventoryError(e.response.data.error)
       } else {
         navigate('/500')

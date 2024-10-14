@@ -247,12 +247,6 @@ const CreatePurchase = () => {
     }
   }
 
-  function handleSubmit(e) {
-    e.preventDefault()
-
-    console.log(items)
-  }
-
   async function handleCheckAccountNumber() {
     setBankError('')
     setAccountNameValue('')
@@ -273,12 +267,10 @@ const CreatePurchase = () => {
         await logout()
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
-      } else if (
-        e.response?.status === 404 ||
-        e.response?.status === 500 ||
-        e.response?.status === 400
-      ) {
+      } else if ([400, 404].includes(e.response?.status)) {
         setBankError(e.response?.data.error)
+      } else {
+        navigate('/500')
       }
     } finally {
       setLoading(false)
@@ -565,7 +557,6 @@ const CreatePurchase = () => {
                             <CTableRow key={index}>
                               <CTableDataCell>{item.inventory.name}</CTableDataCell>
                               <CTableDataCell>
-                                {item.inventory.condition}
                                 {item.inventory.condition === 0 ? (
                                   <CBadge color="primary">BARU</CBadge>
                                 ) : item.inventory.condition === 1 ? (

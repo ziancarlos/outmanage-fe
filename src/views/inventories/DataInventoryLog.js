@@ -64,10 +64,6 @@ const DataInventoryLog = () => {
 
     searchParamsRef.current = searchParams
 
-    setSearchTypeValue('')
-    setSearchStartDateValue('')
-    setSearchEndDateValue('')
-
     if (Object.keys(searchParams).length > 0) {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
@@ -87,8 +83,11 @@ const DataInventoryLog = () => {
       setInventoriesLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      setSearchTypeValue('')
+      setSearchStartDateValue('')
+      setSearchEndDateValue('')
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([401, 404].includes(e.response?.status)) {
