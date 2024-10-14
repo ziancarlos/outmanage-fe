@@ -6,6 +6,7 @@ import useLogout from '../../hooks/useLogout'
 import useAuth from '../../hooks/useAuth'
 import TableInventoryLog from '../../components/inventories/TableInventoryLog'
 import { formatToISODate } from '../../utils/DateUtils'
+import DataQuantityLog from '../../components/inventories/TableQuantityLog'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
@@ -25,11 +26,11 @@ const DataInventoryLog = () => {
 
   const [loading, setLoading] = useState(true)
 
-  const [inventoriesLogs, setInventoriesLogs] = useState([])
+  const [inventoriesQuantityLogs, setInventoriesQuantityLogs] = useState([])
 
   const [error, setError] = useState('')
 
-  const [searchTypeValue, setSearchTypeValue] = useState('')
+  const [searchDetailValue, setSearchDetailValue] = useState('')
   const [searchStartDateValue, setSearchStartDateValue] = useState('')
   const [searchEndDateValue, setSearchEndDateValue] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
@@ -38,7 +39,7 @@ const DataInventoryLog = () => {
 
   useEffect(() => {
     setError('')
-  }, [searchTypeValue, searchStartDateValue, searchEndDateValue])
+  }, [searchDetailValue, searchStartDateValue, searchEndDateValue])
 
   function handleSearch(e) {
     e.preventDefault()
@@ -49,8 +50,8 @@ const DataInventoryLog = () => {
 
     const searchParams = {}
 
-    if (typeOptions[1].value === searchTypeValue || typeOptions[2].value === searchTypeValue) {
-      searchParams.type = searchTypeValue
+    if (searchDetailValue) {
+      searchParams.details = searchDetailValue
     }
 
     if (searchStartDateValue) {
@@ -67,7 +68,7 @@ const DataInventoryLog = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/inventories/log`)
+      navigate(`/inventories/quantity/log`)
     }
 
     fetchData(1, searchParamsRef.current).finally(() => setSearchLoading(false))
@@ -75,28 +76,32 @@ const DataInventoryLog = () => {
 
   async function fetchData(page, searchParams) {
     try {
-      const response = await axiosPrivate.get('/api/inventories/logs', {
-        params: { page: page, size: 3, ...searchParams },
+      const response = await axiosPrivate.get(`/api/inventories/quantity-logs`, {
+        params: { page, size: 5, ...searchParams },
       })
 
-      setInventoriesLogs(response.data.data)
+      setInventoriesQuantityLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
 
-      setSearchTypeValue('')
-      setSearchStartDateValue('')
-      setSearchEndDateValue('')
+      clearSearchInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
-      } else if (e.response?.status === 400) {
+      } else if ([400].includes(e.response?.status)) {
         setError(e.response.data.error)
       } else {
         navigate('/500')
       }
     }
+  }
+
+  function clearSearchInput() {
+    setSearchDetailValue('')
+    setSearchStartDateValue('')
+    setSearchEndDateValue('')
   }
 
   const handlePageChange = (newPage) => {
@@ -111,14 +116,14 @@ const DataInventoryLog = () => {
     setLoading(true)
 
     const queryParams = new URLSearchParams(location.search)
-    const searchTypeParamValue = queryParams.get('type')
+    const searchDetailsParamValue = queryParams.get('details')
     const startDateParamValue = queryParams.get('startDate')
     const endDateParamValue = queryParams.get('endDate')
 
     searchParamsRef.current = {}
 
-    if (searchTypeParamValue) {
-      searchParamsRef.current.type = searchTypeParamValue
+    if (searchDetailsParamValue) {
+      searchParamsRef.current.details = searchDetailsParamValue
     }
     if (startDateParamValue) {
       searchParamsRef.current.startDate = startDateParamValue
@@ -137,28 +142,22 @@ const DataInventoryLog = () => {
           <CSpinner color="primary" variant="grow" />
         </div>
       ) : (
-        <CRow>
-          <CCol>
-            <TableInventoryLog
-              title={'Data Log Inventaris'}
-              error={error}
-              handleSearch={handleSearch}
-              typeOptions={typeOptions}
-              searchTypeValue={searchTypeValue}
-              setSearchTypeValue={setSearchTypeValue}
-              searchStartDateValue={searchStartDateValue}
-              setSearchStartDateValue={setSearchStartDateValue}
-              searchEndDateValue={searchEndDateValue}
-              setSearchEndDateValue={setSearchEndDateValue}
-              searchLoading={searchLoading}
-              inventoriesLogs={inventoriesLogs}
-              page={page}
-              totalPages={totalPages}
-              handlePageChange={handlePageChange}
-              authorizePermissions={authorizePermissions}
-            />
-          </CCol>
-        </CRow>
+        <DataQuantityLog
+          authorizePermissions={authorizePermissions}
+          inventoryQuantityLogs={inventoriesQuantityLogs}
+          error={error}
+          loading={searchLoading}
+          searchDetailValue={searchDetailValue}
+          searchStartDateValue={searchStartDateValue}
+          searchEndDateValue={searchEndDateValue}
+          page={page}
+          totalPage={totalPages}
+          handleSearch={handleSearch}
+          setSearchDetailValue={setSearchDetailValue}
+          setSearchStartDateValue={setSearchStartDateValue}
+          setSearchEndDateValue={setSearchEndDateValue}
+          handlePageChange={handlePageChange}
+        />
       )}
     </>
   )

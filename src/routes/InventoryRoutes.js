@@ -1,6 +1,7 @@
 import React from 'react'
 const DataInventory = React.lazy(() => import('../views/inventories/DataInventory'))
 const DataInventoryLog = React.lazy(() => import('../views/inventories/DataInventoryLog'))
+const DataQuantityLog = React.lazy(() => import('../views/inventories/DataQuantityLog'))
 const DetailInventory = React.lazy(() => import('../views/inventories/DetailInventory'))
 const CreateInventory = React.lazy(() => import('../views/inventories/CreateInventory'))
 
@@ -24,6 +25,13 @@ const InventoryRoutes = [
     name: 'Data Log Inventaris',
     element: DataInventoryLog,
     permissions: ['read-inventories-logs'],
+  },
+
+  {
+    path: '/inventories/quantity/log',
+    name: 'Data Log Kuantitas',
+    element: DataQuantityLog,
+    permissions: ['read-inventory-quantity-logs'],
   },
 
   {

@@ -24,9 +24,9 @@ const InventoryNavs = [
       },
       {
         component: CNavItem,
-        name: 'Data Log Inventaris',
-        to: '/inventories/log',
-        permissions: ['read-inventories-logs'],
+        name: 'Data Log Kuantitas',
+        to: '/inventories/quantity/log',
+        permissions: ['read-inventory-quantity-logs'],
       },
       {
         component: CNavItem,

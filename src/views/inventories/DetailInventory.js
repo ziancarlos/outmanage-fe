@@ -53,6 +53,7 @@ import Swal from 'sweetalert2'
 import moment from 'moment'
 import { formatToISODate } from '../../utils/DateUtils'
 import TableInventoryLog from '../../components/inventories/TableInventoryLog'
+import DataQuantityLog from '../../components/inventories/TableQuantityLog'
 
 const DESCRIPTION_REGEX = /^.{3,60000}$/
 
@@ -584,7 +585,7 @@ const DetailInventory = () => {
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
+      } else if ([401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
       } else if ([400].includes(e.response?.status)) {
         setInventoryQuantityLogsError(e.response.data.error)
@@ -1176,151 +1177,43 @@ const DetailInventory = () => {
           )}
 
           {canReadInventoryQuantityLogs && (
-            <CCol md={12} className="mb-4">
-              <CCard>
-                <CCardHeader className="d-flex justify-content-between align-items-center">
-                  <strong>Data Inventaris Kuantitas Log</strong>
-                </CCardHeader>
-                <CCardBody>
-                  {!!inventoryQuantityLogsError && (
-                    <CRow className="mb-3">
-                      <CCol>
-                        <CAlert color="danger">{inventoryQuantityLogsError}</CAlert>
-                      </CCol>
-                    </CRow>
-                  )}
-
-                  <CForm noValidate onSubmit={handleInventoryQuantityLogsSearch}>
-                    <CRow className="mb-4">
-                      <CCol className="mb-3" md={4}>
-                        <CFormInput
-                          label={'Detil Perubahaan'}
-                          placeholder="Cari..."
-                          onChange={(e) => setInventoryQuantityLogsDetailValue(e.target.value)}
-                          disabled={inventoryQuantityLogsLoading}
-                          value={inventoryQuantityLogsDetailValue}
-                        />
-                      </CCol>
-
-                      <CCol xs={12} md={8} className="mb-3">
-                        <CFormLabel htmlFor="starDateInput">Tanggal</CFormLabel>
-                        <CDateRangePicker
-                          placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
-                          startDate={inventoryQuantityLogsStartDateValue}
-                          endDate={inventoryQuantityLogsEndDateValue}
-                          disabled={inventoryQuantityLogsLoading}
-                          onStartDateChange={(date) => setInventoryQuantityLogsStartDateValue(date)}
-                          onEndDateChange={(date) => setInventoryQuantityLogsEndDateValue(date)}
-                        />
-                      </CCol>
-
-                      <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
-                        <CLoadingButton
-                          color="primary"
-                          type="submit"
-                          loading={inventoryQuantityLogsLoading}
-                          disabled={inventoryQuantityLogsLoading}
-                        >
-                          <FontAwesomeIcon icon={faSearch} />
-                        </CLoadingButton>
-                      </CCol>
-                    </CRow>
-                  </CForm>
-
-                  <div className="table-responsive">
-                    <CTable striped bordered responsive>
-                      <CTableHead>
-                        <CTableRow>
-                          <CTableHeaderCell scope="col">Id Kuantitas Log</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas Awal</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas Baru</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas Dirubah</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Perubahaan</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Dibuat Pada</CTableHeaderCell>
-                        </CTableRow>
-                      </CTableHead>
-                      <CTableBody>
-                        {inventoryQuantityLogs.map((item, idx) => (
-                          <CTableRow key={idx}>
-                            <CTableDataCell>{'#' + item.inventoryQuantityLog}</CTableDataCell>
-                            <CTableDataCell>
-                              {canReadUser ? (
-                                <NavLink to={`/users/${item.user.userId}/detail`}>
-                                  {item.user.username}
-                                </NavLink>
-                              ) : (
-                                item.user.username
-                              )}
-                            </CTableDataCell>
-
-                            <CTableDataCell>
-                              {canReadInventory ? (
-                                <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                                  {item.inventory.name}
-                                </NavLink>
-                              ) : (
-                                item.inventory.name
-                              )}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {item.inventory.condition === 0 ? (
-                                <CBadge color="primary">BARU</CBadge>
-                              ) : item.inventory.condition === 1 ? (
-                                <CBadge color="warning">BEKAS</CBadge>
-                              ) : (
-                                <span>{item.inventory.condition}</span> // Fallback for any other condition
-                              )}
-                            </CTableDataCell>
-                            <CTableDataCell>{item.oldQuantity.toLocaleString()}</CTableDataCell>
-                            <CTableDataCell>{item.newQuantity.toLocaleString()}</CTableDataCell>
-                            <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
-                            <CTableDataCell>{item.details}</CTableDataCell>
-                            <CTableDataCell>
-                              {moment(item.createdAt).format('MMMM D, YYYY h:mm A')}
-                            </CTableDataCell>
-                          </CTableRow>
-                        ))}
-                      </CTableBody>
-                    </CTable>
-                  </div>
-
-                  <CSmartPagination
-                    size="sm"
-                    activePage={inventoryQuantityLogsPage}
-                    pages={inventoryQuantityLogsTotalPage} // Set the total number of pages
-                    onActivePageChange={handlePageChangeInventoryQuantityLogs} // Handle page change
-                  />
-                </CCardBody>
-              </CCard>
-            </CCol>
+            <DataQuantityLog
+              authorizePermissions={authorizePermissions}
+              inventoryQuantityLogs={inventoryQuantityLogs}
+              error={inventoryQuantityLogsError}
+              loading={inventoryQuantityLogsLoading}
+              searchDetailValue={inventoryQuantityLogsDetailValue}
+              searchStartDateValue={inventoryQuantityLogsStartDateValue}
+              searchEndDateValue={inventoryQuantityLogsEndDateValue}
+              page={inventoryQuantityLogsPage}
+              totalPage={inventoryQuantityLogsTotalPage}
+              handleSearch={handleInventoryQuantityLogsSearch}
+              setSearchDetailValue={setInventoryQuantityLogsDetailValue}
+              setSearchStartDateValue={setInventoryQuantityLogsStartDateValue}
+              setSearchEndDateValue={setInventoryQuantityLogsEndDateValue}
+              handlePageChange={handlePageChangeInventoryQuantityLogs}
+            />
           )}
 
           {canReadInventoryLogs && (
-            <CRow>
-              <CCol>
-                <TableInventoryLog
-                  title={'Data Log Inventaris'}
-                  error={inventoryLogsError}
-                  handleSearch={handleInventoryLogsSearch}
-                  typeOptions={typeOptions}
-                  searchTypeValue={inventoryLogsTypeValue}
-                  setSearchTypeValue={setInventoryLogsTypeValue}
-                  searchStartDateValue={inventoryLogsStartDateValue}
-                  setSearchStartDateValue={setInventoryLogsStartDateValue}
-                  searchEndDateValue={inventoryLogsEndDateValue}
-                  setSearchEndDateValue={setInventoryLogsEndDateValue}
-                  searchLoading={inventoryLogsLoading}
-                  inventoriesLogs={inventoryLogs}
-                  page={inventoryLogsPage}
-                  totalPages={inventoryLogsTotalPage}
-                  handlePageChange={handlePageChangeInventoryLogs}
-                  authorizePermissions={authorizePermissions}
-                />
-              </CCol>
-            </CRow>
+            <TableInventoryLog
+              title={'Data Log Inventaris'}
+              error={inventoryLogsError}
+              handleSearch={handleInventoryLogsSearch}
+              typeOptions={typeOptions}
+              searchTypeValue={inventoryLogsTypeValue}
+              setSearchTypeValue={setInventoryLogsTypeValue}
+              searchStartDateValue={inventoryLogsStartDateValue}
+              setSearchStartDateValue={setInventoryLogsStartDateValue}
+              searchEndDateValue={inventoryLogsEndDateValue}
+              setSearchEndDateValue={setInventoryLogsEndDateValue}
+              searchLoading={inventoryLogsLoading}
+              inventoriesLogs={inventoryLogs}
+              page={inventoryLogsPage}
+              totalPages={inventoryLogsTotalPage}
+              handlePageChange={handlePageChangeInventoryLogs}
+              authorizePermissions={authorizePermissions}
+            />
           )}
 
           <CModal visible={visibileModalImport} onClose={() => setVisibileModalImport(false)}>
