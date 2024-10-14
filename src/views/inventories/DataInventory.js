@@ -24,7 +24,7 @@ import {
 } from '@coreui/react-pro'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { faEye, faEdit, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faSearch } from '@fortawesome/free-solid-svg-icons'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useLogout from '../../hooks/useLogout'
 import useAuth from '../../hooks/useAuth'

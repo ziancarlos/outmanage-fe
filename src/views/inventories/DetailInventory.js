@@ -52,8 +52,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Swal from 'sweetalert2'
 import moment from 'moment'
 import { formatToISODate } from '../../utils/DateUtils'
+import TableInventoryLog from '../../components/inventories/TableInventoryLog'
 
 const DESCRIPTION_REGEX = /^.{3,60000}$/
+
+const typeOptions = [
+  { label: 'Select Type', value: '' },
+  { label: 'CREATE', value: 'CREATE' },
+  { label: 'UPDATE', value: 'UPDATE' },
+]
 
 const DetailInventory = () => {
   const { authorizePermissions } = useAuth()
@@ -78,6 +85,9 @@ const DetailInventory = () => {
 
   const canReadInventory = authorizePermissions.some((perm) => perm.name === 'read-inventory')
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
+  const canReadInventoryLogs = authorizePermissions.some(
+    (perm) => perm.name === 'read-inventory-logs',
+  )
 
   const { inventoryId } = useParams()
 
@@ -89,6 +99,16 @@ const DetailInventory = () => {
   const [loading, setLoading] = useState(true)
 
   const [inventory, setInventory] = useState({})
+
+  const [inventoryLogs, setInventoryLogs] = useState([])
+  const [inventoryLogsPage, setInventoryLogsPage] = useState(1)
+  const [inventoryLogsTotalPage, setInventoryLogsTotalPage] = useState(1)
+  const [inventoryLogsTypeValue, setInventoryLogsTypeValue] = useState('')
+  const [inventoryLogsStartDateValue, setInventoryLogsStartDateValue] = useState('')
+  const [inventoryLogsEndDateValue, setInventoryLogsEndDateValue] = useState('')
+  const [inventoryLogsLoading, setInventoryLogsLoading] = useState(false)
+  const [inventoryLogsError, setInventoryLogsError] = useState('')
+  const inventoryLogsSearchRef = useRef()
 
   const [inventoryDepreciation, setInventoryDepreciation] = useState([])
   const [inventoryDepreciationPage, setInventoryDepreciationPage] = useState(1)
@@ -143,23 +163,121 @@ const DetailInventory = () => {
   useEffect(() => {
     setLoading(true)
 
-    const fetchPromises = []
+    const fetchPromises = [
+      fetchInventory(inventoryId),
+      fetchDepreciationReason(),
+      fetchImportReason(),
+    ]
 
-    fetchPromises.push(fetchInventory(inventoryId))
+    const searchParams = new URLSearchParams(location.search)
 
-    fetchPromises.push(fetchDepreciationReason())
-
-    fetchPromises.push(fetchImportReason())
     if (canReadInventoryDepreciations) {
-      fetchPromises.push(fetchInventoryDepreciation(inventoryId, 1))
+      const inventoryDepreciationParam = searchParams.get('inventoryDepreciation')
+
+      if (!!inventoryDepreciationParam) {
+        try {
+          const parsedParams = JSON.parse(inventoryDepreciationParam)
+          inventoryDepreciationSearchRef.current = {}
+
+          if (parsedParams.inventoryDepreciationReasonId) {
+            inventoryDepreciationSearchRef.current.inventoryDepreciationReasonId =
+              parsedParams.inventoryDepreciationReasonId
+          }
+          if (parsedParams.startDate) {
+            inventoryDepreciationSearchRef.current.startDate = formatToISODate(
+              parsedParams.startDate,
+            )
+          }
+          if (parsedParams.endDate) {
+            inventoryDepreciationSearchRef.current.endDate = formatToISODate(parsedParams.endDate)
+          }
+        } finally {
+          clearInventoryDepreciationInput()
+        }
+      }
+
+      fetchPromises.push(
+        fetchInventoryDepreciation(inventoryId, 1, inventoryDepreciationSearchRef.current),
+      )
     }
 
     if (canReadInventoryImports) {
-      fetchPromises.push(fetchInventoryImport(inventoryId, 1))
+      const inventoryImportParam = searchParams.get('inventoryImport')
+
+      if (!!inventoryImportParam) {
+        try {
+          const parsedParams = JSON.parse(inventoryImportParam)
+          inventoryImportSearchRef.current = {}
+
+          if (parsedParams.inventoryImportReasonId) {
+            inventoryImportSearchRef.current.inventoryImportReasonId =
+              parsedParams.inventoryImportReasonId
+          }
+          if (parsedParams.startDate) {
+            inventoryImportSearchRef.current.startDate = formatToISODate(parsedParams.startDate)
+          }
+          if (parsedParams.endDate) {
+            inventoryImportSearchRef.current.endDate = formatToISODate(parsedParams.endDate)
+          }
+        } finally {
+          clearInventoryDepreciationInput()
+        }
+      }
+      fetchPromises.push(fetchInventoryImport(inventoryId, 1, inventoryImportSearchRef.current))
     }
 
     if (canReadInventoryQuantityLogs) {
-      fetchPromises.push(fetchInventoryQuantityLogs(inventoryId, 1))
+      const inventoryQuantityLogsParam = searchParams.get('inventoryQuantityLogs')
+
+      if (!!inventoryQuantityLogsParam) {
+        try {
+          const parsedParams = JSON.parse(inventoryQuantityLogsParam)
+          inventoryQuantityLogsSearchRef.current = {}
+
+          if (parsedParams.details) {
+            inventoryQuantityLogsSearchRef.current.details = parsedParams.details
+          }
+          if (parsedParams.startDate) {
+            inventoryQuantityLogsSearchRef.current.startDate = formatToISODate(
+              parsedParams.startDate,
+            )
+          }
+          if (parsedParams.endDate) {
+            inventoryQuantityLogsSearchRef.current.endDate = formatToISODate(parsedParams.endDate)
+          }
+        } finally {
+          clearQuantityLogsInput()
+        }
+      }
+
+      fetchPromises.push(
+        fetchInventoryQuantityLogs(inventoryId, 1, inventoryQuantityLogsSearchRef.current),
+      )
+    }
+
+    if (canReadInventoryLogs) {
+      const inventoryLogsParam = searchParams.get('inventoryLogs')
+
+      if (!!inventoryLogsParam) {
+        try {
+          const parsedParams = JSON.parse(inventoryLogsParam)
+          inventoryLogsSearchRef.current = {}
+
+          if (parsedParams.type) {
+            inventoryLogsSearchRef.current.type = parsedParams.type
+          }
+          if (parsedParams.startDate) {
+            inventoryLogsSearchRef.current.startDate = formatToISODate(parsedParams.startDate)
+          }
+          if (parsedParams.endDate) {
+            inventoryLogsSearchRef.current.endDate = formatToISODate(parsedParams.endDate)
+          }
+        } finally {
+          clearInventoryLogsInput()
+        }
+      }
+
+      fetchPromises.push(fetchInventoryLogs(inventoryId, 1, inventoryLogsSearchRef.current))
     }
 
     Promise.all(fetchPromises).finally(() => setLoading(false))
@@ -187,24 +305,252 @@ const DetailInventory = () => {
     setImportError('')
   }, [importDescriptionValue, importQuantityValue, importQuantityValue])
 
-  async function fetchInventoryQuantityLogs(inventoryId, page, searchParams = {}) {
-    try {
-      const response = await axiosPrivate.get(`/api/inventories/${inventoryId}/quantity-logs`, {
-        params: { page, size: 5, ...searchParams },
-      })
+  useEffect(() => {
+    setInventoryLogsError('')
+  }, [inventoryLogsTypeValue, inventoryLogsStartDateValue, inventoryLogsEndDateValue])
 
-      setInventoryQuantityLogs(response.data.data)
-      setInventoryQuantityLogsTotalPage(response.data.paging.totalPage)
-      setInventoryQuantityLogsPage(response.data.paging.page)
-    } catch (e) {
-      console.log(e)
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
-      } else {
-        navigate('/500')
-      }
+  useEffect(() => {
+    setInventoryImportError('')
+  }, [inventoryImportReasonValue, inventoryImportStartDateValue, inventoryImportEndDateValue])
+
+  useEffect(() => {
+    setInventoryDepreciationError('')
+  }, [
+    inventoryDepreciationReasonValue,
+    inventoryDepreciationStartDateValue,
+    inventoryDepreciationEndDateValue,
+  ])
+
+  useEffect(() => {
+    setInventoryQuantityLogsError('')
+  }, [
+    inventoryQuantityLogsDetailValue,
+    inventoryQuantityLogsStartDateValue,
+    inventoryQuantityLogsEndDateValue,
+  ])
+
+  function clearInventoryLogsInput() {
+    setInventoryLogsTypeValue('')
+    setInventoryLogsStartDateValue('')
+    setInventoryLogsEndDateValue('')
+  }
+
+  function clearQuantityLogsInput() {
+    setInventoryQuantityLogsDetailValue('')
+    setInventoryQuantityLogsStartDateValue('')
+    setInventoryQuantityLogsEndDateValue('')
+  }
+
+  function clearInventoryDepreciationInput() {
+    setInventoryDepreciationReasonValue('')
+    setInventoryDepreciationStartDateValue('')
+    setInventoryDepreciationEndDateValue('')
+  }
+
+  function clearInventoryImportInput() {
+    setInventoryImportReasonValue('')
+    setInventoryImportStartDateValue('')
+    setInventoryImportEndDateValue('')
+  }
+
+  function handleInventoryLogsSearch(e) {
+    e.preventDefault()
+
+    setInventoryLogsLoading(true)
+
+    setInventoryLogsPage(1)
+
+    const searchParams = {}
+
+    const validReasons = typeOptions.map((option) => option.value.toString()).filter(Boolean)
+
+    if (inventoryLogsTypeValue && validReasons.includes(inventoryLogsTypeValue)) {
+      searchParams.type = inventoryLogsTypeValue
+    }
+
+    if (inventoryLogsStartDateValue) {
+      searchParams.startDate = formatToISODate(inventoryLogsStartDateValue)
+    }
+
+    if (inventoryLogsEndDateValue) {
+      searchParams.endDate = formatToISODate(inventoryLogsEndDateValue)
+    }
+
+    inventoryLogsSearchRef.current = searchParams
+
+    if (Object.keys(searchParams).length > 0) {
+      const newParams = new URLSearchParams(location.search)
+
+      newParams.set('inventoryLogs', JSON.stringify(searchParams))
+
+      navigate(`${location.pathname}?${newParams}`, { replace: true })
+    } else {
+      navigate(`/inventories/${inventoryId}/detail`)
+    }
+
+    fetchInventoryLogs(inventoryId, 1, inventoryLogsSearchRef.current).finally(() =>
+      setInventoryLogsLoading(false),
+    )
+  }
+
+  function handleInventoryImportSearch(e) {
+    e.preventDefault()
+
+    setInventoryImportLoading(true)
+
+    setInventoryImportPage(1)
+
+    const searchParams = {}
+
+    const validReasons = inventoryImportReasonOptions
+      .map((option) => option.value.toString())
+      .filter(Boolean)
+
+    if (inventoryImportReasonValue && validReasons.includes(inventoryImportReasonValue)) {
+      searchParams.inventoryImportReasonId = inventoryImportReasonValue
+    }
+    if (inventoryImportStartDateValue) {
+      searchParams.startDate = formatToISODate(inventoryImportStartDateValue)
+    }
+
+    if (inventoryImportEndDateValue) {
+      searchParams.endDate = formatToISODate(inventoryImportEndDateValue)
+    }
+
+    inventoryImportSearchRef.current = searchParams
+
+    if (Object.keys(searchParams).length > 0) {
+      const newParams = new URLSearchParams(location.search)
+
+      newParams.set('inventoryImport', JSON.stringify(searchParams))
+
+      navigate(`${location.pathname}?${newParams}`, { replace: true })
+    } else {
+      navigate(`/inventories/${inventoryId}/detail`)
+    }
+
+    fetchInventoryImport(inventoryId, 1, inventoryImportSearchRef.current).finally(() =>
+      setInventoryImportLoading(false),
+    )
+  }
+
+  function handleInventoryDepreciationSearch(e) {
+    e.preventDefault()
+
+    setInventoryDepreciationLoading(true)
+
+    setInventoryDepreciationPage(1)
+
+    const searchParams = {}
+
+    const validReasons = inventoryDepreciationReasonOptions
+      .map((option) => option.value.toString())
+      .filter(Boolean)
+
+    if (
+      inventoryDepreciationReasonValue &&
+      validReasons.includes(inventoryDepreciationReasonValue)
+    ) {
+      searchParams.inventoryDepreciationReasonId = inventoryDepreciationReasonValue
+    }
+    if (inventoryDepreciationStartDateValue) {
+      searchParams.startDate = formatToISODate(inventoryDepreciationStartDateValue)
+    }
+
+    if (inventoryDepreciationEndDateValue) {
+      searchParams.endDate = formatToISODate(inventoryDepreciationEndDateValue)
+    }
+
+    inventoryDepreciationSearchRef.current = searchParams
+
+    if (Object.keys(searchParams).length > 0) {
+      const newParams = new URLSearchParams(location.search)
+
+      newParams.set('inventoryDepreciation', JSON.stringify(searchParams))
+
+      navigate(`${location.pathname}?${newParams}`, { replace: true })
+    } else {
+      navigate(`/inventories/${inventoryId}/detail`)
+    }
+
+    fetchInventoryDepreciation(inventoryId, 1, inventoryDepreciationSearchRef.current).finally(() =>
+      setInventoryDepreciationLoading(false),
+    )
+  }
+
+  function handleInventoryQuantityLogsSearch(e) {
+    e.preventDefault()
+
+    setInventoryQuantityLogsLoading(true)
+
+    setInventoryQuantityLogsPage(1)
+
+    const searchParams = {}
+
+    if (inventoryQuantityLogsDetailValue) {
+      searchParams.details = inventoryQuantityLogsDetailValue
+    }
+
+    if (inventoryQuantityLogsStartDateValue) {
+      searchParams.startDate = formatToISODate(inventoryQuantityLogsStartDateValue)
+    }
+
+    if (inventoryQuantityLogsEndDateValue) {
+      searchParams.endDate = formatToISODate(inventoryQuantityLogsEndDateValue)
+    }
+
+    inventoryQuantityLogsSearchRef.current = searchParams
+
+    if (Object.keys(searchParams).length > 0) {
+      const newParams = new URLSearchParams(location.search)
+
+      newParams.set('inventoryQuantityLogs', JSON.stringify(searchParams))
+
+      navigate(`${location.pathname}?${newParams}`, { replace: true })
+    } else {
+      navigate(`/inventories/${inventoryId}/detail`)
+    }
+
+    fetchInventoryQuantityLogs(inventoryId, 1, inventoryQuantityLogsSearchRef.current).finally(() =>
+      setInventoryQuantityLogsLoading(false),
+    )
+  }
+
+  const handlePageChangeInventoryLogs = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      setPage(newPage)
+      setInventoryLogsLoading(true)
+      fetchData(newPage, searchParamsRef.current).finally(() => setInventoryLogsLoading(false))
+    }
+  }
+
+  const handlePageChangeInventoryDepreciation = (newPage) => {
+    if (
+      newPage >= 1 &&
+      newPage <= inventoryDepreciationTotalPage &&
+      newPage !== inventoryDepreciationPage
+    ) {
+      setInventoryDepreciationPage(newPage)
+
+      setInventoryDepreciationLoading(true)
+
+      fetchInventoryDepreciation(
+        inventoryId,
+        newPage,
+        inventoryDepreciationSearchRef.current,
+      ).finally(() => setInventoryDepreciationLoading(false))
+    }
+  }
+
+  const handlePageChangeInventoryImport = (newPage) => {
+    if (newPage >= 1 && newPage <= inventoryImportTotalPage && newPage !== inventoryImportPage) {
+      setInventoryImportPage(newPage)
+
+      setInventoryImportLoading(true)
+
+      fetchInventoryImport(inventoryId, newPage, inventoryImportSearchRef.current).finally(() =>
+        setInventoryImportLoading(false),
+      )
     }
   }
 
@@ -221,6 +567,54 @@ const DetailInventory = () => {
       fetchInventoryQuantityLogs(inventoryId, newPage).finally(() =>
         setInventoryQuantityLogsLoading(false),
       )
+    }
+  }
+
+  async function fetchInventoryQuantityLogs(inventoryId, page, searchParams = {}) {
+    try {
+      const response = await axiosPrivate.get(`/api/inventories/${inventoryId}/quantity-logs`, {
+        params: { page, size: 5, ...searchParams },
+      })
+
+      setInventoryQuantityLogs(response.data.data)
+      setInventoryQuantityLogsTotalPage(response.data.paging.totalPage)
+      setInventoryQuantityLogsPage(response.data.paging.page)
+
+      clearQuantityLogsInput()
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400].includes(e.response?.status)) {
+        setInventoryQuantityLogsError(e.response.data.error)
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  async function fetchInventoryLogs(inventoryId, page, searchParams = {}) {
+    try {
+      const response = await axiosPrivate.get(`/api/inventories/${inventoryId}/logs`, {
+        params: { page: page, size: 3, ...searchParams },
+      })
+
+      setInventoryLogs(response.data.data)
+      setInventoryLogsTotalPage(response.data.paging.totalPage)
+      setInventoryLogsPage(response.data.paging.page)
+
+      clearInventoryLogsInput()
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else if (e.response?.status === 400) {
+        setInventoryLogsError(e.response.data.error)
+      } else {
+        navigate('/500')
+      }
     }
   }
 
@@ -310,36 +704,6 @@ const DetailInventory = () => {
     }
   }
 
-  const handlePageChangeInventoryDepreciation = (newPage) => {
-    if (
-      newPage >= 1 &&
-      newPage <= inventoryDepreciationTotalPage &&
-      newPage !== inventoryDepreciationPage
-    ) {
-      setInventoryDepreciationPage(newPage)
-
-      setInventoryDepreciationLoading(true)
-
-      fetchInventoryDepreciation(
-        inventoryId,
-        newPage,
-        inventoryDepreciationSearchRef.current,
-      ).finally(() => setInventoryDepreciationLoading(false))
-    }
-  }
-
-  const handlePageChangeInventoryImport = (newPage) => {
-    if (newPage >= 1 && newPage <= inventoryImportTotalPage && newPage !== inventoryImportPage) {
-      setInventoryImportPage(newPage)
-
-      setInventoryImportLoading(true)
-
-      fetchInventoryImport(inventoryId, newPage, inventoryImportSearchRef.current).finally(() =>
-        setInventoryImportLoading(false),
-      )
-    }
-  }
-
   async function fetchInventoryDepreciation(inventoryId, page, searchParams = {}) {
     try {
       const response = await axiosPrivate.get(`/api/inventories/${inventoryId}/depreciations`, {
@@ -349,6 +713,8 @@ const DetailInventory = () => {
       setInventoryDepreciation(response.data.data)
       setInventoryDepreciationTotalPage(response.data.paging.totalPage)
       setInventoryDepreciationPage(response.data.paging.page)
+
+      clearInventoryDepreciationInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -371,6 +737,8 @@ const DetailInventory = () => {
       setInventoryImport(response.data.data)
       setInventoryImportTotalPage(response.data.paging.totalPage)
       setInventoryImportPage(response.data.paging.page)
+
+      clearInventoryImportInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -528,141 +896,6 @@ const DetailInventory = () => {
 
       setRefetch(!refetch)
     }
-  }
-
-  function handleInventoryImportSearch(e) {
-    e.preventDefault()
-
-    setInventoryImportLoading(true)
-
-    setInventoryImportPage(1)
-
-    const searchParams = {}
-
-    const validReasons = inventoryImportReasonOptions
-      .map((option) => option.value.toString())
-      .filter(Boolean)
-
-    if (inventoryImportReasonValue && validReasons.includes(inventoryImportReasonValue)) {
-      searchParams.inventoryImportReasonId = inventoryImportReasonValue
-    }
-    if (inventoryImportStartDateValue) {
-      searchParams.startDate = formatToISODate(inventoryImportStartDateValue)
-    }
-
-    if (inventoryImportEndDateValue) {
-      searchParams.endDate = formatToISODate(inventoryImportEndDateValue)
-    }
-
-    inventoryImportSearchRef.current = searchParams
-
-    setInventoryImportReasonValue('')
-    setInventoryImportStartDateValue('')
-    setInventoryImportEndDateValue('')
-
-    if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
-      newParams.set('inventoryImport', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
-    } else {
-      navigate(`/inventories/${inventoryId}/detail`)
-    }
-
-    fetchInventoryImport(inventoryId, 1, inventoryImportSearchRef.current).finally(() =>
-      setInventoryImportLoading(false),
-    )
-  }
-
-  function handleInventoryDepreciationSearch(e) {
-    e.preventDefault()
-
-    setInventoryDepreciationLoading(true)
-
-    setInventoryDepreciationPage(1)
-
-    const searchParams = {}
-
-    const validReasons = inventoryDepreciationReasonOptions
-      .map((option) => option.value.toString())
-      .filter(Boolean)
-
-    if (
-      inventoryDepreciationReasonValue &&
-      validReasons.includes(inventoryDepreciationReasonValue)
-    ) {
-      searchParams.inventoryDepreciationReasonId = inventoryDepreciationReasonValue
-    }
-    if (inventoryDepreciationStartDateValue) {
-      searchParams.startDate = formatToISODate(inventoryDepreciationStartDateValue)
-    }
-
-    if (inventoryDepreciationEndDateValue) {
-      searchParams.endDate = formatToISODate(inventoryDepreciationEndDateValue)
-    }
-
-    inventoryDepreciationSearchRef.current = searchParams
-
-    setInventoryDepreciationReasonValue('')
-    setInventoryDepreciationStartDateValue('')
-    setInventoryDepreciationEndDateValue('')
-
-    if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
-      newParams.set('inventoryDepreciation', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
-    } else {
-      navigate(`/inventories/${inventoryId}/detail`)
-    }
-
-    fetchInventoryDepreciation(inventoryId, 1, inventoryDepreciationSearchRef.current).finally(() =>
-      setInventoryDepreciationLoading(false),
-    )
-  }
-
-  function handleInventoryQuantityLogsSearch(e) {
-    e.preventDefault()
-
-    setInventoryQuantityLogsLoading(true)
-
-    setInventoryQuantityLogsPage(1)
-
-    const searchParams = {}
-
-    if (inventoryQuantityLogsDetailValue) {
-      searchParams.details = inventoryQuantityLogsDetailValue
-    }
-
-    if (inventoryQuantityLogsStartDateValue) {
-      searchParams.startDate = formatToISODate(inventoryQuantityLogsStartDateValue)
-    }
-
-    if (inventoryQuantityLogsEndDateValue) {
-      searchParams.endDate = formatToISODate(inventoryQuantityLogsEndDateValue)
-    }
-
-    inventoryQuantityLogsSearchRef.current = searchParams
-
-    setInventoryQuantityLogsDetailValue('')
-    setInventoryQuantityLogsStartDateValue('')
-    setInventoryQuantityLogsEndDateValue('')
-
-    if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
-      newParams.set('inventoryQuantityLogs', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
-    } else {
-      navigate(`/inventories/${inventoryId}/detail`)
-    }
-
-    fetchInventoryQuantityLogs(inventoryId, 1, inventoryQuantityLogsSearchRef.current).finally(() =>
-      setInventoryQuantityLogsLoading(false),
-    )
   }
 
   return (
@@ -1067,6 +1300,31 @@ const DetailInventory = () => {
                 </CCardBody>
               </CCard>
             </CCol>
+          )}
+
+          {canReadInventoryLogs && (
+            <CRow>
+              <CCol>
+                <TableInventoryLog
+                  title={'Data Log Inventaris'}
+                  error={inventoryLogsError}
+                  handleSearch={handleInventoryLogsSearch}
+                  typeOptions={typeOptions}
+                  searchTypeValue={inventoryLogsTypeValue}
+                  setSearchTypeValue={setInventoryLogsTypeValue}
+                  searchStartDateValue={inventoryLogsStartDateValue}
+                  setSearchStartDateValue={setInventoryLogsStartDateValue}
+                  searchEndDateValue={inventoryLogsEndDateValue}
+                  setSearchEndDateValue={setInventoryLogsEndDateValue}
+                  searchLoading={inventoryLogsLoading}
+                  inventoriesLogs={inventoryLogs}
+                  page={inventoryLogsPage}
+                  totalPages={inventoryLogsTotalPage}
+                  handlePageChange={handlePageChangeInventoryLogs}
+                  authorizePermissions={authorizePermissions}
+                />
+              </CCol>
+            </CRow>
           )}
 
           <CModal visible={visibileModalImport} onClose={() => setVisibileModalImport(false)}>

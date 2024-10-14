@@ -6,6 +6,7 @@ import useLogout from '../../hooks/useLogout'
 import useAuth from '../../hooks/useAuth'
 import TableProjectLog from '../../components/projects/TableProjectLog'
 import TablePurchaseLog from '../../components/purchases/TablePurchaseLog'
+import { formatToISODate } from '../../utils/DateUtils'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
@@ -25,7 +26,6 @@ const DataPurchaseLog = () => {
   const [totalPages, setTotalPages] = useState(1)
 
   const [loading, setLoading] = useState(true)
-  const [paginationLoading, setPaginationLoading] = useState(false)
 
   const [purchasesLogs, setPurchasesLogs] = useState([])
 
@@ -34,7 +34,7 @@ const DataPurchaseLog = () => {
   const [searchTypeValue, setSearchTypeValue] = useState('')
   const [searchStartDateValue, setSearchStartDateValue] = useState('')
   const [searchEndDateValue, setSearchEndDateValue] = useState('')
-  const [searchLoading, setSearchLoading] = useState('')
+  const [searchLoading, setSearchLoading] = useState(false)
 
   const searchParamsRef = useRef()
 
@@ -44,6 +44,10 @@ const DataPurchaseLog = () => {
 
   function handleSearch(e) {
     e.preventDefault()
+
+    setSearchLoading(true)
+
+    setPage(1)
 
     const searchParams = {}
 
@@ -56,20 +60,14 @@ const DataPurchaseLog = () => {
     }
 
     if (searchStartDateValue) {
-      searchParams.startDate = searchStartDateValue
+      searchParams.startDate = formatToISODate(searchStartDateValue)
     }
 
     if (searchEndDateValue) {
-      searchParams.endDate = searchEndDateValue
+      searchParams.endDate = formatToISODate(searchEndDateValue)
     }
 
     searchParamsRef.current = searchParams
-
-    setPage(1)
-
-    setSearchLoading(true)
-
-    fetchData(1, searchParams).finally(() => setSearchLoading(false))
 
     if (searchParams) {
       const newParams = new URLSearchParams(searchParams).toString()
@@ -78,6 +76,10 @@ const DataPurchaseLog = () => {
       navigate(`/project/data`)
     }
 
+    fetchData(1, searchParams).finally(() => setSearchLoading(false))
+  }
+
+  function clearInput() {
     setSearchTypeValue('')
     setSearchStartDateValue('')
     setSearchEndDateValue('')
@@ -89,11 +91,11 @@ const DataPurchaseLog = () => {
         params: { page: page, size: 5, ...searchParams },
       })
 
-      console.log(response)
-
       setPurchasesLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      clearInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -110,8 +112,8 @@ const DataPurchaseLog = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
-      setPaginationLoading(true)
-      fetchData(newPage, searchParamsRef.current).finally(() => setPaginationLoading(false))
+      setSearchLoading(true)
+      fetchData(newPage, searchParamsRef.current).finally(() => setSearchLoading(false))
     }
   }
 
@@ -162,7 +164,6 @@ const DataPurchaseLog = () => {
               purchasesLogs={purchasesLogs}
               page={page}
               totalPages={totalPages}
-              paginationLoading={paginationLoading}
               handlePageChange={handlePageChange}
               authorizePermissions={authorizePermissions}
             />

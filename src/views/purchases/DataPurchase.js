@@ -109,6 +109,8 @@ const DataPurchase = () => {
       setPurchasings(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      clearInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -137,6 +139,16 @@ const DataPurchase = () => {
   function handleUpdate(purchaseId) {
     navigate(`/purchases/${purchaseId}/edit`)
   }
+
+  useEffect(() => {
+    setError('')
+  }, [
+    searchSupplierValue,
+    searchDeliveryStatusValue,
+    searchPaymentStatusValue,
+    searchStartDateValue,
+    searchEndDateValue,
+  ])
 
   useEffect(() => {
     setLoading(true)
@@ -199,8 +211,6 @@ const DataPurchase = () => {
     }
 
     searchParamsRef.current = searchParams
-
-    clearInput()
 
     if (Object.keys(searchParams).length > 0) {
       const newParams = new URLSearchParams(searchParams).toString()

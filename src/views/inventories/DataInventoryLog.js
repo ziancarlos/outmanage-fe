@@ -104,8 +104,8 @@ const DataInventoryLog = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
-      setPaginationLoading(true)
-      fetchData(newPage, searchParamsRef.current).finally(() => setPaginationLoading(false))
+      setSearchLoading(true)
+      fetchData(newPage, searchParamsRef.current).finally(() => setSearchLoading(false))
     }
   }
 
@@ -142,7 +142,7 @@ const DataInventoryLog = () => {
         <CRow>
           <CCol>
             <TableInventoryLog
-              title={'Inventory Log'}
+              title={'Data Log Inventaris'}
               error={error}
               handleSearch={handleSearch}
               typeOptions={typeOptions}
@@ -156,7 +156,6 @@ const DataInventoryLog = () => {
               inventoriesLogs={inventoriesLogs}
               page={page}
               totalPages={totalPages}
-              paginationLoading={paginationLoading}
               handlePageChange={handlePageChange}
               authorizePermissions={authorizePermissions}
             />
