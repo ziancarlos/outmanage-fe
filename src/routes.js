@@ -8,6 +8,7 @@ import ProjectRoutes from './routes/ProjectRoutes'
 import InventoryRoutes from './routes/InventoryRoutes'
 import SupplierRoutes from './routes/SupplierRoutes'
 import PurchaseRoutes from './routes/PurchaseRoutes'
+import OperationalExpensesRoutes from './routes/OperationalExpensesRoutes'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -201,5 +202,6 @@ export default [
   ...InventoryRoutes,
   ...SupplierRoutes,
   ...PurchaseRoutes,
+  ...OperationalExpensesRoutes,
   ...routes,
 ]

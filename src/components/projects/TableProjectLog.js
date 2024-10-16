@@ -26,7 +26,6 @@ import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { NavLink } from 'react-router-dom'
 function TableProjectLog({
-  title,
   error,
   handleSearch,
   typeOptions,
@@ -48,7 +47,7 @@ function TableProjectLog({
   return (
     <CCard className="mb-4">
       <CCardHeader className="d-flex justify-content-between align-items-center">
-        <strong>{title}</strong>
+        <strong>Data Log Proyek</strong>
       </CCardHeader>
       <CCardBody>
         {!!error && (

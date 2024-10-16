@@ -23,7 +23,6 @@ import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { CLoadingButton, CSmartPagination } from '@coreui/react-pro'
 function TableProject({
-  title,
   error,
   handleSearch,
   searchValue,
@@ -37,7 +36,6 @@ function TableProject({
 }) {
   const canUpdateProject = authorizePermissions.some((perm) => perm.name === 'update-project')
   const canReadProject = authorizePermissions.some((perm) => perm.name === 'read-project')
-  const canReadProjectLogs = authorizePermissions.some((perm) => perm.name === 'read-project-logs')
   const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
   const navigate = useNavigate()
 
@@ -52,7 +50,7 @@ function TableProject({
   return (
     <CCard className="mb-4">
       <CCardHeader className="d-flex justify-content-between align-items-center">
-        <strong>{title}</strong>
+        <strong>Data Proyek</strong>
       </CCardHeader>
       <CCardBody>
         {error && (
@@ -98,7 +96,7 @@ function TableProject({
                 <CTableHeaderCell scope="col">Alamat</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Deskripsi</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Klien</CTableHeaderCell>
-                {canReadProject || canReadProjectLogs || canUpdateProject ? (
+                {canReadProject || canUpdateProject ? (
                   <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                 ) : (
                   ''
@@ -123,7 +121,7 @@ function TableProject({
                   </CTableDataCell>
 
                   <CTableDataCell>
-                    {canReadProject || canReadProjectLogs ? (
+                    {canReadProject ? (
                       <CButton
                         color="info"
                         size="sm"

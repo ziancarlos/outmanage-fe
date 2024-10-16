@@ -13,6 +13,8 @@ import {
   CCardHeader,
   CCardFooter,
   CLoadingButton,
+  CFormLabel,
+  CBadge,
 } from '@coreui/react-pro'
 import Swal from 'sweetalert2'
 import useLogout from '../../hooks/useLogout'
@@ -22,6 +24,7 @@ import { faSave } from '@fortawesome/free-solid-svg-icons'
 const USERNAME_REGEX = /^[A-z][A-z0-9-_]{3,50}$/
 const EMAIL_REGEX = /^(?=.{1,256}$)(?=.{1,64}@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/
+const TELEGRAM_CHAT_ID_REGEX = /^(0|[1-9][0-9]*)$/
 
 function CreateUserForm({ roles, fetchData }) {
   const axiosPrivate = useAxiosPrivate()
@@ -31,11 +34,14 @@ function CreateUserForm({ roles, fetchData }) {
   const [usernameValue, setUsernameValue] = useState('')
   const [emailValue, setEmailValue] = useState('')
   const [roleValue, setRoleValue] = useState('')
+  const [telegramChatIdValue, setTelegramChatIdValue] = useState('')
   const [passwordValue, setPasswordValue] = useState('')
 
   const [usernameValid, setUsernameValid] = useState(false)
   const [emailValid, setEmailValid] = useState(false)
   const [roleValid, setRoleValid] = useState(false)
+  const [telegramChatIdValid, setTelegramChatIdValid] = useState(false)
+
   const [passwordValid, setPasswordValid] = useState(false)
 
   const [roleTouched, setRoleTouched] = useState(false)
@@ -52,6 +58,14 @@ function CreateUserForm({ roles, fetchData }) {
   }, [emailValue])
 
   useEffect(() => {
+    if (telegramChatIdValue) {
+      setTelegramChatIdValid(TELEGRAM_CHAT_ID_REGEX.test(telegramChatIdValue))
+    } else {
+      setTelegramChatIdValid(true)
+    }
+  }, [telegramChatIdValue])
+
+  useEffect(() => {
     setRoleValid(roleValue !== '')
   }, [roleValue])
 
@@ -60,7 +74,14 @@ function CreateUserForm({ roles, fetchData }) {
   }, [passwordValue])
 
   function isFormValid() {
-    if (error || !usernameValid || !passwordValid || !emailValid || !roleValid) {
+    if (
+      error ||
+      !usernameValid ||
+      !passwordValid ||
+      !emailValid ||
+      !roleValid ||
+      (!telegramChatIdValid && telegramChatIdValue !== '')
+    ) {
       return false
     }
 
@@ -77,12 +98,23 @@ function CreateUserForm({ roles, fetchData }) {
     setLoading(true)
 
     try {
-      await axiosPrivate.post('/api/users', {
-        username: usernameValue,
-        email: emailValue,
-        password: passwordValue,
-        roleId: roleValue,
-      })
+      await axiosPrivate.post(
+        '/api/users',
+        telegramChatIdValue
+          ? {
+              username: usernameValue,
+              email: emailValue,
+              password: passwordValue,
+              telegramChatId: telegramChatIdValue,
+              roleId: roleValue,
+            }
+          : {
+              username: usernameValue,
+              email: emailValue,
+              password: passwordValue,
+              roleId: roleValue,
+            },
+      )
 
       Swal.fire({
         icon: 'success',
@@ -101,7 +133,7 @@ function CreateUserForm({ roles, fetchData }) {
       } else if ([404, 400, 409].includes(e.response?.status)) {
         setError(e.response.data.error)
       } else {
-        navigate('/505')
+        navigate('/500')
       }
     } finally {
       setLoading(false)
@@ -115,11 +147,12 @@ function CreateUserForm({ roles, fetchData }) {
     setRoleValue('')
     setRoleTouched(false)
     setError('')
+    setTelegramChatIdValue('')
   }
 
   useEffect(() => {
     setError('')
-  }, [usernameValue, roleValue, emailValue, passwordValue])
+  }, [usernameValue, roleValue, emailValue, passwordValue, telegramChatIdValue])
 
   const roleOptions = [
     { label: 'Pilih Peran', value: '' },
@@ -239,6 +272,38 @@ function CreateUserForm({ roles, fetchData }) {
             {!passwordValid && passwordValue && (
               <div className="invalid-feedback">
                 Kata sandi harus menyertakan huruf besar dan kecil, angka, dan karakter khusus.
+              </div>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <CFormLabel>
+              Id Chat Telegram <CBadge color="success">Optional</CBadge>
+            </CFormLabel>
+
+            <CFormInput
+              id="username"
+              type="text"
+              autoComplete="new-email"
+              placeholder="Masukkan telegram chat id"
+              value={telegramChatIdValue}
+              onChange={(e) => setTelegramChatIdValue(e.target.value)}
+              disabled={loading}
+              className={
+                telegramChatIdValue && telegramChatIdValid
+                  ? 'is-valid'
+                  : telegramChatIdValue && !telegramChatIdValid
+                    ? 'is-invalid'
+                    : ''
+              }
+            />
+
+            {telegramChatIdValid && telegramChatIdValue && (
+              <div className="valid-feedback">Id chat telegram valid.</div>
+            )}
+            {!telegramChatIdValid && telegramChatIdValue && (
+              <div className="invalid-feedback">
+                Id chat telegram tidak valid. Harus berupa angka positif.
               </div>
             )}
           </div>

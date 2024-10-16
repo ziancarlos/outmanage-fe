@@ -28,6 +28,7 @@ import SupplierNavs from './navs/SupplierNavs'
 import InventoryNavs from './navs/InventoryNavs'
 import PurchaseRoutes from './routes/PurchaseRoutes'
 import PurchaseNavs from './navs/PurchaseNavs'
+import OperationalExpenseNavs from './navs/OperationalExpenseNavs'
 
 const _nav = [
   {
@@ -66,6 +67,8 @@ const _nav = [
   ...InventoryNavs,
 
   ...PurchaseNavs,
+
+  ...OperationalExpenseNavs,
   {
     component: CNavTitle,
     name: <Translation>{(t) => t('theme')}</Translation>,

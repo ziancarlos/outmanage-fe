@@ -15,6 +15,8 @@ import {
   CCol,
   CCardHeader,
   CLoadingButton,
+  CFormLabel,
+  CBadge,
 } from '@coreui/react-pro'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useLogout from '../../hooks/useLogout'
@@ -24,6 +26,7 @@ import { faEdit } from '@fortawesome/free-solid-svg-icons'
 const USERNAME_REGEX = /^[A-z][A-z0-9-_]{3,50}$/
 const EMAIL_REGEX = /^(?=.{1,256}$)(?=.{1,64}@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/
+const TELEGRAM_CHAT_ID_REGEX = /^(0|[1-9][0-9]*)$/
 
 function Settings() {
   const logout = useLogout()
@@ -37,9 +40,12 @@ function Settings() {
   const [emailValue, setEmailValue] = useState('')
   const [passwordValue, setPasswordValue] = useState('')
 
+  const [telegramChatIdValue, setTelegramChatIdValue] = useState('')
+
   const [usernameValid, setUsernameValid] = useState(true)
   const [emailValid, setEmailValid] = useState(true)
   const [passwordValid, setPasswordValid] = useState(true)
+  const [telegramChatIdValid, setTelegramChatIdValid] = useState(false)
 
   const [error, setError] = useState('')
 
@@ -58,12 +64,24 @@ function Settings() {
     setUsernameValid(USERNAME_REGEX.test(usernameValue))
     setEmailValid(EMAIL_REGEX.test(emailValue))
     setPasswordValid(PASSWORD_REGEX.test(passwordValue))
-  }, [usernameValue, emailValue, passwordValue])
+    if (telegramChatIdValue) {
+      setTelegramChatIdValid(TELEGRAM_CHAT_ID_REGEX.test(telegramChatIdValue))
+    } else {
+      setTelegramChatIdValid(true)
+    }
+  }, [usernameValue, emailValue, passwordValue, telegramChatIdValue])
 
   const isFormChanged =
-    usernameValue !== user.username || emailValue !== user.email || passwordValue !== ''
+    usernameValue !== user.username ||
+    emailValue !== user.email ||
+    passwordValue !== '' ||
+    telegramChatIdValue !== (user.telegramChatId || '')
 
-  const isFormValid = usernameValid && emailValid && (passwordValue === '' || passwordValid)
+  const isFormValid =
+    usernameValid &&
+    emailValid &&
+    (passwordValue === '' || passwordValid) &&
+    (telegramChatIdValue === '' || telegramChatIdValid)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -82,6 +100,7 @@ function Settings() {
         username: usernameValue !== user.username ? usernameValue : undefined,
         email: emailValue !== user.email ? emailValue : undefined,
         password: passwordValue ? passwordValue : undefined,
+        telegramChatId: telegramChatIdValue || null,
       })
 
       Swal.fire({
@@ -118,6 +137,7 @@ function Settings() {
       setUser(userData)
       setUsernameValue(userData.username)
       setEmailValue(userData.email)
+      setTelegramChatIdValue(userData.telegramChatId || '')
     } catch (e) {
       if (
         (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) ||
@@ -222,6 +242,38 @@ function Settings() {
                       <div className="invalid-feedback">
                         Kata sandi harus menyertakan huruf besar dan kecil, angka, dan karakter
                         khusus.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-3">
+                    <CFormLabel>
+                      Id Chat Telegram <CBadge color="success">Optional</CBadge>
+                    </CFormLabel>
+
+                    <CFormInput
+                      id="username"
+                      type="text"
+                      autoComplete="new-email"
+                      placeholder="Masukkan telegram chat id"
+                      value={telegramChatIdValue}
+                      onChange={(e) => setTelegramChatIdValue(e.target.value)}
+                      disabled={loading}
+                      className={
+                        telegramChatIdValue && telegramChatIdValid
+                          ? 'is-valid'
+                          : telegramChatIdValue && !telegramChatIdValid
+                            ? 'is-invalid'
+                            : ''
+                      }
+                    />
+
+                    {telegramChatIdValid && telegramChatIdValue && (
+                      <div className="valid-feedback">Id chat telegram valid.</div>
+                    )}
+                    {!telegramChatIdValid && telegramChatIdValue && (
+                      <div className="invalid-feedback">
+                        Id chat telegram tidak valid. Harus berupa angka positif.
                       </div>
                     )}
                   </div>

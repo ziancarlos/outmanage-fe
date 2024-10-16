@@ -167,7 +167,7 @@ function UpdateProject() {
     e.preventDefault()
 
     if (!isFormValid) {
-      return setError('Input tidak valid.')
+      return setError('Input yang dimasukkan tidak valid. Mohon periksa kembali.')
     }
     if (!isFormChanged) {
       return setError('Tidak melakukan perubahaan.')

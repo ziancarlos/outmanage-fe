@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useLogout from '../../hooks/useLogout'
 import useAuth from '../../hooks/useAuth'
-import TableProjectLog from '../../components/projects/TableProjectLog'
+import TableOperationalExpenseLog from '../../components/operational-expense/TableOperationalExpenseLog'
 import { formatToISODate } from '../../utils/DateUtils'
 
 const typeOptions = [
@@ -12,9 +12,7 @@ const typeOptions = [
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
 ]
-const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
-
-const DataProjectLog = () => {
+const DataOperationalExpenseLog = () => {
   const { authorizePermissions } = useAuth()
 
   const axiosPrivate = useAxiosPrivate()
@@ -25,7 +23,9 @@ const DataProjectLog = () => {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  const [projectsLogs, setProjectsLogs] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const [operationalExpensesLog, setOperationalExpensesLog] = useState([])
 
   const [error, setError] = useState('')
 
@@ -33,32 +33,8 @@ const DataProjectLog = () => {
   const [searchStartDateValue, setSearchStartDateValue] = useState('')
   const [searchEndDateValue, setSearchEndDateValue] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
-  const [loading, setLoading] = useState(true)
 
   const searchParamsRef = useRef()
-
-  useEffect(() => {
-    setLoading(true)
-
-    const queryParams = new URLSearchParams(location.search)
-    const searchActivityParamValue = queryParams.get('type')
-    const startDateParamValue = queryParams.get('startDate')
-    const endDateParamValue = queryParams.get('endDate')
-
-    searchParamsRef.current = {}
-
-    if (matchingTypes.includes(searchActivityParamValue)) {
-      searchParamsRef.current.type = searchActivityParamValue
-    }
-    if (startDateParamValue) {
-      searchParamsRef.current.startDate = startDateParamValue
-    }
-    if (endDateParamValue) {
-      searchParamsRef.current.endDate = endDateParamValue
-    }
-
-    fetchData(1, searchParamsRef.current).finally(() => setLoading(false))
-  }, [])
 
   useEffect(() => {
     setError('')
@@ -73,7 +49,7 @@ const DataProjectLog = () => {
 
     const searchParams = {}
 
-    if (matchingTypes.includes(searchTypeValue)) {
+    if (typeOptions[1].value === searchTypeValue || typeOptions[2].value === searchTypeValue) {
       searchParams.type = searchTypeValue
     }
 
@@ -91,7 +67,7 @@ const DataProjectLog = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/projects/log`)
+      navigate(`/operational-expenses/log`)
     }
 
     fetchData(1, searchParamsRef.current).finally(() => setSearchLoading(false))
@@ -99,15 +75,17 @@ const DataProjectLog = () => {
 
   async function fetchData(page, searchParams) {
     try {
-      const response = await axiosPrivate.get('/api/projects/logs', {
+      const response = await axiosPrivate.get('/api/operational-expenses/logs', {
         params: { page: page, size: 3, ...searchParams },
       })
 
-      setProjectsLogs(response.data.data)
+      setOperationalExpensesLog(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
 
-      clearInput()
+      setSearchTypeValue('')
+      setSearchStartDateValue('')
+      setSearchEndDateValue('')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -121,12 +99,6 @@ const DataProjectLog = () => {
     }
   }
 
-  function clearInput() {
-    setSearchTypeValue('')
-    setSearchStartDateValue('')
-    setSearchEndDateValue('')
-  }
-
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
@@ -135,6 +107,31 @@ const DataProjectLog = () => {
     }
   }
 
+  useEffect(() => {
+    setLoading(true)
+
+    const queryParams = new URLSearchParams(location.search)
+    const searchTypeParamValue = queryParams.get('type')
+    const startDateParamValue = queryParams.get('startDate')
+    const endDateParamValue = queryParams.get('endDate')
+
+    searchParamsRef.current = {}
+
+    if (searchTypeParamValue) {
+      searchParamsRef.current.type = searchTypeParamValue
+    }
+    if (startDateParamValue) {
+      searchParamsRef.current.startDate = startDateParamValue
+    }
+    if (endDateParamValue) {
+      searchParamsRef.current.endDate = endDateParamValue
+    }
+
+    console.log(searchParamsRef.current)
+
+    fetchData(1, searchParamsRef.current).finally(() => setLoading(false))
+  }, [])
+
   return (
     <>
       {loading ? (
@@ -142,30 +139,27 @@ const DataProjectLog = () => {
           <CSpinner color="primary" variant="grow" />
         </div>
       ) : (
-        <CRow>
-          <CCol>
-            <TableProjectLog
-              error={error}
-              handleSearch={handleSearch}
-              typeOptions={typeOptions}
-              searchTypeValue={searchTypeValue}
-              setSearchTypeValue={setSearchTypeValue}
-              searchStartDateValue={searchStartDateValue}
-              setSearchStartDateValue={setSearchStartDateValue}
-              searchEndDateValue={searchEndDateValue}
-              setSearchEndDateValue={setSearchEndDateValue}
-              searchLoading={searchLoading}
-              projectsLogs={projectsLogs}
-              page={page}
-              totalPages={totalPages}
-              handlePageChange={handlePageChange}
-              authorizePermissions={authorizePermissions}
-            />
-          </CCol>
-        </CRow>
+        <TableOperationalExpenseLog
+          title={'Data Log Biaya Operasional'}
+          error={error}
+          handleSearch={handleSearch}
+          typeOptions={typeOptions}
+          searchTypeValue={searchTypeValue}
+          setSearchTypeValue={setSearchTypeValue}
+          searchStartDateValue={searchStartDateValue}
+          setSearchStartDateValue={setSearchStartDateValue}
+          searchEndDateValue={searchEndDateValue}
+          setSearchEndDateValue={setSearchEndDateValue}
+          searchLoading={searchLoading}
+          operationalExpenseLog={operationalExpensesLog}
+          page={page}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+          authorizePermissions={authorizePermissions}
+        />
       )}
     </>
   )
 }
 
-export default DataProjectLog
+export default DataOperationalExpenseLog

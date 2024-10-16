@@ -3,7 +3,6 @@ import {
   CCard,
   CCardBody,
   CCardTitle,
-  CCardText,
   CListGroup,
   CListGroupItem,
   CSpinner,
@@ -17,7 +16,6 @@ import moment from 'moment'
 import useLogout from '../../hooks/useLogout'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useAuth from '../../hooks/useAuth'
-
 import { formatToISODate } from '../../utils/DateUtils'
 import TableProjectLog from '../../components/projects/TableProjectLog'
 
@@ -26,6 +24,8 @@ const typeOptions = [
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
 ]
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 const DetailProject = () => {
   const { authorizePermissions } = useAuth()
   const canReadProjectLogs = authorizePermissions.some((perm) => perm.name === 'read-project-logs')
@@ -44,14 +44,13 @@ const DetailProject = () => {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  const [loading, setLoading] = useState(true)
-
   const [error, setError] = useState('')
 
   const [searchTypeValue, setSearchTypeValue] = useState('')
   const [searchStartDateValue, setSearchStartDateValue] = useState('')
   const [searchEndDateValue, setSearchEndDateValue] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const searchParamsRef = useRef()
 
@@ -62,29 +61,30 @@ const DetailProject = () => {
   useEffect(() => {
     setLoading(true)
 
-    const queryParams = new URLSearchParams(location.search)
-    const searchActivityParamValue = queryParams.get('type')
-    const startDateParamValue = queryParams.get('startDate')
-    const endDateParamValue = queryParams.get('endDate')
+    const fetchPromises = [fetchProject(projectId)]
 
-    searchParamsRef.current = {}
+    if (canReadProjectLogs) {
+      const queryParams = new URLSearchParams(location.search)
+      const searchActivityParamValue = queryParams.get('type')
+      const startDateParamValue = queryParams.get('startDate')
+      const endDateParamValue = queryParams.get('endDate')
 
-    if (searchActivityParamValue) {
-      searchParamsRef.current.type = searchActivityParamValue
-    }
-    if (startDateParamValue) {
-      searchParamsRef.current.startDate = startDateParamValue
-    }
-    if (endDateParamValue) {
-      searchParamsRef.current.endDate = endDateParamValue
+      searchParamsRef.current = {}
+
+      if (matchingTypes.includes(searchActivityParamValue)) {
+        searchParamsRef.current.type = searchActivityParamValue
+      }
+      if (startDateParamValue) {
+        searchParamsRef.current.startDate = startDateParamValue
+      }
+      if (endDateParamValue) {
+        searchParamsRef.current.endDate = endDateParamValue
+      }
+
+      fetchPromises.push(fetchProjectLogs(projectId, page, searchParamsRef.current))
     }
 
-    canReadProjectLogs
-      ? Promise.all([
-          fetchProject(projectId),
-          fetchProjectLogs(projectId, page, searchParamsRef.current),
-        ]).finally(() => setLoading(false))
-      : Promise.all([fetchProject(projectId)]).finally(() => setLoading(false))
+    Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [])
 
   function handleSearch(e) {
@@ -96,11 +96,7 @@ const DetailProject = () => {
 
     const searchParams = {}
 
-    if (
-      typeOptions[1].value === searchTypeValue ||
-      typeOptions[2].value === searchTypeValue ||
-      typeOptions[3].value === searchTypeValue
-    ) {
+    if (matchingTypes.includes(searchTypeValue)) {
       searchParams.type = searchTypeValue
     }
 
@@ -113,10 +109,6 @@ const DetailProject = () => {
     }
 
     searchParamsRef.current = searchParams
-
-    setSearchTypeValue('')
-    setSearchStartDateValue('')
-    setSearchEndDateValue('')
 
     if (Object.keys(searchParams).length > 0) {
       const newParams = new URLSearchParams(searchParams).toString()
@@ -153,6 +145,8 @@ const DetailProject = () => {
       setProjectLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      clearInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -170,10 +164,16 @@ const DetailProject = () => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
 
-      setLoading(true)
+      setSearchLoading(true)
 
-      fetchProjectLogs(projectId, newPage, searchParamsRef).finally(() => setLoading(false))
+      fetchProjectLogs(projectId, newPage, searchParamsRef).finally(() => setSearchLoading(false))
     }
+  }
+
+  function clearInput() {
+    setSearchTypeValue('')
+    setSearchStartDateValue('')
+    setSearchEndDateValue('')
   }
 
   return (
@@ -201,11 +201,11 @@ const DetailProject = () => {
                   )}
                 </CListGroupItem>
                 <CListGroupItem>Address: {project.address}</CListGroupItem>
+                {project.description && (
+                  <CListGroupItem>Deskripsi: {project.description}</CListGroupItem>
+                )}
                 <CListGroupItem>
-                  Deskripsi: {project.description ? project.description : '-'}
-                </CListGroupItem>
-                <CListGroupItem>
-                  Created At: {moment(project.createdAt).format('MMMM D, YYYY h:mm A')}
+                  Dibuat Pada: {moment(project.createdAt).format('MMMM D, YYYY h:mm A')}
                 </CListGroupItem>
               </CListGroup>
             </CCard>
@@ -214,7 +214,6 @@ const DetailProject = () => {
           {canReadProjectLogs && (
             <CCol className="mt-3" md={12} xs={12}>
               <TableProjectLog
-                title={'Client Log'}
                 error={error}
                 handleSearch={handleSearch}
                 typeOptions={typeOptions}

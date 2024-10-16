@@ -61,7 +61,7 @@ function ManageUser() {
   async function fetchUser(page, value = null, endpoint) {
     try {
       const params = !!value
-        ? { username: value, email: value, page: page, size: 5 }
+        ? { username: value, email: value, telegramChatId: value, page: page, size: 5 }
         : { page: page, size: 5 }
 
       const response = await axiosPrivate.get(endpoint, { params })

@@ -211,6 +211,9 @@ const Profile = () => {
                   )}
                 </CListGroupItem>
 
+                {user.telegramChatId && (
+                  <CListGroupItem>Telegram Chat Id: {user.telegramChatId}</CListGroupItem>
+                )}
                 <CListGroupItem>
                   Dibuat Pada: {moment(user.createdAt).format('MMMM D, YYYY h:mm A')}
                 </CListGroupItem>

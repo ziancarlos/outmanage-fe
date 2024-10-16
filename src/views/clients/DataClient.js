@@ -176,7 +176,7 @@ const DataClient = () => {
                 </CForm>
 
                 <div className="table-responsive">
-                  <CTable bordered responsive>
+                  <CTable bordered responsive striped>
                     <CTableHead>
                       <CTableRow>
                         <CTableHeaderCell scope="col">Klien Id</CTableHeaderCell>

@@ -146,8 +146,6 @@ const DetailClient = () => {
     fetchClientLogs(clientId, 1, clientSearchParamsRef.current).finally(() =>
       setClientLogsSearchLoading(false),
     )
-
-    clearClientLogsSearchInput()
   }
 
   function clearClientLogsSearchInput() {
@@ -174,8 +172,6 @@ const DetailClient = () => {
     navigate(`${location.pathname}?${newParams.toString()}`, { replace: true })
 
     fetchProjects(clientId, 1, projectsSearchValue).finally(() => setProjectsSearchLoading(false))
-
-    setProjectsSearchValue('')
   }
 
   async function fetchClient(clientId) {
@@ -204,6 +200,8 @@ const DetailClient = () => {
       setClientLogs(response.data.data)
       setClienLogsTotalPages(response.data.paging.totalPage)
       setClientLogsPage(response.data.paging.page)
+
+      clearClientLogsSearchInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -228,8 +226,9 @@ const DetailClient = () => {
       setProjects(response.data.data)
       setProjectsTotalPages(response.data.paging.totalPage)
       setProjectsPage(response.data.paging.page)
+
+      setProjectsSearchValue('')
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401 || e.response?.status === 404) {
@@ -246,10 +245,10 @@ const DetailClient = () => {
     if (newPage >= 1 && newPage <= setClientLogsTotalPages && newPage !== clientLogsPage) {
       setClientLogsPage(newPage)
 
-      setLoading(true)
+      setClientLogsSearchLoading(true)
 
       fetchClientLogs(clientId, newPage, clientSearchParamsRef.current).finally(() =>
-        setLoading(false),
+        setClientLogsSearchLoading(false),
       )
     }
   }
@@ -258,10 +257,10 @@ const DetailClient = () => {
     if (newPage >= 1 && newPage <= projectsTotalPages && newPage !== projectsPage) {
       setProjectsPage(newPage)
 
-      setLoading(true)
+      setProjectsSearchLoading(true)
 
       fetchProjects(clientId, newPage, projectSearchParamsRef.current).finally(() =>
-        setLoading(false),
+        setProjectsSearchLoading(false),
       )
     }
   }

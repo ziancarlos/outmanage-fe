@@ -17,8 +17,11 @@ import {
   CCardHeader,
   CBadge,
   CFormLabel,
+  CLoadingButton,
 } from '@coreui/react-pro'
 import useLogout from '../../hooks/useLogout'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
 
 const PHONE_REGEX = /^\+62\d{8,12}$/
 const EMAIL_REGEX = /^(?=.{1,256}$)(?=.{1,64}@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -132,7 +135,7 @@ function UpdateSupplier() {
         text: 'Pemasok berhasil diubah.',
         confirmButtonText: 'OK',
       }).then(() => {
-        navigate('/supplier/data')
+        navigate('/suppliers/data')
       })
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
@@ -264,16 +267,16 @@ function UpdateSupplier() {
                   </div>
                 </CCardBody>
                 <CCardFooter>
-                  <CButton
-                    color="primary"
+                  <CLoadingButton
+                    color="info"
                     type="submit"
+                    loading={updateFormLoading}
                     disabled={
-                      !!error || loading || updateFormLoading || !isFormValid || !isFormChanged
+                      loading || updateFormLoading || !!error || !isFormValid || !isFormChanged
                     }
                   >
-                    Submit
-                    {updateFormLoading && <CSpinner size="sm" className="ms-2" />}
-                  </CButton>
+                    <FontAwesomeIcon icon={faEdit} />
+                  </CLoadingButton>
                 </CCardFooter>
               </CForm>
             </CCard>

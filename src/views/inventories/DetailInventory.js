@@ -85,7 +85,6 @@ const DetailInventory = () => {
   )
 
   const canReadInventory = authorizePermissions.some((perm) => perm.name === 'read-inventory')
-  const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
   const canReadInventoryLogs = authorizePermissions.some(
     (perm) => perm.name === 'read-inventory-logs',
   )
@@ -931,7 +930,7 @@ const DetailInventory = () => {
                     >
                       <FontAwesomeIcon icon={faPlusCircle} className="me-1" />
                       {/* Add margin to the end */}
-                      Stok impor
+                      Impor
                     </CButton>
                   )}
 

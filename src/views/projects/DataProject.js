@@ -27,8 +27,7 @@ const DataProject = () => {
 
   const [searchValue, setSearchValue] = useState('')
 
-  const searchValueRef = useRef()
-
+  const searchValueRef = useRef(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -37,9 +36,11 @@ const DataProject = () => {
     const queryParams = new URLSearchParams(location.search)
     const searchValue = queryParams.get('search')
 
-    searchValueRef.current = searchValue
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
 
-    setLoading(true)
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+    }
 
     fetchData(page, searchValue).finally(() => setLoading(false))
   }, [])
@@ -57,6 +58,8 @@ const DataProject = () => {
       setProjects(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      setSearchValue('')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -70,26 +73,30 @@ const DataProject = () => {
     }
   }
 
-  const handlePageChange = (newPage) => {
+  function handlePageChange(newPage) {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
 
-      setLoading(true)
+      setSearchLoading(true)
 
-      fetchData(newPage, searchValueRef.current).finally(() => setLoading(false))
+      fetchData(newPage, searchValueRef.current).finally(() => setSearchLoading(false))
     }
   }
 
   async function handleSearch(e) {
     e.preventDefault()
 
-    setPage(1)
-
     setSearchLoading(true)
 
-    fetchData(1, searchValue).finally(() => setSearchLoading(false))
+    setPage(1)
 
-    if (searchValue) {
+    searchValueRef.current = null
+
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
+
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+
       const newParams = new URLSearchParams({ search: searchValue })
 
       navigate(`/projects/data?${newParams.toString()}`, { replace: true })
@@ -97,9 +104,7 @@ const DataProject = () => {
       navigate(`/projects/data`, { replace: true })
     }
 
-    searchValueRef.current = searchValue
-
-    setSearchValue('')
+    fetchData(1, searchValueRef.current).finally(() => setSearchLoading(false))
   }
 
   return (
@@ -112,7 +117,6 @@ const DataProject = () => {
         <CRow>
           <CCol xs={12}>
             <TableProject
-              title={'Data Proyek'}
               error={error}
               handleSearch={handleSearch}
               searchValue={searchValue}

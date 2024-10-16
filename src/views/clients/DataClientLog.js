@@ -63,10 +63,6 @@ const DataClientLog = () => {
 
     searchParamsRef.current = searchParams
 
-    setSearchTypeValue('')
-    setSearchStartDateValue('')
-    setSearchEndDateValue('')
-
     if (Object.keys(searchParams).length > 0) {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
@@ -86,6 +82,10 @@ const DataClientLog = () => {
       setClientsLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      setSearchTypeValue('')
+      setSearchStartDateValue('')
+      setSearchEndDateValue('')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -102,8 +102,8 @@ const DataClientLog = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
-      setLoading(true)
-      fetchData(newPage, searchParamsRef.current).finally(() => setLoading(false))
+      setSearchLoading(true)
+      fetchData(newPage, searchParamsRef.current).finally(() => setSearchLoading(false))
     }
   }
 
