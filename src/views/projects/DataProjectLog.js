@@ -41,14 +41,14 @@ const DataProjectLog = () => {
     setLoading(true)
 
     const queryParams = new URLSearchParams(location.search)
-    const searchActivityParamValue = queryParams.get('type')
+    const searchTypeParamValue = queryParams.get('type')
     const startDateParamValue = queryParams.get('startDate')
     const endDateParamValue = queryParams.get('endDate')
 
     searchParamsRef.current = {}
 
-    if (matchingTypes.includes(searchActivityParamValue)) {
-      searchParamsRef.current.type = searchActivityParamValue
+    if (matchingTypes.includes(searchTypeParamValue)) {
+      searchParamsRef.current.type = searchTypeParamValue
     }
     if (startDateParamValue) {
       searchParamsRef.current.startDate = startDateParamValue

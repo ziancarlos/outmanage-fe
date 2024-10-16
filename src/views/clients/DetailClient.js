@@ -25,6 +25,9 @@ const typeOptions = [
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
 ]
+
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 const DetailClient = () => {
   const { authorizePermissions } = useAuth()
   const canReadClientLogs = authorizePermissions.some((perm) => perm.name === 'read-client-logs')
@@ -66,7 +69,7 @@ const DetailClient = () => {
   useEffect(() => {
     setLoading(true)
 
-    const promises = [fetchClient(clientId)]
+    const fetchPromises = [fetchClient(clientId)]
 
     const searchParams = new URLSearchParams(location.search)
 
@@ -78,7 +81,7 @@ const DetailClient = () => {
           const parsedParams = JSON.parse(clientLogParam)
           clientSearchParamsRef.current = {}
 
-          if (parsedParams.type) {
+          if (matchingTypes.includes(parsedParams.type)) {
             clientSearchParamsRef.current.type = parsedParams.type
           }
           if (parsedParams.startDate) {
@@ -87,39 +90,37 @@ const DetailClient = () => {
           if (parsedParams.endDate) {
             clientSearchParamsRef.current.endDate = parsedParams.endDate
           }
-
-          promises.push(fetchClientLogs(clientId, clientLogsPage, clientSearchParamsRef.current))
         } finally {
           clearClientLogsSearchInput()
         }
-      } else {
-        promises.push(fetchClientLogs(clientId, clientLogsPage))
       }
+
+      fetchPromises.push(fetchClientLogs(clientId, clientLogsPage, clientSearchParamsRef.current))
     }
 
     if (canReadProjects) {
       const projectsSearchParam = searchParams.get('search')
 
-      projectSearchParamsRef.current = projectsSearchParam
+      const trimmedSearchValue = projectsSearchParam ? projectsSearchParam.trim() : ''
 
-      promises.push(fetchProjects(clientId, projectsPage, projectsSearchParam))
+      if (!!trimmedSearchValue) {
+        projectSearchParamsRef.current = projectsSearchParam
+      }
+
+      fetchPromises.push(fetchProjects(clientId, projectsPage, projectsSearchParam))
     }
 
-    Promise.all(promises).finally(() => setLoading(false))
+    Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [])
 
   function clientLogHandleSearch(e) {
     e.preventDefault()
-
     setClientLogsSearchLoading(true)
     setClientLogsPage(1)
 
     const searchParams = {}
 
-    if (
-      typeOptions[1].value === clientLogsSearchTypeValue ||
-      typeOptions[2].value === clientLogsSearchTypeValue
-    ) {
+    if (matchingTypes.includes(clientLogsSearchTypeValue)) {
       searchParams.type = clientLogsSearchTypeValue
     }
 
@@ -133,37 +134,35 @@ const DetailClient = () => {
 
     clientSearchParamsRef.current = searchParams
 
+    const newParams = new URLSearchParams(location.search)
+
     if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
       newParams.set('clientLog', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/clients/${clientId}/detail`)
+      newParams.delete('clientLog')
     }
+
+    navigate(`${location.pathname}?${newParams}`, { replace: true })
 
     fetchClientLogs(clientId, 1, clientSearchParamsRef.current).finally(() =>
       setClientLogsSearchLoading(false),
     )
   }
 
-  function clearClientLogsSearchInput() {
-    setClientLogsSearchTypeValue('')
-    setClientLogsSearchStartDateValue('')
-    setClientLogsSearchEndDateValue('')
-  }
-
   function projectsHandleSearch(e) {
     e.preventDefault()
-
     setProjectsSearchLoading(true)
     setProjectsPage(1)
 
     const newParams = new URLSearchParams(location.search)
 
-    projectSearchParamsRef.current = projectsSearchValue
-    if (projectSearchParamsRef.current) {
+    projectSearchParamsRef.current = null
+
+    const trimmedSearchValue = projectsSearchValue ? projectsSearchValue.trim() : ''
+
+    if (!!trimmedSearchValue) {
+      projectSearchParamsRef.current = projectsSearchValue
+
       newParams.set('search', projectSearchParamsRef.current)
     } else {
       newParams.delete('search')
@@ -171,7 +170,15 @@ const DetailClient = () => {
 
     navigate(`${location.pathname}?${newParams.toString()}`, { replace: true })
 
-    fetchProjects(clientId, 1, projectsSearchValue).finally(() => setProjectsSearchLoading(false))
+    fetchProjects(clientId, 1, projectSearchParamsRef.current).finally(() =>
+      setProjectsSearchLoading(false),
+    )
+  }
+
+  function clearClientLogsSearchInput() {
+    setClientLogsSearchTypeValue('')
+    setClientLogsSearchStartDateValue('')
+    setClientLogsSearchEndDateValue('')
   }
 
   async function fetchClient(clientId) {
@@ -292,7 +299,6 @@ const DetailClient = () => {
           {canReadProjects && (
             <CCol xs={12}>
               <TableProject
-                title={'Data Proyek Terkait'}
                 error={projectsError}
                 handleSearch={projectsHandleSearch}
                 searchValue={projectsSearchValue}
@@ -310,7 +316,6 @@ const DetailClient = () => {
           {canReadClientLogs && (
             <CCol xs={12}>
               <TableClientLog
-                title={'Data Log Klien'}
                 error={clientLogsError}
                 handleSearch={clientLogHandleSearch}
                 typeOptions={typeOptions}

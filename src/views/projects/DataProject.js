@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { CCol, CRow, CSpinner } from '@coreui/react-pro'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
 import { useLocation, useNavigate } from 'react-router-dom'
-import { faEye, faEdit, faSearch } from '@fortawesome/free-solid-svg-icons'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useLogout from '../../hooks/useLogout'
-import moment from 'moment'
+
 import useAuth from '../../hooks/useAuth'
 import TableProject from '../../components/projects/TableProject'
 
@@ -33,8 +32,8 @@ const DataProject = () => {
   useEffect(() => {
     setLoading(true)
 
-    const queryParams = new URLSearchParams(location.search)
-    const searchValue = queryParams.get('search')
+    const searchParams = new URLSearchParams(location.search)
+    const searchValue = searchParams.get('search')
 
     const trimmedSearchValue = searchValue ? searchValue.trim() : ''
 
@@ -85,9 +84,7 @@ const DataProject = () => {
 
   async function handleSearch(e) {
     e.preventDefault()
-
     setSearchLoading(true)
-
     setPage(1)
 
     searchValueRef.current = null

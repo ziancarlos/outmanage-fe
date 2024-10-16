@@ -12,6 +12,9 @@ const typeOptions = [
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
 ]
+
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 const DataClientLog = () => {
   const { authorizePermissions } = useAuth()
 
@@ -37,19 +40,40 @@ const DataClientLog = () => {
   const searchParamsRef = useRef()
 
   useEffect(() => {
+    setLoading(true)
+
+    const queryParams = new URLSearchParams(location.search)
+    const searchTypeParamValue = queryParams.get('type')
+    const startDateParamValue = queryParams.get('startDate')
+    const endDateParamValue = queryParams.get('endDate')
+
+    searchParamsRef.current = {}
+
+    if (matchingTypes.includes(searchTypeParamValue)) {
+      searchParamsRef.current.type = searchTypeParamValue
+    }
+    if (startDateParamValue) {
+      searchParamsRef.current.startDate = startDateParamValue
+    }
+    if (endDateParamValue) {
+      searchParamsRef.current.endDate = endDateParamValue
+    }
+
+    fetchData(1, searchParamsRef.current).finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
     setError('')
   }, [searchTypeValue, searchStartDateValue, searchEndDateValue])
 
   function handleSearch(e) {
     e.preventDefault()
-
     setSearchLoading(true)
-
     setPage(1)
 
     const searchParams = {}
 
-    if (typeOptions[1].value === searchTypeValue || typeOptions[2].value === searchTypeValue) {
+    if (matchingTypes.includes(searchTypeValue)) {
       searchParams.type = searchTypeValue
     }
 
@@ -107,29 +131,6 @@ const DataClientLog = () => {
     }
   }
 
-  useEffect(() => {
-    setLoading(true)
-
-    const queryParams = new URLSearchParams(location.search)
-    const searchTypeParamValue = queryParams.get('type')
-    const startDateParamValue = queryParams.get('startDate')
-    const endDateParamValue = queryParams.get('endDate')
-
-    searchParamsRef.current = {}
-
-    if (searchTypeParamValue) {
-      searchParamsRef.current.type = searchTypeParamValue
-    }
-    if (startDateParamValue) {
-      searchParamsRef.current.startDate = startDateParamValue
-    }
-    if (endDateParamValue) {
-      searchParamsRef.current.endDate = endDateParamValue
-    }
-
-    fetchData(1, searchParamsRef.current).finally(() => setLoading(false))
-  }, [])
-
   return (
     <>
       {loading ? (
@@ -140,7 +141,6 @@ const DataClientLog = () => {
         <CRow>
           <CCol>
             <TableClientLog
-              title={'Data Log Klien'}
               error={error}
               handleSearch={handleSearch}
               typeOptions={typeOptions}

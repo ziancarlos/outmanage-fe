@@ -57,6 +57,12 @@ const DataClient = () => {
     const queryParams = new URLSearchParams(location.search)
     const searchValue = queryParams.get('search')
 
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
+
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+    }
+
     fetchData(page, searchValue).finally(() => setLoading(false))
   }, [])
 
@@ -75,6 +81,8 @@ const DataClient = () => {
       setClients(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      setSearchValue('')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -92,9 +100,9 @@ const DataClient = () => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
 
-      setLoading(true)
+      setSearchLoading(true)
 
-      fetchData(newPage, searchValueRef.current).finally(() => setLoading(false))
+      fetchData(newPage, searchValueRef.current).finally(() => setSearchLoading(false))
     }
   }
 
@@ -108,16 +116,16 @@ const DataClient = () => {
 
   async function handleSearch(e) {
     e.preventDefault()
-
     setSearchLoading(true)
-
     setPage(1)
 
-    searchValueRef.current = searchValue
+    searchValueRef.current = null
 
-    setSearchValue('')
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
 
-    if (searchValue) {
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+
       const newParams = new URLSearchParams({ search: searchValue })
 
       navigate(`/clients/data?${newParams.toString()}`, { replace: true })
@@ -125,7 +133,7 @@ const DataClient = () => {
       navigate(`/clients/data`, { replace: true })
     }
 
-    fetchData(1, searchValue).finally(() => setSearchLoading(false))
+    fetchData(1, searchValueRef.current).finally(() => setSearchLoading(false))
   }
 
   return (
@@ -179,7 +187,7 @@ const DataClient = () => {
                   <CTable bordered responsive striped>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell scope="col">Klien Id</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Id Klien</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Alamat Email</CTableHeaderCell>
                         <CTableHeaderCell scope="col">No. Hp</CTableHeaderCell>
