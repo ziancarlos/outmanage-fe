@@ -12,6 +12,9 @@ const typeOptions = [
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
 ]
+
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 const DataInventoryLog = () => {
   const { authorizePermissions } = useAuth()
 
@@ -42,14 +45,12 @@ const DataInventoryLog = () => {
 
   function handleSearch(e) {
     e.preventDefault()
-
     setSearchLoading(true)
-
     setPage(1)
 
     const searchParams = {}
 
-    if (typeOptions[1].value === searchTypeValue || typeOptions[2].value === searchTypeValue) {
+    if (matchingTypes.includes(searchTypeValue)) {
       searchParams.type = searchTypeValue
     }
 
@@ -117,7 +118,7 @@ const DataInventoryLog = () => {
 
     searchParamsRef.current = {}
 
-    if (searchTypeParamValue) {
+    if (matchingTypes.includes(searchTypeParamValue)) {
       searchParamsRef.current.type = searchTypeParamValue
     }
     if (startDateParamValue) {

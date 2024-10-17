@@ -43,14 +43,13 @@ const DataInventoryLog = () => {
 
   function handleSearch(e) {
     e.preventDefault()
-
     setSearchLoading(true)
-
     setPage(1)
 
     const searchParams = {}
 
-    if (searchDetailValue) {
+    const trimmedSearchDetailValue = searchDetailValue ? searchDetailValue.trim() : ''
+    if (!!trimmedSearchDetailValue) {
       searchParams.details = searchDetailValue
     }
 

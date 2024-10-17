@@ -45,10 +45,14 @@ function ManageUser() {
     const showRemovedParam = queryParams.get('showRemoved') === 'true'
     setShowRemoved(showRemovedParam)
 
-    Promise.all([
+    const fetchPromises = [
       fetchUser(page, filterRef.current, showRemovedParam ? '/api/users/removed' : '/api/users'),
-      fetchRole(),
-    ]).finally(() => {
+    ]
+
+    if (canReadRoles) {
+      fetchPromises.push(fetchRole())
+    }
+    Promise.all(fetchPromises).finally(() => {
       setLoading(false)
     })
   }, [location.search, page])

@@ -4,7 +4,6 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useLogout from '../../hooks/useLogout'
 import useAuth from '../../hooks/useAuth'
-import TableProjectLog from '../../components/projects/TableProjectLog'
 import TablePurchaseLog from '../../components/purchases/TablePurchaseLog'
 import { formatToISODate } from '../../utils/DateUtils'
 
@@ -14,6 +13,8 @@ const typeOptions = [
   { label: 'UPDATE', value: 'UPDATE' },
   { label: 'DELETE', value: 'DELETE' },
 ]
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 const DataPurchaseLog = () => {
   const { authorizePermissions } = useAuth()
 
@@ -51,11 +52,7 @@ const DataPurchaseLog = () => {
 
     const searchParams = {}
 
-    if (
-      typeOptions[1].value === searchTypeValue ||
-      typeOptions[2].value === searchTypeValue ||
-      typeOptions[3].value === searchTypeValue
-    ) {
+    if (matchingTypes.includes(searchTypeValue)) {
       searchParams.type = searchTypeValue
     }
 
@@ -69,11 +66,11 @@ const DataPurchaseLog = () => {
 
     searchParamsRef.current = searchParams
 
-    if (searchParams) {
+    if (Object.keys(searchParams).length > 0) {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/project/data`)
+      navigate(`/purchases/log`)
     }
 
     fetchData(1, searchParams).finally(() => setSearchLoading(false))
@@ -127,7 +124,7 @@ const DataPurchaseLog = () => {
 
     searchParamsRef.current = {}
 
-    if (searchTypeParamValue) {
+    if (matchingTypes.includes(searchTypeParamValue)) {
       searchParamsRef.current.type = searchTypeParamValue
     }
     if (startDateParamValue) {
@@ -150,7 +147,7 @@ const DataPurchaseLog = () => {
         <CRow>
           <CCol>
             <TablePurchaseLog
-              title={'Purchase Log'}
+              title={'Data Log Pembelian'}
               error={error}
               handleSearch={handleSearch}
               typeOptions={typeOptions}

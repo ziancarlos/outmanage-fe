@@ -355,9 +355,7 @@ const DetailInventory = () => {
 
   function handleInventoryLogsSearch(e) {
     e.preventDefault()
-
     setInventoryLogsLoading(true)
-
     setInventoryLogsPage(1)
 
     const searchParams = {}
@@ -377,16 +375,15 @@ const DetailInventory = () => {
     }
 
     inventoryLogsSearchRef.current = searchParams
+    const newParams = new URLSearchParams(location.search)
 
     if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
       newParams.set('inventoryLogs', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/inventories/${inventoryId}/detail`)
+      newParams.delete('inventoryLogs')
     }
+
+    navigate(`${location.pathname}?${newParams}`, { replace: true })
 
     fetchInventoryLogs(inventoryId, 1, inventoryLogsSearchRef.current).finally(() =>
       setInventoryLogsLoading(false),
@@ -418,16 +415,15 @@ const DetailInventory = () => {
     }
 
     inventoryImportSearchRef.current = searchParams
+    const newParams = new URLSearchParams(location.search)
 
     if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
       newParams.set('inventoryImport', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/inventories/${inventoryId}/detail`)
+      newParams.delete('inventoryImport')
     }
+
+    navigate(`${location.pathname}?${newParams}`, { replace: true })
 
     fetchInventoryImport(inventoryId, 1, inventoryImportSearchRef.current).finally(() =>
       setInventoryImportLoading(false),
@@ -436,9 +432,7 @@ const DetailInventory = () => {
 
   function handleInventoryDepreciationSearch(e) {
     e.preventDefault()
-
     setInventoryDepreciationLoading(true)
-
     setInventoryDepreciationPage(1)
 
     const searchParams = {}
@@ -462,16 +456,15 @@ const DetailInventory = () => {
     }
 
     inventoryDepreciationSearchRef.current = searchParams
+    const newParams = new URLSearchParams(location.search)
 
     if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
       newParams.set('inventoryDepreciation', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/inventories/${inventoryId}/detail`)
+      newParams.delete('inventoryDepreciation')
     }
+
+    navigate(`${location.pathname}?${newParams}`, { replace: true })
 
     fetchInventoryDepreciation(inventoryId, 1, inventoryDepreciationSearchRef.current).finally(() =>
       setInventoryDepreciationLoading(false),
@@ -501,15 +494,15 @@ const DetailInventory = () => {
 
     inventoryQuantityLogsSearchRef.current = searchParams
 
+    const newParams = new URLSearchParams(location.search)
+
     if (Object.keys(searchParams).length > 0) {
-      const newParams = new URLSearchParams(location.search)
-
       newParams.set('inventoryQuantityLogs', JSON.stringify(searchParams))
-
-      navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/inventories/${inventoryId}/detail`)
+      newParams.delete('inventoryQuantityLogs')
     }
+
+    navigate(`${location.pathname}?${newParams}`, { replace: true })
 
     fetchInventoryQuantityLogs(inventoryId, 1, inventoryQuantityLogsSearchRef.current).finally(() =>
       setInventoryQuantityLogsLoading(false),

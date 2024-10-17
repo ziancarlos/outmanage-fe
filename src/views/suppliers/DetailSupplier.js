@@ -359,7 +359,7 @@ const DetailSupplier = () => {
         </div>
       ) : (
         <CRow>
-          <CCol md={12} xs={12}>
+          <CCol md={12} xs={12} className="mb-3">
             <CCard>
               <CCardBody>
                 <CCardTitle>{'#' + supplier.supplierId + ' ' + supplier.name}</CCardTitle>
@@ -371,29 +371,6 @@ const DetailSupplier = () => {
               </CListGroup>
             </CCard>
           </CCol>
-
-          {canReadSupplierLog && (
-            <CCol className="mt-3" xs={12}>
-              <TableSupplierLog
-                title={'Data Log Pemasok'}
-                error={supplierLogsError}
-                handleSearch={supplierLogHandleSearch}
-                typeOptions={typeOptions}
-                searchTypeValue={supplierLogsSearchTypeValue}
-                setSearchTypeValue={setSupplierLogsSearchTypeValue}
-                searchStartDateValue={supplierLogsSearchStartDateValue}
-                setSearchStartDateValue={setSupplierLogsSearchStartDateValue}
-                searchEndDateValue={supplierLogsSearchEndDateValue}
-                setSearchEndDateValue={setSupplierLogsSearchEndDateValue}
-                searchLoading={supplierLogsSearchLoading}
-                suppliersLogs={supplierLogs}
-                page={supplierLogsPage}
-                totalPages={supplierLogsTotalPage}
-                handlePageChange={supplierLogHandlePageChange}
-                authorizePermissions={authorizePermissions}
-              />
-            </CCol>
-          )}
 
           {canReadPurchases && (
             <TablePurchase
@@ -417,6 +394,29 @@ const DetailSupplier = () => {
               totalPages={purchasesTotalPages}
               handlePageChange={purchasesHandlePageChange}
             />
+          )}
+
+          {canReadSupplierLog && (
+            <CCol xs={12}>
+              <TableSupplierLog
+                title={'Data Log Pemasok'}
+                error={supplierLogsError}
+                handleSearch={supplierLogHandleSearch}
+                typeOptions={typeOptions}
+                searchTypeValue={supplierLogsSearchTypeValue}
+                setSearchTypeValue={setSupplierLogsSearchTypeValue}
+                searchStartDateValue={supplierLogsSearchStartDateValue}
+                setSearchStartDateValue={setSupplierLogsSearchStartDateValue}
+                searchEndDateValue={supplierLogsSearchEndDateValue}
+                setSearchEndDateValue={setSupplierLogsSearchEndDateValue}
+                searchLoading={supplierLogsSearchLoading}
+                suppliersLogs={supplierLogs}
+                page={supplierLogsPage}
+                totalPages={supplierLogsTotalPage}
+                handlePageChange={supplierLogHandlePageChange}
+                authorizePermissions={authorizePermissions}
+              />
+            </CCol>
           )}
         </CRow>
       )}

@@ -34,7 +34,7 @@ import {
   CTableRow,
 } from '@coreui/react-pro'
 
-import { NavLink, useNavigate, useParams } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import moment from 'moment'
 import useLogout from '../../hooks/useLogout'
@@ -54,6 +54,8 @@ import {
   faTimesCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { formatRupiah } from '../../utils/CurrencyUtils'
+import { formatToISODate } from '../../utils/DateUtils'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
@@ -61,6 +63,9 @@ const typeOptions = [
   { label: 'UPDATE', value: 'UPDATE' },
   { label: 'DELETE', value: 'DELETE' },
 ]
+
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 const DetailPurchase = () => {
   const { authorizePermissions } = useAuth()
 
@@ -89,6 +94,7 @@ const DetailPurchase = () => {
 
   const { purchaseId } = useParams()
 
+  const location = useLocation()
   const logout = useLogout()
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
@@ -144,7 +150,24 @@ const DetailPurchase = () => {
     fetchPromises.push(fetchPurchase(purchaseId))
 
     if (canReadPurchaseLog) {
-      fetchPromises.push(fetchPurchaseLogs(purchaseId, purchaseLogPage))
+      const queryParams = new URLSearchParams(location.search)
+      const searchTypeParamValue = queryParams.get('type')
+      const startDateParamValue = queryParams.get('startDate')
+      const endDateParamValue = queryParams.get('endDate')
+
+      searchParamsRef.current = {}
+
+      if (matchingTypes.includes(searchTypeParamValue)) {
+        searchParamsRef.current.type = searchTypeParamValue
+      }
+      if (startDateParamValue) {
+        searchParamsRef.current.startDate = startDateParamValue
+      }
+      if (endDateParamValue) {
+        searchParamsRef.current.endDate = endDateParamValue
+      }
+
+      fetchPromises.push(fetchPurchaseLogs(purchaseId, purchaseLogPage, searchParamsRef.current))
     }
 
     if (canReadPurchaseInventories) {
@@ -314,45 +337,36 @@ const DetailPurchase = () => {
 
   function purchaseLogHandleSearch(e) {
     e.preventDefault()
+    setPurchaseLogSearchLoading(true)
+    setPurchaseLogPage(1)
 
-    searchParamsRef.current = {}
+    const searchParams = {}
 
-    if (
-      typeOptions[1].value === purchaseLogSearchTypeValue ||
-      typeOptions[2].value === purchaseLogSearchTypeValue ||
-      typeOptions[3].value === purchaseLogSearchTypeValue
-    ) {
-      searchParamsRef.current = { ...searchParamsRef.current, type: purchaseLogSearchTypeValue }
+    if (matchingTypes.includes(purchaseLogSearchTypeValue)) {
+      searchParams.type = purchaseLogSearchTypeValue
     }
 
     if (purchaseLogSearchStartDateValue) {
-      searchParamsRef.current = {
-        ...searchParamsRef.current,
-        startDate: purchaseLogSearchStartDateValue,
-      }
+      searchParams.startDate = formatToISODate(purchaseLogSearchStartDateValue)
     }
 
     if (purchaseLogSearchEndDateValue) {
-      searchParamsRef.current = {
-        ...searchParamsRef.current,
-        endDate: purchaseLogSearchEndDateValue,
-      }
+      searchParams.endDate = formatToISODate(purchaseLogSearchEndDateValue)
     }
 
-    setPurchaseLogSearchLoading(true)
+    searchParamsRef.current = searchParams
 
-    setPurchaseLogPage(1)
+    if (Object.keys(searchParams).length > 0) {
+      const newParams = new URLSearchParams(searchParams).toString()
+      navigate(`${location.pathname}?${newParams}`, { replace: true })
+    } else {
+      navigate(`/purchases/${purchaseId}/detail`)
+    }
 
-    fetchPurchaseLogs(purchaseId, 1, searchParamsRef.current).finally(() =>
-      setPurchaseLogSearchLoading(false),
-    )
-
-    setPurchaseLogSearchTypeValue('')
-    setPurchaseLogSearchStartDateValue('')
-    setPurchaseLogSearchEndDateValue('')
+    fetchPurchaseLogs(purchaseId, 1, searchParams).finally(() => setPurchaseLogSearchLoading(false))
   }
 
-  async function fetchPurchaseLogs(purchaseId, page, searchParams) {
+  async function fetchPurchaseLogs(purchaseId, page, searchParams = {}) {
     try {
       const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/logs`, {
         params: { page: page, size: 3, ...searchParams },
@@ -361,6 +375,10 @@ const DetailPurchase = () => {
       setProjectLogs(response.data.data)
       setPurchaseLogTotalPages(response.data.paging.totalPage)
       setPurchaseLogPage(response.data.paging.page)
+
+      setPurchaseLogSearchTypeValue('')
+      setPurchaseLogSearchStartDateValue('')
+      setPurchaseLogSearchEndDateValue('')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -382,17 +400,6 @@ const DetailPurchase = () => {
 
       fetchPurchaseLogs(purchaseId, newPage, searchParamsRef).finally(() => setLoading(false))
     }
-  }
-
-  function formatRupiah(number) {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    })
-      .format(number)
-      .replace('IDR', 'Rp')
-      .trim()
   }
 
   function handlePaymentAmount(value) {
@@ -629,19 +636,17 @@ const DetailPurchase = () => {
                   </CListGroupItem>
                 )}
               </CListGroup>
-              {(purchase.deliveryStatus === 0 || purchase.remainingBalance > 0) && (
+              {purchase.remainingBalance > 0 && canCreatePurchasePayment && (
                 <CCardFooter>
-                  {purchase.remainingBalance > 0 && canCreatePurchasePayment && (
-                    <CButton
-                      color="warning"
-                      variant="outline"
-                      onClick={() => setVisibileModalPayment(!visibileModalPayment)}
-                    >
-                      <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />{' '}
-                      {/* Add margin to the end */}
-                      Pembayaran
-                    </CButton>
-                  )}
+                  <CButton
+                    color="warning"
+                    variant="outline"
+                    onClick={() => setVisibileModalPayment(!visibileModalPayment)}
+                  >
+                    <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />{' '}
+                    {/* Add margin to the end */}
+                    Pembayaran
+                  </CButton>
                 </CCardFooter>
               )}
             </CCard>
@@ -676,7 +681,7 @@ const DetailPurchase = () => {
 
                             <CTableDataCell>
                               {canReadInventory ? (
-                                <NavLink to={`/inventory/${item.inventory.inventoryId}/detail`}>
+                                <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
                                   {item.inventory.name}
                                 </NavLink>
                               ) : (
@@ -754,7 +759,7 @@ const DetailPurchase = () => {
                             </CTableDataCell>
                             <CTableDataCell>
                               {canReadInventory ? (
-                                <NavLink to={`/inventory/${item.inventory.inventoryId}/detail`}>
+                                <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
                                   {item.inventory.name}
                                 </NavLink>
                               ) : (

@@ -61,6 +61,12 @@ const DataInventory = () => {
     const queryParams = new URLSearchParams(location.search)
     const searchValue = queryParams.get('search')
 
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
+
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+    }
+
     fetchData(page, searchValue).finally(() => setLoading(false))
   }, [])
 
@@ -96,9 +102,9 @@ const DataInventory = () => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
 
-      setLoading(true)
+      setSearchLoading(true)
 
-      fetchData(newPage, searchValueRef.current).finally(() => setLoading(false))
+      fetchData(newPage, searchValueRef.current).finally(() => setSearchLoading(false))
     }
   }
 
@@ -108,16 +114,18 @@ const DataInventory = () => {
 
   async function handleSearch(e) {
     e.preventDefault()
-
     setSearchLoading(true)
-
     setPage(1)
 
-    searchValueRef.current = searchValue
+    searchValueRef.current = null
+
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
 
     setSearchValue('')
 
-    if (searchValue) {
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+
       const newParams = new URLSearchParams({ search: searchValue })
 
       navigate(`/inventories/data?${newParams.toString()}`, { replace: true })
@@ -125,7 +133,7 @@ const DataInventory = () => {
       navigate(`/inventories/data`, { replace: true })
     }
 
-    fetchData(1, searchValue).finally(() => setSearchLoading(false))
+    fetchData(1, searchValueRef.current).finally(() => setSearchLoading(false))
   }
 
   return (
