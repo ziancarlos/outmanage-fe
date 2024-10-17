@@ -127,8 +127,6 @@ const DataOperationalExpenseLog = () => {
       searchParamsRef.current.endDate = endDateParamValue
     }
 
-    console.log(searchParamsRef.current)
-
     fetchData(1, searchParamsRef.current).finally(() => setLoading(false))
   }, [])
 

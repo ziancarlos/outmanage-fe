@@ -24,6 +24,8 @@ const typeOptions = [
   { label: 'UPDATE', value: 'UPDATE' },
 ]
 
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 function DetailOperationalExpense() {
   const { operationalExpenseId } = useParams()
   const { authorizePermissions } = useAuth()
@@ -65,7 +67,7 @@ function DetailOperationalExpense() {
 
       searchParamsRef.current = {}
 
-      if (searchTypeParamValue) {
+      if (matchingTypes.includes(searchTypeParamValue)) {
         searchParamsRef.current.type = searchTypeParamValue
       }
       if (startDateParamValue) {
@@ -142,7 +144,7 @@ function DetailOperationalExpense() {
 
     const searchParams = {}
 
-    if (typeOptions[1].value === searchTypeValue || typeOptions[2].value === searchTypeValue) {
+    if (matchingTypes.includes(searchTypeValue)) {
       searchParams.type = searchTypeValue
     }
 
