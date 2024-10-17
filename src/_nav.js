@@ -45,7 +45,7 @@ const _nav = [
   {
     component: CNavTitle,
     name: 'Pengguna',
-    permissions: ['create-user', 'read-users', 'update-user'],
+    permissions: [],
   },
 
   ...UserNavs,

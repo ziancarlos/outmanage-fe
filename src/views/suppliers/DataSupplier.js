@@ -59,7 +59,11 @@ const DataSupplier = () => {
     const queryParams = new URLSearchParams(location.search)
     const searchValue = queryParams.get('search')
 
-    searchValueRef.current = searchValue
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
+
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+    }
 
     fetchData(page, searchValue).finally(() => setLoading(false))
   }, [])
@@ -79,8 +83,9 @@ const DataSupplier = () => {
       setSuppliers(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      setSearchValue('')
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
@@ -97,9 +102,9 @@ const DataSupplier = () => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
 
-      setLoading(true)
+      setSearchLoading(true)
 
-      fetchData(newPage, searchValueRef.current).finally(() => setLoading(false))
+      fetchData(newPage, searchValueRef.current).finally(() => setSearchLoading(false))
     }
   }
 
@@ -113,24 +118,24 @@ const DataSupplier = () => {
 
   async function handleSearch(e) {
     e.preventDefault()
-
     setSearchLoading(true)
-
     setPage(1)
 
-    searchValueRef.current = searchValue
+    searchValueRef.current = null
 
-    setSearchValue('')
+    const trimmedSearchValue = searchValue ? searchValue.trim() : ''
 
-    if (searchValue) {
+    if (!!trimmedSearchValue) {
+      searchValueRef.current = searchValue
+
       const newParams = new URLSearchParams({ search: searchValue })
 
-      navigate(`/suppliers/data?${newParams.toString()}`, { replace: true })
+      navigate(`/projects/data?${newParams.toString()}`, { replace: true })
     } else {
-      navigate(`/suppliers/data`, { replace: true })
+      navigate(`/projects/data`, { replace: true })
     }
 
-    fetchData(1, searchValue).finally(() => setSearchLoading(false))
+    fetchData(1, searchValueRef.current).finally(() => setSearchLoading(false))
   }
 
   return (

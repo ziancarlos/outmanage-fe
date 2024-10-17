@@ -42,7 +42,6 @@ function ManageUser() {
     // get the query params of search
     filterRef.current = queryParams.get('search')
 
-    // get the query params of show removed
     const showRemovedParam = queryParams.get('showRemoved') === 'true'
     setShowRemoved(showRemovedParam)
 

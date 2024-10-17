@@ -12,6 +12,9 @@ const typeOptions = [
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
 ]
+
+const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
+
 const DataSupplierLog = () => {
   const { authorizePermissions } = useAuth()
 
@@ -49,7 +52,7 @@ const DataSupplierLog = () => {
 
     const searchParams = {}
 
-    if (typeOptions[1].value === searchTypeValue || typeOptions[2].value === searchTypeValue) {
+    if (matchingTypes.includes(searchTypeValue)) {
       searchParams.type = searchTypeValue
     }
 
@@ -70,14 +73,16 @@ const DataSupplierLog = () => {
       navigate(`/suppliers/log`)
     }
 
-    setSearchTypeValue('')
-    setSearchStartDateValue('')
-    setSearchEndDateValue('')
-
     fetchData(1, searchParams).finally(() => setSearchLoading(false))
   }
 
-  async function fetchData(page, searchParams) {
+  function clearInput() {
+    setSearchTypeValue('')
+    setSearchStartDateValue('')
+    setSearchEndDateValue('')
+  }
+
+  async function fetchData(page, searchParams = {}) {
     try {
       const response = await axiosPrivate.get('/api/suppliers/logs', {
         params: { page: page, size: 3, ...searchParams },
@@ -86,13 +91,15 @@ const DataSupplierLog = () => {
       setSuppliersLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
+
+      clearInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
       } else if (e.response?.status === 400) {
-        setSupplierLogsError(e.response.data.error)
+        setError(e.response.data.error)
       } else {
         navigate('/500')
       }
@@ -102,8 +109,8 @@ const DataSupplierLog = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
-      setLoading(true)
-      fetchData(newPage, searchParamsRef.current).finally(() => setLoading(false))
+      searchLoading(true)
+      fetchData(newPage, searchParamsRef.current).finally(() => searchLoading(false))
     }
   }
 
@@ -117,7 +124,7 @@ const DataSupplierLog = () => {
 
     searchParamsRef.current = {}
 
-    if (searchTypeParamValue) {
+    if (matchingTypes.includes(searchTypeParamValue)) {
       searchParamsRef.current.type = searchTypeParamValue
     }
     if (startDateParamValue) {
@@ -140,7 +147,6 @@ const DataSupplierLog = () => {
         <CRow>
           <CCol>
             <TableSupplierLog
-              title={'Data Log Pemasok'}
               error={error}
               handleSearch={handleSearch}
               typeOptions={typeOptions}
