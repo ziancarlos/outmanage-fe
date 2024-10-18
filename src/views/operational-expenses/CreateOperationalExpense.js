@@ -14,6 +14,7 @@ import {
   CLoadingButton,
   CFormSelect,
   CBadge,
+  CSpinner,
 } from '@coreui/react-pro'
 import Swal from 'sweetalert2'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
@@ -46,7 +47,8 @@ function CreateOperationalExpense() {
   const axiosPrivate = useAxiosPrivate()
 
   useEffect(() => {
-    fetchType()
+    setLoading(true)
+    fetchType().finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
@@ -158,116 +160,124 @@ function CreateOperationalExpense() {
   }
 
   return (
-    <CRow>
-      <CCol>
-        <CCard>
-          <CCardHeader>
-            <strong>Tambah Biaya Operasional</strong>
-          </CCardHeader>
-          <CForm onSubmit={handleSubmit}>
-            <CCardBody>
-              {!!error && <CAlert color="danger">{error}</CAlert>}
+    <>
+      {loading ? (
+        <div className="pt-3 text-center">
+          <CSpinner color="primary" variant="grow" />
+        </div>
+      ) : (
+        <CRow>
+          <CCol>
+            <CCard>
+              <CCardHeader>
+                <strong>Tambah Biaya Operasional</strong>
+              </CCardHeader>
+              <CForm onSubmit={handleSubmit}>
+                <CCardBody>
+                  {!!error && <CAlert color="danger">{error}</CAlert>}
 
-              <div className="mb-3">
-                <CFormLabel htmlFor="type">Tipe Pengeluaran</CFormLabel>
-                <CFormSelect
-                  id="type"
-                  value={typeValue}
-                  onChange={(e) => setTypeValue(e.target.value)}
-                  disabled={loading}
-                  className={
-                    typeValue && typeValid
-                      ? 'is-valid'
-                      : typeValue && !typeValid
-                        ? 'is-invalid'
-                        : ''
-                  }
-                  options={typeOptions}
-                />
-                {!typeValid && typeValue && (
-                  <div className="invalid-feedback">Pilih tipe pengeluaran yang valid.</div>
-                )}
-                {typeValid && typeValue && (
-                  <div className="valid-feedback">Tipe pengeluaran valid.</div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <CFormInput
-                  label="Jumlah Pengeluaran"
-                  id="amount"
-                  type="text"
-                  placeholder="Masukkan jumlah pengeluaran"
-                  disabled={loading}
-                  onBlur={() => setAmountTouched(true)}
-                  value={amountValue ? formatRupiah(amountValue) : formatRupiah(0)}
-                  onChange={(e) => {
-                    const value = handlePriceInput(e.target.value)
-
-                    if (!isNaN(value) && Number(value) >= 0) {
-                      setAmountValue(value)
-                    }
-                  }}
-                  className={
-                    amountValue && amountValid
-                      ? 'is-valid'
-                      : !amountValid && amountTouched
-                        ? 'is-invalid'
-                        : ''
-                  }
-                />
-                {amountValid && amountValue && (
-                  <div className="valid-feedback">Jumlah pengeluaran valid.</div>
-                )}
-                {!amountValid && amountTouched && (
-                  <div className="invalid-feedback">Jumlah pengeluaran tidak valid.</div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <CFormLabel htmlFor="description">
-                  Deskripsi <CBadge color="info">Optional</CBadge>
-                </CFormLabel>
-                <CFormTextarea
-                  id="description"
-                  rows={3}
-                  placeholder="Masukkan deskripsi pengeluaran"
-                  disabled={loading}
-                  value={descriptionValue}
-                  onChange={(e) => setDescriptionValue(e.target.value)}
-                  className={
-                    descriptionValue && descriptionValid
-                      ? 'is-valid'
-                      : descriptionValue
-                        ? 'is-invalid'
-                        : ''
-                  }
-                />
-                {descriptionValid && descriptionValue && (
-                  <div className="valid-feedback">Deskripsi valid</div>
-                )}
-                {!descriptionValid && descriptionValue && (
-                  <div className="invalid-feedback">
-                    Deskripsi harus memiliki panjang 3-60000 karakter
+                  <div className="mb-3">
+                    <CFormLabel htmlFor="type">Tipe Pengeluaran</CFormLabel>
+                    <CFormSelect
+                      id="type"
+                      value={typeValue}
+                      onChange={(e) => setTypeValue(e.target.value)}
+                      disabled={loading}
+                      className={
+                        typeValue && typeValid
+                          ? 'is-valid'
+                          : typeValue && !typeValid
+                            ? 'is-invalid'
+                            : ''
+                      }
+                      options={typeOptions}
+                    />
+                    {!typeValid && typeValue && (
+                      <div className="invalid-feedback">Pilih tipe pengeluaran yang valid.</div>
+                    )}
+                    {typeValid && typeValue && (
+                      <div className="valid-feedback">Tipe pengeluaran valid.</div>
+                    )}
                   </div>
-                )}
-              </div>
-            </CCardBody>
 
-            <CCardFooter>
-              <CLoadingButton
-                color="primary"
-                type="submit"
-                disabled={!isFormValid() || loading}
-                loading={loading}
-              >
-                <FontAwesomeIcon icon={faSave} />
-              </CLoadingButton>
-            </CCardFooter>
-          </CForm>
-        </CCard>
-      </CCol>
-    </CRow>
+                  <div className="mb-3">
+                    <CFormInput
+                      label="Jumlah Pengeluaran"
+                      id="amount"
+                      type="text"
+                      placeholder="Masukkan jumlah pengeluaran"
+                      disabled={loading}
+                      onBlur={() => setAmountTouched(true)}
+                      value={amountValue ? formatRupiah(amountValue) : formatRupiah(0)}
+                      onChange={(e) => {
+                        const value = handlePriceInput(e.target.value)
+
+                        if (!isNaN(value) && Number(value) >= 0) {
+                          setAmountValue(value)
+                        }
+                      }}
+                      className={
+                        amountValue && amountValid
+                          ? 'is-valid'
+                          : !amountValid && amountTouched
+                            ? 'is-invalid'
+                            : ''
+                      }
+                    />
+                    {amountValid && amountValue && (
+                      <div className="valid-feedback">Jumlah pengeluaran valid.</div>
+                    )}
+                    {!amountValid && amountTouched && (
+                      <div className="invalid-feedback">Jumlah pengeluaran tidak valid.</div>
+                    )}
+                  </div>
+
+                  <div className="mb-3">
+                    <CFormLabel htmlFor="description">
+                      Deskripsi <CBadge color="info">Optional</CBadge>
+                    </CFormLabel>
+                    <CFormTextarea
+                      id="description"
+                      rows={3}
+                      placeholder="Masukkan deskripsi pengeluaran"
+                      disabled={loading}
+                      value={descriptionValue}
+                      onChange={(e) => setDescriptionValue(e.target.value)}
+                      className={
+                        descriptionValue && descriptionValid
+                          ? 'is-valid'
+                          : descriptionValue
+                            ? 'is-invalid'
+                            : ''
+                      }
+                    />
+                    {descriptionValid && descriptionValue && (
+                      <div className="valid-feedback">Deskripsi valid</div>
+                    )}
+                    {!descriptionValid && descriptionValue && (
+                      <div className="invalid-feedback">
+                        Deskripsi harus memiliki panjang 3-60000 karakter
+                      </div>
+                    )}
+                  </div>
+                </CCardBody>
+
+                <CCardFooter>
+                  <CLoadingButton
+                    color="primary"
+                    type="submit"
+                    disabled={!isFormValid() || loading}
+                    loading={loading}
+                  >
+                    <FontAwesomeIcon icon={faSave} />
+                  </CLoadingButton>
+                </CCardFooter>
+              </CForm>
+            </CCard>
+          </CCol>
+        </CRow>
+      )}
+    </>
   )
 }
 

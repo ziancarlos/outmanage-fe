@@ -86,12 +86,13 @@ function TableClientLog({
 
             <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
               <CLoadingButton
-                color="primary"
+                color="light"
                 type="submit"
                 loading={searchLoading}
                 disabled={searchLoading}
               >
-                <FontAwesomeIcon icon={faSearch} />
+                <FontAwesomeIcon icon={faSearch} className="me-2" />
+                Filter
               </CLoadingButton>
             </CCol>
           </CRow>

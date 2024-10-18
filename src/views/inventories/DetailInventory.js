@@ -234,7 +234,9 @@ const DetailInventory = () => {
           const parsedParams = JSON.parse(inventoryQuantityLogsParam)
           inventoryQuantityLogsSearchRef.current = {}
 
-          if (parsedParams.details) {
+          const trimmedDetailsValue = parsedParams.details ? parsedParams.details.trim() : ''
+
+          if (!!trimmedDetailsValue) {
             inventoryQuantityLogsSearchRef.current.details = parsedParams.details
           }
           if (parsedParams.startDate) {
@@ -480,7 +482,11 @@ const DetailInventory = () => {
 
     const searchParams = {}
 
-    if (inventoryQuantityLogsDetailValue) {
+    const trimmedDetailValue = inventoryQuantityLogsDetailValue
+      ? inventoryQuantityLogsDetailValue.trim()
+      : ''
+
+    if (!!trimmedDetailValue) {
       searchParams.details = inventoryQuantityLogsDetailValue
     }
 
@@ -963,8 +969,8 @@ const DetailInventory = () => {
                   )}
 
                   <CForm noValidate onSubmit={handleInventoryDepreciationSearch}>
-                    <CRow className="mb-4">
-                      <CCol className="mb-3" md={4}>
+                    <CRow className="mb-2">
+                      <CCol className="mb-2" md={4}>
                         <CFormSelect
                           options={inventoryDepreciationReasonOptions}
                           onChange={(e) => setInventoryDepreciationReasonValue(e.target.value)}
@@ -974,7 +980,7 @@ const DetailInventory = () => {
                         />
                       </CCol>
 
-                      <CCol xs={12} md={8} className="mb-3">
+                      <CCol xs={12} md={8} className="mb-2">
                         <CFormLabel htmlFor="starDateInput">Tanggal</CFormLabel>
                         <CDateRangePicker
                           placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
@@ -986,14 +992,15 @@ const DetailInventory = () => {
                         />
                       </CCol>
 
-                      <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
+                      <CCol className="d-flex align-items-center" xs={12}>
                         <CLoadingButton
-                          color="primary"
+                          color="light"
                           type="submit"
                           loading={inventoryDepreciationLoading}
                           disabled={inventoryDepreciationLoading}
                         >
-                          <FontAwesomeIcon icon={faSearch} />
+                          <FontAwesomeIcon icon={faSearch} className="me-2" />
+                          Filter
                         </CLoadingButton>
                       </CCol>
                     </CRow>
@@ -1075,7 +1082,7 @@ const DetailInventory = () => {
 
                   <CForm noValidate onSubmit={handleInventoryImportSearch}>
                     <CRow className="mb-4">
-                      <CCol className="mb-3" md={4}>
+                      <CCol className="mb-2" md={4}>
                         <CFormSelect
                           options={inventoryImportReasonOptions}
                           onChange={(e) => setInventoryImportReasonValue(e.target.value)}
@@ -1085,7 +1092,7 @@ const DetailInventory = () => {
                         />
                       </CCol>
 
-                      <CCol xs={12} md={8} className="mb-3">
+                      <CCol xs={12} md={8} className="mb-2">
                         <CFormLabel htmlFor="starDateInput">Tanggal</CFormLabel>
                         <CDateRangePicker
                           placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
@@ -1097,14 +1104,15 @@ const DetailInventory = () => {
                         />
                       </CCol>
 
-                      <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
+                      <CCol className="d-flex align-items-center" xs={12}>
                         <CLoadingButton
-                          color="primary"
+                          color="light"
                           type="submit"
                           loading={inventoryImportLoading}
                           disabled={inventoryImportLoading}
                         >
-                          <FontAwesomeIcon icon={faSearch} />
+                          <FontAwesomeIcon icon={faSearch} className="me-2" />
+                          Filter
                         </CLoadingButton>
                       </CCol>
                     </CRow>

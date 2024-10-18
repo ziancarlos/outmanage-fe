@@ -73,11 +73,13 @@ const DataOperationalExpense = () => {
 
     searchParamsRef.current = {}
 
-    if (!isNaN(parseInt(operationalExpenseTypeIdValue))) {
+    if (operationalExpenseTypeIdValue) {
       searchParamsRef.current.operationalExpenseTypeId = operationalExpenseTypeIdValue
     }
 
-    if (descriptionValue) {
+    const trimmedDescriptionValue = descriptionValue ? descriptionValue.trim() : ''
+
+    if (!!trimmedDescriptionValue) {
       searchParamsRef.current.description = descriptionValue
     }
 
@@ -171,7 +173,9 @@ const DataOperationalExpense = () => {
       searchParams.operationalExpenseTypeId = searchTypeValue
     }
 
-    if (searchDescriptionValue) {
+    const trimmedDesciptionValue = searchDescriptionValue ? searchDescriptionValue.trim() : ''
+
+    if (!!trimmedDesciptionValue) {
       searchParams.description = searchDescriptionValue
     }
 
@@ -226,7 +230,7 @@ const DataOperationalExpense = () => {
 
                 <CForm onSubmit={handleSearch} noValidate>
                   <CRow className="mb-3">
-                    <CCol md={8} xs={12}>
+                    <CCol md={8} xs={12} className="mb-xs-2">
                       <CFormInput
                         type="text"
                         placeholder="Cari..."
@@ -238,7 +242,7 @@ const DataOperationalExpense = () => {
                       />
                     </CCol>
 
-                    <CCol md={4} xs={12}>
+                    <CCol md={4} xs={12} className="mb-xs-2">
                       <CFormSelect
                         label={'Pilih tipe pengeluaran'}
                         options={typeOptions}
@@ -262,12 +266,13 @@ const DataOperationalExpense = () => {
 
                     <CCol md={4} xs={12} className="d-flex align-items-center mt-2">
                       <CLoadingButton
-                        color="primary"
+                        color="light"
                         type="submit"
                         loading={searchLoading}
                         disabled={searchLoading}
                       >
-                        <FontAwesomeIcon icon={faSearch} />
+                        <FontAwesomeIcon icon={faSearch} className="me-2" />
+                        Filter
                       </CLoadingButton>
                     </CCol>
                   </CRow>

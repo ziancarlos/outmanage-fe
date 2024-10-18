@@ -145,7 +145,7 @@ const DataInventoryLog = () => {
           authorizePermissions={authorizePermissions}
           inventoryQuantityLogs={inventoriesQuantityLogs}
           error={error}
-          loading={searchLoading}
+          searchLoading={searchLoading}
           searchDetailValue={searchDetailValue}
           searchStartDateValue={searchStartDateValue}
           searchEndDateValue={searchEndDateValue}

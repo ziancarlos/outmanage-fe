@@ -80,7 +80,7 @@ function TablePurchase({
             <CForm onSubmit={handleSearch} noValidate>
               <CRow className="mb-4">
                 {/* Delivery Status Selection */}
-                <CCol xs={12} md={6} className="mb-3">
+                <CCol xs={12} md={6} className="mb-2">
                   <CFormLabel htmlFor="deliveryStatusInput">Status Pengiriman</CFormLabel>
                   <CFormSelect
                     id="deliveryStatusInput"
@@ -91,7 +91,7 @@ function TablePurchase({
                 </CCol>
 
                 {/* Payment Status Selection */}
-                <CCol xs={12} md={6} className="mb-3">
+                <CCol xs={12} md={6} className="mb-2">
                   <CFormLabel htmlFor="paymentStatusInput">Status Pembayaran</CFormLabel>
                   <CFormSelect
                     id="paymentStatusInput"
@@ -102,7 +102,7 @@ function TablePurchase({
                 </CCol>
 
                 {/* Date Range Picker */}
-                <CCol xs={12} md={12} className="mb-3">
+                <CCol xs={12} md={12} className="mb-2">
                   <CFormLabel htmlFor="dateRangeInput">Tanggal</CFormLabel>
                   <CDateRangePicker
                     placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
@@ -115,14 +115,15 @@ function TablePurchase({
                 </CCol>
 
                 {/* Search Button */}
-                <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
+                <CCol className="d-flex align-items-center " xs={12}>
                   <CLoadingButton
-                    color="primary"
+                    color="light"
                     type="submit"
                     loading={searchLoading}
                     disabled={searchLoading}
                   >
-                    <FontAwesomeIcon icon={faSearch} />
+                    <FontAwesomeIcon icon={faSearch} className="me-2" />
+                    Filter
                   </CLoadingButton>
                 </CCol>
               </CRow>

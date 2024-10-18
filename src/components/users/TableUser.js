@@ -107,8 +107,9 @@ function TableUser({
             </CCol>
 
             <CCol md={4} xs={12} className="d-flex align-items-center mt-2 mt-md-0">
-              <CLoadingButton color="primary" type="submit" loading={loading} disabled={loading}>
-                <FontAwesomeIcon icon={faSearch} />
+              <CLoadingButton color="light" type="submit" loading={loading} disabled={loading}>
+                <FontAwesomeIcon icon={faSearch} className="me-2" />
+                Filter
               </CLoadingButton>
             </CCol>
           </CRow>

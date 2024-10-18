@@ -29,7 +29,7 @@ const DataQuantityLog = ({
   authorizePermissions,
   inventoryQuantityLogs,
   error,
-  loading,
+  searchLoading,
   searchDetailValue,
   searchStartDateValue,
   searchEndDateValue,
@@ -60,31 +60,37 @@ const DataQuantityLog = ({
 
           <CForm noValidate onSubmit={handleSearch}>
             <CRow className="mb-4">
-              <CCol className="mb-3" md={4}>
+              <CCol className="mb-2" md={4}>
                 <CFormInput
                   label="Detil Perubahaan"
                   placeholder="Cari..."
                   onChange={(e) => setSearchDetailValue(e.target.value)}
-                  disabled={loading}
+                  disabled={searchLoading}
                   value={searchDetailValue}
                 />
               </CCol>
 
-              <CCol xs={12} md={8} className="mb-3">
+              <CCol xs={12} md={8} className="mb-2">
                 <CFormLabel>Tanggal</CFormLabel>
                 <CDateRangePicker
                   placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
                   startDate={searchStartDateValue}
                   endDate={searchEndDateValue}
-                  disabled={loading}
+                  disabled={searchLoading}
                   onStartDateChange={(date) => setSearchStartDateValue(date)}
                   onEndDateChange={(date) => setSearchEndDateValue(date)}
                 />
               </CCol>
 
-              <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
-                <CLoadingButton color="primary" type="submit" loading={loading} disabled={loading}>
-                  <FontAwesomeIcon icon={faSearch} />
+              <CCol className="d-flex align-items-center 0" xs={12}>
+                <CLoadingButton
+                  color="light"
+                  type="submit"
+                  loading={searchLoading}
+                  disabled={searchLoading}
+                >
+                  <FontAwesomeIcon icon={faSearch} className="me-2" />
+                  Filter
                 </CLoadingButton>
               </CCol>
             </CRow>

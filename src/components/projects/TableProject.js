@@ -74,14 +74,15 @@ function TableProject({
               />
             </CCol>
 
-            <CCol md={4} xs={12} className="d-flex align-items-center mt-2 mt-md-0">
+            <CCol md={4} xs={12} className="d-flex align-items-center">
               <CLoadingButton
-                color="primary"
+                color="light"
                 type="submit"
-                loading={!!searchLoading}
-                disabled={!!searchLoading}
+                loading={searchLoading}
+                disabled={searchLoading}
               >
-                <FontAwesomeIcon icon={faSearch} />
+                <FontAwesomeIcon icon={faSearch} className="me-2" />
+                Filter
               </CLoadingButton>
             </CCol>
           </CRow>

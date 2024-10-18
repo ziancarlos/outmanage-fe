@@ -670,8 +670,9 @@ const DetailPurchase = () => {
                           <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
-
-                          <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                          {canCreatePurchaseInventoryDetail && (
+                            <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                          )}
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
@@ -701,26 +702,22 @@ const DetailPurchase = () => {
                             <CTableDataCell>{formatRupiah(item.totalPrice)}</CTableDataCell>
                             <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
                             <CTableDataCell>{item.arrivedQuantity.toLocaleString()}</CTableDataCell>
-                            <CTableDataCell className="d-flex align-middle">
-                              {item.arrivedQuantity !== item.quantity ? (
-                                <>
-                                  {canCreatePurchaseInventoryDetail && (
-                                    <CButton
-                                      color="primary"
-                                      size="sm"
-                                      className="me-1"
-                                      onClick={() => {
-                                        handleShowModalArrivalInventory(item.purchaseHasInventoryId)
-                                      }}
-                                    >
-                                      <FontAwesomeIcon color="white" icon={faCircleCheck} />
-                                    </CButton>
-                                  )}
-                                </>
-                              ) : (
-                                '-'
+
+                            {item.arrivedQuantity !== item.quantity &&
+                              canCreatePurchaseInventoryDetail && (
+                                <CTableDataCell className="d-flex align-middle">
+                                  <CButton
+                                    color="primary"
+                                    size="sm"
+                                    className="me-1"
+                                    onClick={() => {
+                                      handleShowModalArrivalInventory(item.purchaseHasInventoryId)
+                                    }}
+                                  >
+                                    <FontAwesomeIcon color="white" icon={faCircleCheck} />
+                                  </CButton>
+                                </CTableDataCell>
                               )}
-                            </CTableDataCell>
                           </CTableRow>
                         ))}
                       </CTableBody>

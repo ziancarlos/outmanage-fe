@@ -60,7 +60,7 @@ function TableProjectLog({
 
         <CForm onSubmit={handleSearch} noValidate>
           <CRow className="mb-4">
-            <CCol xs={12} md={4} className="mb-3">
+            <CCol xs={12} md={4} className="mb-2">
               <CFormLabel htmlFor="typeInput">Tipe Perubahaan</CFormLabel>
               <CFormSelect
                 id="typeInput"
@@ -71,7 +71,7 @@ function TableProjectLog({
               />
             </CCol>
 
-            <CCol xs={12} md={8} className="mb-3">
+            <CCol xs={12} md={8} className="mb-2">
               <CFormLabel htmlFor="starDateInput">Tanggal</CFormLabel>
               <CDateRangePicker
                 placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
@@ -83,14 +83,15 @@ function TableProjectLog({
               />
             </CCol>
 
-            <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
+            <CCol className="d-flex align-items-center " xs={12}>
               <CLoadingButton
-                color="primary"
+                color="light"
                 type="submit"
                 loading={searchLoading}
                 disabled={searchLoading}
               >
-                <FontAwesomeIcon icon={faSearch} />
+                <FontAwesomeIcon icon={faSearch} className="me-2" />
+                Filter
               </CLoadingButton>
             </CCol>
           </CRow>
