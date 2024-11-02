@@ -102,7 +102,7 @@ function UpdateOperationalExpense() {
 
       setInitialOperationalExpense(response.data.data)
       setTypeValue(response.data.data.operationalExpenseType.operationalExpenseTypeId)
-      setAmountValue(response.data.data.amount)
+      setAmountValue(response.data.data.grandTotal)
       setDescriptionValue(response.data.data.description || '')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
@@ -137,7 +137,7 @@ function UpdateOperationalExpense() {
     try {
       await axiosPrivate.patch(`/api/operational-expenses/${operationalExpenseId}`, {
         operationalExpenseTypeId: typeValue,
-        amount: amountValue,
+        grandTotal: amountValue,
         description: descriptionValue || null,
       })
 
@@ -150,7 +150,6 @@ function UpdateOperationalExpense() {
 
       navigate('/operational-expenses/data')
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {

@@ -278,14 +278,14 @@ function CreateUserForm({ roles, fetchData }) {
 
           <div className="mb-3">
             <CFormLabel>
-              Id Chat Telegram <CBadge color="success">Optional</CBadge>
+              Id Pesan Telegram <CBadge color="success">Optional</CBadge>
             </CFormLabel>
 
             <CFormInput
               id="username"
               type="text"
               autoComplete="new-email"
-              placeholder="Masukkan telegram chat id"
+              placeholder="Masukkan id pesan telegram"
               value={telegramChatIdValue}
               onChange={(e) => setTelegramChatIdValue(e.target.value)}
               disabled={loading}
@@ -299,11 +299,11 @@ function CreateUserForm({ roles, fetchData }) {
             />
 
             {telegramChatIdValid && telegramChatIdValue && (
-              <div className="valid-feedback">Id chat telegram valid.</div>
+              <div className="valid-feedback">Id pesan telegram valid.</div>
             )}
             {!telegramChatIdValid && telegramChatIdValue && (
               <div className="invalid-feedback">
-                Id chat telegram tidak valid. Harus berupa angka positif.
+                Id pesan telegram tidak valid. Harus berupa angka positif.
               </div>
             )}
           </div>

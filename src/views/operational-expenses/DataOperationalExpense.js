@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   CAlert,
+  CBadge,
   CButton,
   CCard,
   CCardBody,
@@ -32,6 +33,16 @@ import useAuth from '../../hooks/useAuth'
 import { formatToISODate } from '../../utils/DateUtils'
 import { formatRupiah } from '../../utils/CurrencyUtils'
 import moment from 'moment'
+const paymentStatusOptions = [
+  { label: 'Pilih Status Pembayaran', value: '' },
+  { label: 'Lunas', value: 'LUNAS' },
+  { label: 'Sebagian', value: 'SEBAGIAN' },
+  { label: 'Belum Lunas', value: 'BELUM-LUNAS' },
+]
+
+const matchingPaymentStatus = paymentStatusOptions
+  .filter((option) => option.value)
+  .map((option) => option.value)
 
 const DataOperationalExpense = () => {
   const { authorizePermissions } = useAuth()
@@ -57,6 +68,8 @@ const DataOperationalExpense = () => {
   const [searchTypeValue, setSearchTypeValue] = useState('')
   const [searchStartDateValue, setSearchStartDateValue] = useState('')
   const [searchEndDateValue, setSearchEndDateValue] = useState('')
+  const [searchPaymentStatusValue, setSearchPaymentStatusValue] = useState('')
+
   const [typeOptions, setTypeOptions] = useState([])
   const searchParamsRef = useRef()
 
@@ -67,7 +80,7 @@ const DataOperationalExpense = () => {
 
     const queryParams = new URLSearchParams(location.search)
     const operationalExpenseTypeIdValue = queryParams.get('operationalExpenseTypeId')
-    const descriptionValue = queryParams.get('description')
+    const paymentStatusValue = queryParams.get('paymentStatus')
     const startDateParamValue = queryParams.get('startDate')
     const endDateParamValue = queryParams.get('endDate')
 
@@ -77,10 +90,8 @@ const DataOperationalExpense = () => {
       searchParamsRef.current.operationalExpenseTypeId = operationalExpenseTypeIdValue
     }
 
-    const trimmedDescriptionValue = descriptionValue ? descriptionValue.trim() : ''
-
-    if (!!trimmedDescriptionValue) {
-      searchParamsRef.current.description = descriptionValue
+    if (matchingPaymentStatus.includes(paymentStatusValue)) {
+      searchParamsRef.current.paymentStatus = paymentStatusValue
     }
 
     if (startDateParamValue) {
@@ -97,7 +108,13 @@ const DataOperationalExpense = () => {
 
   useEffect(() => {
     setError('')
-  }, [searchDescriptionValue, searchStartDateValue, searchEndDateValue, searchTypeValue])
+  }, [
+    searchDescriptionValue,
+    searchStartDateValue,
+    searchEndDateValue,
+    searchTypeValue,
+    searchPaymentStatusValue,
+  ])
 
   async function fetchType() {
     try {
@@ -135,6 +152,7 @@ const DataOperationalExpense = () => {
       setSearchStartDateValue('')
       setSearchEndDateValue('')
       setSearchDescriptionValue('')
+      setSearchPaymentStatusValue('')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -173,10 +191,8 @@ const DataOperationalExpense = () => {
       searchParams.operationalExpenseTypeId = searchTypeValue
     }
 
-    const trimmedDesciptionValue = searchDescriptionValue ? searchDescriptionValue.trim() : ''
-
-    if (!!trimmedDesciptionValue) {
-      searchParams.description = searchDescriptionValue
+    if (matchingPaymentStatus.includes(searchPaymentStatusValue)) {
+      searchParams.paymentStatus = searchPaymentStatusValue
     }
 
     if (searchStartDateValue) {
@@ -197,10 +213,6 @@ const DataOperationalExpense = () => {
     }
 
     fetchData(1, searchParamsRef.current).finally(() => setSearchLoading(false))
-  }
-
-  function handleUpdate(operationalExpenseId) {
-    navigate(`/operational-expenses/${operationalExpenseId}/edit`)
   }
 
   function handleDetail(operationalExpenseId) {
@@ -231,14 +243,12 @@ const DataOperationalExpense = () => {
                 <CForm onSubmit={handleSearch} noValidate>
                   <CRow className="mb-3">
                     <CCol md={8} xs={12} className="mb-xs-2">
-                      <CFormInput
-                        type="text"
-                        placeholder="Cari..."
-                        value={searchDescriptionValue}
-                        disabled={searchLoading}
-                        onChange={(e) => setSearchDescriptionValue(e.target.value)}
-                        aria-label="Search"
-                        label={'Deskripsi'}
+                      <CFormSelect
+                        id="paymentStatusInput"
+                        value={searchPaymentStatusValue}
+                        onChange={(e) => setSearchPaymentStatusValue(e.target.value)}
+                        options={paymentStatusOptions}
+                        label={'Status Pembayaran'}
                       />
                     </CCol>
 
@@ -284,10 +294,10 @@ const DataOperationalExpense = () => {
                       <CTableRow>
                         <CTableHeaderCell scope="col">Id Pengeluaran Operasional</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Tipe Pengeluaran</CTableHeaderCell>
-                        <CTableHeaderCell scope="col">Jumlah</CTableHeaderCell>
-                        <CTableHeaderCell scope="col">Deksripsi</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Status Pembayaran</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Total Pembayaran</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Tanggal</CTableHeaderCell>
-                        {(canReadOperationalExpense || canUpdateOperationalExpense) && (
+                        {canReadOperationalExpense && (
                           <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                         )}
                       </CTableRow>
@@ -297,32 +307,41 @@ const DataOperationalExpense = () => {
                         <CTableRow key={idx}>
                           <CTableDataCell>#{expense.operationalExpenseId}</CTableDataCell>
                           <CTableDataCell>{expense.type}</CTableDataCell>
-                          <CTableDataCell>{formatRupiah(expense.amount)}</CTableDataCell>
-                          <CTableDataCell>{expense.description || '-'}</CTableDataCell>
+                          <CTableDataCell>
+                            <CBadge
+                              color={
+                                expense.paymentStatus === 2
+                                  ? 'success'
+                                  : expense.paymentStatus === 1
+                                    ? 'warning'
+                                    : expense.paymentStatus === 0
+                                      ? 'danger'
+                                      : 'secondary'
+                              }
+                            >
+                              {expense.paymentStatus === 2
+                                ? 'LUNAS'
+                                : expense.paymentStatus === 1
+                                  ? 'SEBAGIAN'
+                                  : expense.paymentStatus === 0
+                                    ? 'BELUM LUNAS'
+                                    : expense.paymentStatus}
+                            </CBadge>
+                          </CTableDataCell>
+                          <CTableDataCell>{formatRupiah(expense.grandTotal)}</CTableDataCell>
                           <CTableDataCell>
                             {moment(expense.date).format('MMMM D, YYYY h:mm A')}
                           </CTableDataCell>
-                          {(canReadOperationalExpense || canUpdateOperationalExpense) && (
+                          {canReadOperationalExpense && (
                             <CTableDataCell className="d-flex align-middle">
-                              {canReadOperationalExpense && (
-                                <CButton
-                                  color="info"
-                                  size="sm"
-                                  onClick={() => handleDetail(expense.operationalExpenseId)}
-                                  className="me-1"
-                                >
-                                  <FontAwesomeIcon icon={faEye} />
-                                </CButton>
-                              )}
-                              {canUpdateOperationalExpense && (
-                                <CButton
-                                  color="warning"
-                                  size="sm"
-                                  onClick={() => handleUpdate(expense.operationalExpenseId)}
-                                >
-                                  <FontAwesomeIcon icon={faEdit} />
-                                </CButton>
-                              )}
+                              <CButton
+                                color="info"
+                                size="sm"
+                                onClick={() => handleDetail(expense.operationalExpenseId)}
+                                className="me-1"
+                              >
+                                <FontAwesomeIcon icon={faEye} />
+                              </CButton>
                             </CTableDataCell>
                           )}
                         </CTableRow>

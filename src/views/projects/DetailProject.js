@@ -200,7 +200,7 @@ const DetailProject = () => {
                     project.client.name
                   )}
                 </CListGroupItem>
-                <CListGroupItem>Address: {project.address}</CListGroupItem>
+                <CListGroupItem>Alamat: {project.address}</CListGroupItem>
                 {project.description && (
                   <CListGroupItem>Deskripsi: {project.description}</CListGroupItem>
                 )}

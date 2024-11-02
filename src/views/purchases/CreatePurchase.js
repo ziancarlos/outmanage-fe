@@ -36,6 +36,9 @@ import { useNavigate } from 'react-router-dom'
 import useLogout from '../../hooks/useLogout'
 import Swal from 'sweetalert2'
 
+const DESCRIPTION_REGEX = /^.{3,60000}$/
+const CASH_RECIPIENT_REGEX = /^.{2,200}$/
+
 const CreatePurchase = () => {
   const logout = useLogout()
   const navigate = useNavigate()
@@ -57,7 +60,7 @@ const CreatePurchase = () => {
   const [quantityValue, setQuantityValue] = useState()
   const [pricePerUnitValue, setPricePerUnitValue] = useState()
 
-  const [amountPaid, setAmountPaid] = useState(0)
+  const [amountPaidValue, setAmountPaidValue] = useState(0)
 
   const [bankValue, setBankValue] = useState('')
   const [bankOptions, setBankOptions] = useState([])
@@ -92,7 +95,7 @@ const CreatePurchase = () => {
   }
 
   function handlePaymentAmount(value) {
-    setAmountPaid(
+    setAmountPaidValue(
       Math.max(0, Math.min(Number(value.replace(/[^0-9]/g, '')), calculateTotalPrice())),
     )
   }
@@ -109,8 +112,8 @@ const CreatePurchase = () => {
       return total + price * quantity
     }, 0)
 
-    if (amountPaid > newTotalPrice) {
-      setAmountPaid(newTotalPrice)
+    if (amountPaidValue > newTotalPrice) {
+      setAmountPaidValue(newTotalPrice)
     }
   }
 
@@ -286,7 +289,7 @@ const CreatePurchase = () => {
     setPricePerUnitValue('')
     setItems([])
     setCheckedPaymentMethodOptions('transfer')
-    setAmountPaid(0)
+    setAmountPaidValue(0)
     setBankValue('')
     setAccountNameValue('')
     setAccountNumberValue('')
@@ -299,11 +302,11 @@ const CreatePurchase = () => {
 
   function validateForm() {
     if (supplierValue === '') {
-      return 'Supplier must be selected'
+      return 'Harap pilih supplier.'
     }
 
     if (items.length < 1) {
-      return '.....'
+      return 'Harap tambahkan setidaknya satu barang.'
     }
 
     if (
@@ -312,33 +315,30 @@ const CreatePurchase = () => {
           !item.inventory || isNaN(parseInt(item.quantity)) || isNaN(parseInt(item.pricePerUnit)),
       )
     ) {
-      return 'Harap pastikan semua barang memiliki inventaris, kuantitas, dan harga, dan kuantitas serta harga adalah angka.'
+      return 'Harap pastikan semua barang memiliki inventaris, kuantitas, dan harga. Kuantitas dan harga harus berupa angka.'
     }
 
     if (items.some((item) => item.quantity < 1 || item.pricePerUnit < 1)) {
-      return 'Harap pastikan semua kuantitas dan harga barang diperlukan dan lebih besar dari 0'
+      return 'Kuantitas dan harga barang harus lebih besar dari 0.'
     }
 
-    if (amountPaid > 0) {
+    if (amountPaidValue > 0) {
       if (
         checkedPaymentMethodOptions === 'transfer' &&
         (!bankValue || !accountNumberValue || !accountNameValue)
       ) {
-        return 'Harap berikan rincian bank dan rekening yang valid untuk transfer.'
+        return 'Harap isi rincian bank dan nomor rekening yang valid untuk transfer.'
       }
 
-      if (checkedPaymentMethodOptions === 'cash' && !cashRecipentValue) {
-        return 'Harap informasikan penerima uang tunai untuk pembayaran tunai.'
-      }
       if (checkedPaymentMethodOptions === 'cash' && cashRecipentValue) {
-        if (cashRecipentValue.length < 2) {
-          return 'Penerima uang tunai tidak boleh lebih kecil dari 3 karakter'
-        }
-
-        if (cashRecipentValue > 200) {
-          return 'Penerima uang tunai tidak boleh lebih besar dari 200 karakter'
+        if (!CASH_RECIPIENT_REGEX.test(cashRecipentValue)) {
+          return 'Nama penerima tunai harus memiliki minimal 2 karakter dan maksimal 200 karakter.'
         }
       }
+    }
+
+    if (descriptionValue && !DESCRIPTION_REGEX.test(descriptionValue)) {
+      return 'Deskripsi harus memiliki minimal 3 karakter dan maksimal 60.000 karakter.'
     }
 
     return null
@@ -351,12 +351,12 @@ const CreatePurchase = () => {
 
     try {
       const errorMessage = validateForm()
+
       if (errorMessage) {
-        setError(errorMessage)
-        return
+        return setError(errorMessage)
       }
 
-      let request = {
+      const request = {
         supplierId: supplierValue.value,
         items: items.map((item) => {
           return {
@@ -368,28 +368,22 @@ const CreatePurchase = () => {
       }
 
       if (descriptionValue) {
-        request = { ...request, description: descriptionValue }
+        request.description = descriptionValue
       }
 
-      if (amountPaid > 0) {
+      if (amountPaidValue > 0) {
         if (checkedPaymentMethodOptions === 'transfer') {
-          request = {
-            ...request,
-            paymentDetails: {
-              bankCode: bankValue.value,
-              accountNumber: accountNumberValue,
-              amountPaid: amountPaid,
-            },
+          request.paymentDetails = {
+            bankCode: bankValue.value,
+            accountNumber: accountNumberValue,
+            amountPaid: amountPaidValue,
           }
         }
 
         if (checkedPaymentMethodOptions === 'cash') {
-          request = {
-            ...request,
-            paymentDetails: {
-              cashRecipent: cashRecipentValue,
-              amountPaid: amountPaid,
-            },
+          request.paymentDetails = {
+            cashRecipent: cashRecipentValue,
+            amountPaid: amountPaidValue,
           }
         }
       }
@@ -401,9 +395,9 @@ const CreatePurchase = () => {
         title: 'Berhasil!',
         text: 'Proyek berhasil dibuat.',
         confirmButtonText: 'OK',
-      }).then(() => {
-        clearInput()
       })
+
+      clearInput()
     } catch (e) {
       console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
@@ -606,12 +600,12 @@ const CreatePurchase = () => {
                         min={0}
                         max={calculateTotalPrice()}
                         disabled={submitLoading}
-                        onChange={(e) => setAmountPaid(e.target.value)}
-                        value={amountPaid}
+                        onChange={(e) => setAmountPaidValue(e.target.value)}
+                        value={amountPaidValue}
                       />
                       <CFormInput
                         type="text"
-                        value={formatRupiah(amountPaid)}
+                        value={formatRupiah(amountPaidValue)}
                         disabled={submitLoading}
                         onChange={(e) => {
                           const value = e.target.value
@@ -621,7 +615,7 @@ const CreatePurchase = () => {
                       />
                     </div>
 
-                    {amountPaid > 0 && (
+                    {amountPaidValue > 0 && (
                       <>
                         {bankError && <CAlert color="danger">{bankError}</CAlert>}
 

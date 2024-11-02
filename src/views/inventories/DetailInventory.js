@@ -729,6 +729,8 @@ const DetailInventory = () => {
         params: { page, size: 5, ...searchParams },
       })
 
+      console.log(searchParams)
+
       setInventoryImport(response.data.data)
       setInventoryImportTotalPage(response.data.paging.totalPage)
       setInventoryImportPage(response.data.paging.page)

@@ -95,7 +95,6 @@ function TableProject({
                 <CTableHeaderCell scope="col">Id Proyek</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Alamat</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Deskripsi</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Klien</CTableHeaderCell>
                 {canReadProject || canUpdateProject ? (
                   <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
@@ -110,7 +109,6 @@ function TableProject({
                   <CTableDataCell>#{project.projectId}</CTableDataCell>
                   <CTableDataCell>{project.name}</CTableDataCell>
                   <CTableDataCell>{project.address}</CTableDataCell>
-                  <CTableDataCell>{project.description || '-'}</CTableDataCell>
                   <CTableDataCell>
                     {canReadClient ? (
                       <NavLink to={`/clients/${project.client.clientId}/detail`}>

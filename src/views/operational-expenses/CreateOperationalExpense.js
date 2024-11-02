@@ -15,6 +15,11 @@ import {
   CFormSelect,
   CBadge,
   CSpinner,
+  CFormRange,
+  CFormCheck,
+  CMultiSelect,
+  CInputGroup,
+  CButton,
 } from '@coreui/react-pro'
 import Swal from 'sweetalert2'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
@@ -25,6 +30,7 @@ import useLogout from '../../hooks/useLogout'
 import { useNavigate } from 'react-router-dom'
 
 const DESCRIPTION_REGEX = /^.{3,60000}$/
+const CASH_RECIPIENT_REGEX = /^.{2,200}$/
 
 function CreateOperationalExpense() {
   const logout = useLogout()
@@ -32,44 +38,97 @@ function CreateOperationalExpense() {
 
   const [typeOptions, setTypeOptions] = useState([])
   const [typeValue, setTypeValue] = useState('')
-  const [amountValue, setAmountValue] = useState('')
+  const [grandTotalValue, setGrandTotalValue] = useState('')
   const [descriptionValue, setDescriptionValue] = useState('')
 
-  const [typeValid, setTypeValid] = useState(false)
-  const [amountValid, setAmountValid] = useState(false)
-  const [descriptionValid, setDescriptionValid] = useState(false)
+  const [amountPaidValue, setAmountPaidValue] = useState(0)
 
-  const [amountTouched, setAmountTouched] = useState(false)
+  const [bankError, setBankError] = useState('')
+  const [bankSuccess, setBankSuccess] = useState('')
+
+  const [checkedPaymentMethodOptions, setCheckedPaymentMethodOptions] = useState('transfer')
+  const [cashRecipentValue, setCashRecipentValue] = useState('')
+  const [accountNumberValue, setAccountNumberValue] = useState('')
+  const [accountNameValue, setAccountNameValue] = useState('')
+
+  const [bankValue, setBankValue] = useState('')
+  const [bankOptions, setBankOptions] = useState([])
 
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [submitLoading, setSubmitLoading] = useState(false)
 
   const axiosPrivate = useAxiosPrivate()
 
   useEffect(() => {
     setLoading(true)
-    fetchType().finally(() => setLoading(false))
+    Promise.all([fetchBankOptions(), fetchType()]).finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
-    setTypeValid(typeValue !== '')
-  }, [typeValue])
-
-  useEffect(() => {
-    setAmountValid(Number(amountValue) > 0)
-  }, [amountValue])
-
-  useEffect(() => {
-    if (descriptionValue) {
-      setDescriptionValid(DESCRIPTION_REGEX.test(descriptionValue))
-    } else {
-      setDescriptionValid(true)
-    }
-  }, [descriptionValue])
-
-  useEffect(() => {
     setError('')
-  }, [typeValue, amountValue, descriptionValue])
+  }, [typeValue, grandTotalValue, descriptionValue])
+
+  async function handleCheckAccountNumber() {
+    setBankError('')
+    setAccountNameValue('')
+
+    try {
+      setLoading(true)
+
+      const response = await axiosPrivate.post('/api/bank', {
+        bankCode: bankValue.value,
+        accountNumber: accountNumberValue,
+      })
+
+      setAccountNameValue(response.data.data.accountName)
+
+      setBankSuccess('Bank dan nomor rekening ditemukkan')
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401) {
+        navigate('/404', { replace: true })
+      } else if ([400, 404].includes(e.response?.status)) {
+        setBankError(e.response?.data.error)
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function fetchBankOptions() {
+    setLoading(true)
+
+    try {
+      const response = await axiosPrivate.get('/api/bank')
+
+      const options = response.data.data.map((bank) => ({
+        value: bank.bankCode,
+        label: bank.bankName,
+      }))
+
+      setBankOptions(options)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401 || e.response?.status === 404) {
+        navigate('/404', { replace: true })
+      } else if (e.response?.status === 400) {
+        setError(e.response?.data.error)
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handlePaymentAmount(value) {
+    setAmountPaidValue(Math.max(0, Math.min(Number(value.replace(/[^0-9]/g, '')), grandTotalValue)))
+  }
 
   async function fetchType() {
     try {
@@ -92,38 +151,74 @@ function CreateOperationalExpense() {
     }
   }
 
-  function isFormValid() {
-    if (
-      error ||
-      !typeValid ||
-      (!descriptionValid && descriptionValue !== '') ||
-      (!amountValid && amountTouched)
-    ) {
-      return false
+  function validateForm() {
+    if (!typeValue) {
+      return 'Pilih tipe pengeluaran operasional yang valid.'
     }
-    return true
+
+    if (Number(grandTotalValue) <= 0) {
+      return 'Jumlah pembayaran harus lebih dari 0.'
+    }
+
+    if (descriptionValue && !DESCRIPTION_REGEX.test(descriptionValue)) {
+      return 'Deskripsi harus memiliki minimal 3 karakter dan maksimal 60.000 karakter.'
+    }
+
+    if (amountPaidValue > 0) {
+      if (
+        checkedPaymentMethodOptions === 'transfer' &&
+        (!bankValue || !accountNumberValue || !accountNameValue)
+      ) {
+        return 'Harap berikan rincian bank dan rekening yang valid untuk transfer.'
+      }
+
+      if (checkedPaymentMethodOptions === 'cash') {
+        if (!CASH_RECIPIENT_REGEX.test(cashRecipentValue)) {
+          return 'Nama penerima uang tunai harus memiliki minimal 2 karakter dan tidak boleh lebih dari 200 karakter.'
+        }
+      }
+    }
+
+    return null
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
 
-    if (!isFormValid()) {
-      return setError('Silakan isi semua kolom yang diperlukan dengan benar.')
-    }
-
-    setLoading(true)
+    setSubmitLoading(true)
 
     try {
-      const request = descriptionValue
-        ? {
-            operationalExpenseTypeId: typeValue,
-            amount: amountValue,
-            description: descriptionValue,
+      const message = validateForm()
+
+      if (message !== null) {
+        return setError(message)
+      }
+
+      const request = {
+        operationalExpenseTypeId: typeValue,
+        grandTotal: grandTotalValue,
+      }
+
+      if (descriptionValue) {
+        request.description = descriptionValue
+      }
+
+      if (Number(amountPaidValue) > 0) {
+        if (checkedPaymentMethodOptions === 'transfer') {
+          request.paymentDetails = {
+            bankCode: bankValue.value,
+            accountNumber: accountNumberValue,
+            amountPaid: amountPaidValue,
           }
-        : {
-            operationalExpenseTypeId: typeValue,
-            amount: amountValue,
+        }
+
+        if (checkedPaymentMethodOptions === 'cash') {
+          request.paymentDetails = {
+            cashRecipent: cashRecipentValue,
+            amountPaid: amountPaidValue,
           }
+        }
+      }
 
       await axiosPrivate.post('/api/operational-expenses', request)
 
@@ -135,6 +230,7 @@ function CreateOperationalExpense() {
       })
 
       clearInput()
+
       navigate('/operational-expenses/data')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
@@ -147,15 +243,23 @@ function CreateOperationalExpense() {
         navigate('/500')
       }
     } finally {
-      setLoading(false)
+      setSubmitLoading(false)
     }
   }
 
   function clearInput() {
     setTypeValue('')
-    setAmountTouched(false)
-    setAmountValue('')
+    setGrandTotalValue('')
     setDescriptionValue('')
+    setCheckedPaymentMethodOptions('transfer')
+    setCashRecipentValue('')
+    setBankOptions([])
+    setBankValue('')
+    setAccountNumberValue('')
+    setAccountNameValue('')
+    setAmountPaidValue(0)
+    setBankError('')
+    setBankSuccess('')
     setError('')
   }
 
@@ -182,22 +286,9 @@ function CreateOperationalExpense() {
                       id="type"
                       value={typeValue}
                       onChange={(e) => setTypeValue(e.target.value)}
-                      disabled={loading}
-                      className={
-                        typeValue && typeValid
-                          ? 'is-valid'
-                          : typeValue && !typeValid
-                            ? 'is-invalid'
-                            : ''
-                      }
+                      disabled={submitLoading}
                       options={typeOptions}
                     />
-                    {!typeValid && typeValue && (
-                      <div className="invalid-feedback">Pilih tipe pengeluaran yang valid.</div>
-                    )}
-                    {typeValid && typeValue && (
-                      <div className="valid-feedback">Tipe pengeluaran valid.</div>
-                    )}
                   </div>
 
                   <div className="mb-3">
@@ -206,31 +297,143 @@ function CreateOperationalExpense() {
                       id="amount"
                       type="text"
                       placeholder="Masukkan jumlah pengeluaran"
-                      disabled={loading}
-                      onBlur={() => setAmountTouched(true)}
-                      value={amountValue ? formatRupiah(amountValue) : formatRupiah(0)}
+                      disabled={submitLoading}
+                      value={grandTotalValue ? formatRupiah(grandTotalValue) : formatRupiah(0)}
                       onChange={(e) => {
                         const value = handlePriceInput(e.target.value)
 
                         if (!isNaN(value) && Number(value) >= 0) {
-                          setAmountValue(value)
+                          setGrandTotalValue(value)
                         }
                       }}
-                      className={
-                        amountValue && amountValid
-                          ? 'is-valid'
-                          : !amountValid && amountTouched
-                            ? 'is-invalid'
-                            : ''
-                      }
                     />
-                    {amountValid && amountValue && (
-                      <div className="valid-feedback">Jumlah pengeluaran valid.</div>
-                    )}
-                    {!amountValid && amountTouched && (
-                      <div className="invalid-feedback">Jumlah pengeluaran tidak valid.</div>
-                    )}
                   </div>
+
+                  {grandTotalValue > 0 && (
+                    <div className="mb-3">
+                      <CFormLabel className="fw-bold">Jumlah Yang Dibayarkan</CFormLabel>
+                      <CFormRange
+                        id="customRange1"
+                        min={0}
+                        max={parseInt(grandTotalValue)}
+                        disabled={submitLoading}
+                        onChange={(e) => setAmountPaidValue(e.target.value)}
+                        value={amountPaidValue}
+                      />
+
+                      <CFormInput
+                        type="text"
+                        value={formatRupiah(amountPaidValue)}
+                        disabled={submitLoading}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          handlePaymentAmount(value)
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {grandTotalValue > 0 && amountPaidValue > 0 && (
+                    <>
+                      {bankError && <CAlert color="danger">{bankError}</CAlert>}
+
+                      {bankSuccess && <CAlert color="success">{bankSuccess}</CAlert>}
+                      {/* Payment Method */}
+                      <div className="mb-3">
+                        <CFormLabel htmlFor="paymentMethod" className="fw-bold d-block">
+                          Metode Pembayaran
+                        </CFormLabel>
+                        <CFormCheck
+                          inline
+                          type="radio"
+                          name="paymentMethod"
+                          id="transfer"
+                          disabled={submitLoading}
+                          label="Transfer"
+                          value={'transfer'}
+                          checked={checkedPaymentMethodOptions === 'transfer'}
+                          onChange={(e) => setCheckedPaymentMethodOptions(e.target.value)}
+                        />
+                        <CFormCheck
+                          inline
+                          type="radio"
+                          name="paymentMethod"
+                          id="cash"
+                          disabled={submitLoading}
+                          label="Tunai"
+                          className="me-3"
+                          value={'cash'}
+                          checked={checkedPaymentMethodOptions === 'cash'}
+                          onChange={(e) => setCheckedPaymentMethodOptions(e.target.value)}
+                        />
+                      </div>
+
+                      {checkedPaymentMethodOptions === 'cash' && (
+                        <div className="mb-3">
+                          <CFormLabel className="fw-bold">Penerima Uang Tunai</CFormLabel>
+                          <CFormInput
+                            type="text"
+                            disabled={submitLoading}
+                            placeholder="Masukkan penerima uang tunai"
+                            value={cashRecipentValue}
+                            onChange={(e) => setCashRecipentValue(e.target.value)}
+                          />
+                        </div>
+                      )}
+
+                      {checkedPaymentMethodOptions === 'transfer' && (
+                        <div className="mb-3">
+                          <CRow>
+                            <CCol lg={4} className="mb-3">
+                              <CFormLabel className="fw-bold">Bank</CFormLabel>
+                              <CMultiSelect
+                                options={bankOptions.map((option) => ({
+                                  ...option,
+                                  selected: option.value === bankValue.value, // Set selected property based on the current value
+                                }))}
+                                disabled={submitLoading}
+                                onChange={(e) => {
+                                  if (e.length < 1) return
+                                  if (e[0].value === bankValue.value) return
+
+                                  setBankValue(e[0])
+                                }}
+                                multiple={false}
+                                virtualScroller
+                                visibleItems={5}
+                                placeholder="Pilih bank"
+                                cleaner={false}
+                              />
+                            </CCol>
+                            <CCol lg={4} className="mb-3">
+                              <CFormLabel className="fw-bold">Nomor Rekening</CFormLabel>
+                              <CInputGroup>
+                                <CFormInput
+                                  placeholder="Masukkan nomor rekening"
+                                  value={accountNumberValue}
+                                  disabled={submitLoading}
+                                  onChange={(e) => setAccountNumberValue(e.target.value)}
+                                />
+                                <CButton
+                                  type="button"
+                                  color="primary"
+                                  variant="outline"
+                                  disabled={submitLoading}
+                                  onClick={handleCheckAccountNumber}
+                                >
+                                  Cek
+                                </CButton>
+                              </CInputGroup>
+                            </CCol>
+                            <CCol lg={4} className="mb-3">
+                              <CFormLabel className="fw-bold">Nama Rekening</CFormLabel>
+                              <CFormInput type="text" readOnly value={accountNameValue} disabled />
+                            </CCol>
+                          </CRow>
+                        </div>
+                      )}
+                    </>
+                  )}
 
                   <div className="mb-3">
                     <CFormLabel htmlFor="description">
@@ -240,25 +443,10 @@ function CreateOperationalExpense() {
                       id="description"
                       rows={3}
                       placeholder="Masukkan deskripsi pengeluaran"
-                      disabled={loading}
+                      disabled={submitLoading}
                       value={descriptionValue}
                       onChange={(e) => setDescriptionValue(e.target.value)}
-                      className={
-                        descriptionValue && descriptionValid
-                          ? 'is-valid'
-                          : descriptionValue
-                            ? 'is-invalid'
-                            : ''
-                      }
                     />
-                    {descriptionValid && descriptionValue && (
-                      <div className="valid-feedback">Deskripsi valid</div>
-                    )}
-                    {!descriptionValid && descriptionValue && (
-                      <div className="invalid-feedback">
-                        Deskripsi harus memiliki panjang 3-60000 karakter
-                      </div>
-                    )}
                   </div>
                 </CCardBody>
 
@@ -266,8 +454,8 @@ function CreateOperationalExpense() {
                   <CLoadingButton
                     color="primary"
                     type="submit"
-                    disabled={!isFormValid() || loading}
-                    loading={loading}
+                    disabled={submitLoading || validateForm() !== null}
+                    loading={submitLoading}
                   >
                     <FontAwesomeIcon icon={faSave} />
                   </CLoadingButton>

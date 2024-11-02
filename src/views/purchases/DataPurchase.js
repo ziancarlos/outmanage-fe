@@ -82,8 +82,8 @@ const DataPurchase = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage)
-      searchLoading(true)
-      fetchData(newPage, searchParamsRef.current).finally(() => searchLoading(false))
+      setSearchLoading(true)
+      fetchData(newPage, searchParamsRef.current).finally(() => setSearchLoading(false))
     }
   }
 
@@ -110,7 +110,7 @@ const DataPurchase = () => {
     if (matchingDeliveryStatus.includes(deliveryStatusValue)) {
       searchParamsRef.current.deliveryStatus = deliveryStatusValue
     }
-    if (matchingDeliveryStatus.includes(paymentStatusValue)) {
+    if (matchingPaymentStatus.includes(paymentStatusValue)) {
       searchParamsRef.current.paymentStatus = paymentStatusValue
     }
     if (startDateParamValue) {

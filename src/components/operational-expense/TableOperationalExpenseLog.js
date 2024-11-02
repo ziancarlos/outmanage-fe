@@ -107,8 +107,7 @@ function TableOperationalExpenseLog({
                     <CTableHeaderCell scope="col">Id Biaya Operasional</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Nilai Baru</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Detil</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Dibuat Pada</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -127,26 +126,7 @@ function TableOperationalExpenseLog({
                         )}
                       </CTableDataCell>
                       <CTableDataCell>{log.changeType}</CTableDataCell>
-                      <CTableDataCell>
-                        {!!log.oldValue ? (
-                          <div className="json-viewer">
-                            <JSONPretty
-                              data={log.oldValue}
-                              theme={{ main: 'monospace', key: 'red', value: 'green' }}
-                            />
-                          </div>
-                        ) : (
-                          '-'
-                        )}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <div className="json-viewer">
-                          <JSONPretty
-                            data={log.newValue}
-                            theme={{ main: 'monospace', key: 'red', value: 'green' }}
-                          />
-                        </div>
-                      </CTableDataCell>
+                      <CTableDataCell>{log.details}</CTableDataCell>
                       <CTableDataCell>
                         {moment(log.createdAt).format('MMMM D, YYYY h:mm A')}
                       </CTableDataCell>

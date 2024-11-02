@@ -103,9 +103,9 @@ const DetailPurchase = () => {
 
   const [visibileModalPayment, setVisibileModalPayment] = useState(false)
 
-  const [purchase, setProject] = useState({})
+  const [purchase, setPurchase] = useState({})
 
-  const [purchaseLogs, setProjectLogs] = useState([])
+  const [purchaseLogs, setPurchaseLogs] = useState([])
   const [purchaseLogPage, setPurchaseLogPage] = useState(1)
   const [purchaseLogTotalPages, setPurchaseLogTotalPages] = useState(1)
   const [purchaseLogError, setPurchaseLogError] = useState('')
@@ -208,16 +208,6 @@ const DetailPurchase = () => {
     setPaymentSuccess('')
   }, [checkedPaymentMethodOptions, bankValue, accountNumberValue])
 
-  useEffect(() => {
-    if (visibileModalArrivalInventory && purchaseInventoryId && canReadPurchaseInventory) {
-      setModalInventoryLoading(true)
-
-      fetchPurchaseInventory(purchaseId, purchaseInventoryId).finally(() =>
-        setModalInventoryLoading(false),
-      )
-    }
-  }, [visibileModalArrivalInventory])
-
   async function fetchPurchaseInventoriesDetails(purchaseId) {
     try {
       const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/inventories/details`)
@@ -234,27 +224,10 @@ const DetailPurchase = () => {
     }
   }
 
-  async function fetchPurchaseInventory(purchaseId, purchaseInventoryId) {
-    try {
-      const response = await axiosPrivate.get(
-        `/api/purchases/${purchaseId}/inventories/${purchaseInventoryId}`,
-      )
-
-      setArrivalPurchaseInventory(response.data.data)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  function handleShowModalArrivalInventory(purchaseInventoryId) {
+  function handleShowModalArrivalInventory(item) {
     setVisibileModalArrivalInventory(true)
-    setPurchaseInventoryId(purchaseInventoryId)
+    setPurchaseInventoryId(item.purchaseHasInventoryId)
+    setArrivalPurchaseInventory(item)
   }
 
   function handleCloseModalArrivalInventory() {
@@ -268,7 +241,7 @@ const DetailPurchase = () => {
     try {
       const response = await axiosPrivate.get(`/api/purchases/${purchaseId}`)
 
-      setProject(response.data.data)
+      setPurchase(response.data.data)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -372,7 +345,7 @@ const DetailPurchase = () => {
         params: { page: page, size: 3, ...searchParams },
       })
 
-      setProjectLogs(response.data.data)
+      setPurchaseLogs(response.data.data)
       setPurchaseLogTotalPages(response.data.paging.totalPage)
       setPurchaseLogPage(response.data.paging.page)
 
@@ -636,19 +609,21 @@ const DetailPurchase = () => {
                   </CListGroupItem>
                 )}
               </CListGroup>
-              {purchase.remainingBalance > 0 && canCreatePurchasePayment && (
-                <CCardFooter>
-                  <CButton
-                    color="warning"
-                    variant="outline"
-                    onClick={() => setVisibileModalPayment(!visibileModalPayment)}
-                  >
-                    <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />{' '}
-                    {/* Add margin to the end */}
-                    Pembayaran
-                  </CButton>
-                </CCardFooter>
-              )}
+
+              {(purchase.deliveryStatus == 1 || purchase.deliveryStatus == 0) &&
+                canCreatePurchasePayment && (
+                  <CCardFooter>
+                    <CButton
+                      color="warning"
+                      variant="outline"
+                      onClick={() => setVisibileModalPayment(!visibileModalPayment)}
+                    >
+                      <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />{' '}
+                      {/* Add margin to the end */}
+                      Pembayaran
+                    </CButton>
+                  </CCardFooter>
+                )}
             </CCard>
           </CCol>
 
@@ -699,25 +674,28 @@ const DetailPurchase = () => {
                               )}
                             </CTableDataCell>
                             <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
-                            <CTableDataCell>{formatRupiah(item.totalPrice)}</CTableDataCell>
+                            <CTableDataCell>
+                              {formatRupiah(item.pricePerUnit * item.quantity)}
+                            </CTableDataCell>
                             <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
-                            <CTableDataCell>{item.arrivedQuantity.toLocaleString()}</CTableDataCell>
-
-                            {item.arrivedQuantity !== item.quantity &&
-                              canCreatePurchaseInventoryDetail && (
-                                <CTableDataCell className="d-flex align-middle">
-                                  <CButton
-                                    color="primary"
-                                    size="sm"
-                                    className="me-1"
-                                    onClick={() => {
-                                      handleShowModalArrivalInventory(item.purchaseHasInventoryId)
-                                    }}
-                                  >
-                                    <FontAwesomeIcon color="white" icon={faCircleCheck} />
-                                  </CButton>
-                                </CTableDataCell>
+                            <CTableDataCell>{item.arrivedQuantity}</CTableDataCell>
+                            <CTableDataCell className="d-flex align-middle">
+                              {item.arrivedQuantity != item.quantity &&
+                              canCreatePurchaseInventoryDetail ? (
+                                <CButton
+                                  color="primary"
+                                  size="sm"
+                                  className="me-1"
+                                  onClick={() => {
+                                    handleShowModalArrivalInventory(item)
+                                  }}
+                                >
+                                  <FontAwesomeIcon color="white" icon={faCircleCheck} />
+                                </CButton>
+                              ) : (
+                                '-'
                               )}
+                            </CTableDataCell>
                           </CTableRow>
                         ))}
                       </CTableBody>
@@ -742,10 +720,8 @@ const DetailPurchase = () => {
                           <CTableHeaderCell scope="col">Id Penerimaan Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
-
-                          <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas Belum Diterima</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Tanggal Diterima</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
@@ -772,16 +748,26 @@ const DetailPurchase = () => {
                                 <span>{item.inventory.condition}</span> // Fallback for any other condition
                               )}
                             </CTableDataCell>
-                            <CTableDataCell>{item.arrivedQuantity.toLocaleString()}</CTableDataCell>
-                            <CTableDataCell>
-                              {item.remainingQuantity.toLocaleString()}
-                            </CTableDataCell>
 
                             <CTableDataCell>
                               {moment(item.arrivalDate).format('MMMM D, YYYY h:mm A')}
                             </CTableDataCell>
+                            <CTableDataCell>{item.arrivedQuantity}</CTableDataCell>
                           </CTableRow>
                         ))}
+                        <CTableRow>
+                          <CTableHeaderCell className="text-center align-middle" colSpan={4}>
+                            <strong>Total</strong>
+                          </CTableHeaderCell>
+                          <CTableDataCell>
+                            <strong>
+                              {purchaseInventoriesDetails.reduce(
+                                (total, details) => total + details.arrivedQuantity,
+                                0,
+                              )}
+                            </strong>
+                          </CTableDataCell>
+                        </CTableRow>
                       </CTableBody>
                     </CTable>
                   </div>
@@ -808,20 +794,7 @@ const DetailPurchase = () => {
                           >
                             Id Pembayaran
                           </CTableHeaderCell>
-                          <CTableHeaderCell
-                            scope="col"
-                            rowSpan={3}
-                            className="text-center align-middle"
-                          >
-                            Jumlah Yang Dibayarkan
-                          </CTableHeaderCell>
-                          <CTableHeaderCell
-                            scope="col"
-                            rowSpan={3}
-                            className="text-center align-middle"
-                          >
-                            Sisa Pembayaran
-                          </CTableHeaderCell>
+
                           <CTableHeaderCell
                             scope="col"
                             rowSpan={3}
@@ -835,6 +808,14 @@ const DetailPurchase = () => {
                             className="text-center align-middle"
                           >
                             Metode Pembayaran
+                          </CTableHeaderCell>
+
+                          <CTableHeaderCell
+                            scope="col"
+                            rowSpan={3}
+                            className="text-center align-middle"
+                          >
+                            Jumlah Yang Dibayarkan
                           </CTableHeaderCell>
                         </CTableRow>
                         <CTableRow>
@@ -863,10 +844,6 @@ const DetailPurchase = () => {
                         {purchasePayments.map((payment, idx) => (
                           <CTableRow key={idx}>
                             <CTableDataCell>{'#' + payment.purchasePaymentId}</CTableDataCell>
-                            <CTableDataCell>{formatRupiah(payment.amountPaid)}</CTableDataCell>
-                            <CTableDataCell>
-                              {formatRupiah(payment.remainingBalance)}
-                            </CTableDataCell>
                             <CTableDataCell>
                               {moment(payment.paymentDate).format('MMMM D, YYYY h:mm A')}
                             </CTableDataCell>
@@ -879,8 +856,25 @@ const DetailPurchase = () => {
                             <CTableDataCell>
                               {payment.bankName ? payment.bankName : '-'}
                             </CTableDataCell>
+                            <CTableDataCell>{formatRupiah(payment.amountPaid)}</CTableDataCell>
                           </CTableRow>
                         ))}
+
+                        <CTableRow>
+                          <CTableHeaderCell className="text-center align-middle" colSpan={5}>
+                            <strong>Total</strong>
+                          </CTableHeaderCell>
+                          <CTableDataCell>
+                            <strong>
+                              {formatRupiah(
+                                purchasePayments.reduce(
+                                  (total, payment) => total + Number(payment.amountPaid),
+                                  0,
+                                ),
+                              )}
+                            </strong>
+                          </CTableDataCell>
+                        </CTableRow>
                       </CTableBody>
                     </CTable>
                   </div>
@@ -944,7 +938,7 @@ const DetailPurchase = () => {
 
                       <div className="mb-3">
                         <CFormInput
-                          value={`${arrivalPurchaseInventory?.remainingQuantity.toLocaleString()}`}
+                          value={`${(arrivalPurchaseInventory?.quantity - arrivalPurchaseInventory?.arrivedQuantity).toLocaleString()}`}
                           label="Kuantitas Belum Diterima"
                           disabled
                           readOnly

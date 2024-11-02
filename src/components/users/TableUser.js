@@ -123,7 +123,7 @@ function TableUser({
                 <CTableHeaderCell scope="col">Nama Pengguna</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Email</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Peran</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Telegram Chat Id</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Id Pesan Telegram</CTableHeaderCell>
                 {canReadUser ||
                 canReadUserActivities ||
                 canRestoreUser ||
