@@ -678,7 +678,9 @@ const DetailPurchase = () => {
                               {formatRupiah(item.pricePerUnit * item.quantity)}
                             </CTableDataCell>
                             <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
-                            <CTableDataCell>{item.arrivedQuantity}</CTableDataCell>
+                            <CTableDataCell>
+                              {parseInt(item.arrivedQuantity).toLocaleString()}
+                            </CTableDataCell>
                             <CTableDataCell className="d-flex align-middle">
                               {item.arrivedQuantity != item.quantity &&
                               canCreatePurchaseInventoryDetail ? (
@@ -752,7 +754,7 @@ const DetailPurchase = () => {
                             <CTableDataCell>
                               {moment(item.arrivalDate).format('MMMM D, YYYY h:mm A')}
                             </CTableDataCell>
-                            <CTableDataCell>{item.arrivedQuantity}</CTableDataCell>
+                            <CTableDataCell>{item.arrivedQuantity.toLocaleString()}</CTableDataCell>
                           </CTableRow>
                         ))}
                         <CTableRow>
@@ -761,10 +763,9 @@ const DetailPurchase = () => {
                           </CTableHeaderCell>
                           <CTableDataCell>
                             <strong>
-                              {purchaseInventoriesDetails.reduce(
-                                (total, details) => total + details.arrivedQuantity,
-                                0,
-                              )}
+                              {purchaseInventoriesDetails
+                                .reduce((total, details) => total + details.arrivedQuantity, 0)
+                                .toLocaleString()}
                             </strong>
                           </CTableDataCell>
                         </CTableRow>

@@ -8,7 +8,6 @@ import {
   CCardFooter,
   CForm,
   CFormInput,
-  CButton,
   CSpinner,
   CAlert,
   CRow,
@@ -16,6 +15,9 @@ import {
   CCardHeader,
   CLoadingButton,
 } from '@coreui/react-pro'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import useLogout from '../../hooks/useLogout'
 
 const MODEL_REGEX = /^.{3,100}$/
 
@@ -23,12 +25,13 @@ function UpdateTruck() {
   const { truckId } = useParams()
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
+  const logout = useLogout()
 
   const [initialTruck, setInitialTruck] = useState({})
   const [modelValue, setModelValue] = useState('')
   const [modelValid, setModelValid] = useState(true)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [updateFormLoading, setUpdateFormLoading] = useState(false)
 
   useEffect(() => {
@@ -47,10 +50,13 @@ function UpdateTruck() {
     try {
       const response = await axiosPrivate.get(`/api/trucks/${truckId}`)
       const data = response.data.data
+
       setInitialTruck(data)
       setModelValue(data.model)
     } catch (e) {
-      if (e.response?.status === 401) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
       } else {
         navigate('/500')
@@ -82,7 +88,15 @@ function UpdateTruck() {
         navigate('/trucks/data')
       })
     } catch (e) {
-      setError('Terjadi kesalahan saat memperbarui model truk.')
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401) {
+        navigate('/404', { replace: true })
+      } else if ([400, 404].includes(e.response?.status)) {
+        setError(e.response.data.error)
+      } else {
+        navigate('/500')
+      }
     } finally {
       setUpdateFormLoading(false)
     }
@@ -99,7 +113,7 @@ function UpdateTruck() {
           <CCol>
             <CCard>
               <CCardHeader>
-                <strong>Update Truck Model</strong>
+                <strong>Ubah Truk</strong>
               </CCardHeader>
               <CForm onSubmit={handleSubmit}>
                 <CCardBody>
@@ -130,21 +144,60 @@ function UpdateTruck() {
                     <CFormInput
                       type="text"
                       placeholder="Owner"
-                      value={initialTruck.owner}
-                      label="Owner"
+                      value={initialTruck.licensePlate}
+                      label="Plat Nomor"
                       disabled
                     />
                   </div>
                   {/* Add more disabled fields if needed */}
+
+                  <div className="mb-3">
+                    <CFormInput
+                      type="text"
+                      placeholder="Owner"
+                      value={initialTruck.brand.name}
+                      label="Merek"
+                      disabled
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <CFormInput
+                      type="text"
+                      placeholder="Warna"
+                      value={initialTruck.color?.name}
+                      label="Warna"
+                      disabled
+                      className="mb-1" // Optional: adds some space between the input and the color block
+                    />
+                    {initialTruck.color?.rgb && (
+                      <div
+                        style={{
+                          display: 'inline-block',
+                          width: '50px', // Make the color block smaller
+                          height: '30px',
+                          backgroundColor: `${initialTruck.color.rgb}`,
+                          marginTop: '5px',
+                          borderRadius: '4px',
+                          border: `1px solid ${initialTruck.color.rgb}`,
+                          boxShadow: '0 0 5px rgba(0, 0, 0, 0.1)', // Adding a slight shadow to make it pop
+                          cursor: 'pointer', // Optional: cursor pointer to show it's a color block
+                        }}
+                        title={`RGB: ${initialTruck.color.rgb}`} // Show RGB value on hover
+                      />
+                    )}
+                  </div>
                 </CCardBody>
                 <CCardFooter>
                   <CLoadingButton
                     color="info"
                     type="submit"
-                    loading={updateFormLoading}
-                    disabled={!isFormValid || !isFormChanged || loading || updateFormLoading}
+                    loading={updateFormLoading || loading}
+                    disabled={
+                      loading || updateFormLoading || !!error || !isFormValid || !isFormChanged
+                    }
                   >
-                    Update Model
+                    <FontAwesomeIcon icon={faEdit} />
                   </CLoadingButton>
                 </CCardFooter>
               </CForm>

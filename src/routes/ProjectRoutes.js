@@ -38,7 +38,7 @@ const ProjectRoutes = [
     path: '/projects/:projectId/edit',
     name: 'Ubah Proyek',
     element: UpdateProject,
-    permissions: ['update-project', 'read-clients'],
+    permissions: ['update-project', 'read-clients', 'read-project'],
   },
 ]
 

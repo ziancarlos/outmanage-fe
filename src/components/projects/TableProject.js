@@ -96,10 +96,8 @@ function TableProject({
                 <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Alamat</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Klien</CTableHeaderCell>
-                {canReadProject || canUpdateProject ? (
+                {(canReadProject || canUpdateProject) && (
                   <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
-                ) : (
-                  ''
                 )}
               </CTableRow>
             </CTableHead>

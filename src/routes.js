@@ -10,6 +10,7 @@ import SupplierRoutes from './routes/SupplierRoutes'
 import PurchaseRoutes from './routes/PurchaseRoutes'
 import OperationalExpensesRoutes from './routes/OperationalExpensesRoutes'
 import TelegramMessageRoutes from './routes/TelegramMessagesRoutes'
+import TruckRoutes from './routes/TruckRoutes'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -205,5 +206,6 @@ export default [
   ...PurchaseRoutes,
   ...OperationalExpensesRoutes,
   ...TelegramMessageRoutes,
+  ...TruckRoutes,
   ...routes,
 ]

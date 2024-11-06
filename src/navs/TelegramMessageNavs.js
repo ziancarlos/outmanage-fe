@@ -7,6 +7,7 @@ const TelegramMessage = [
     component: CNavItem,
     name: 'Data Pesan Telegram',
     to: '/telegram-messages/data',
+    permissions: ['read-telegram-messages'],
     icon: <FontAwesomeIcon icon={faPaperPlane} className="nav-icon no-fill-icon" />,
   },
 ]
