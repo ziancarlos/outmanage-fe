@@ -104,8 +104,8 @@ function TableInventoryLog({
               <CTable striped bordered responsive>
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell scope="col">Id Inventaris Log</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Id Inventaris</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Id</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Inventaris</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
@@ -116,8 +116,16 @@ function TableInventoryLog({
                 <CTableBody>
                   {inventoriesLogs.map((log, idx) => (
                     <CTableRow key={idx}>
-                      <CTableDataCell>#{log.inventoryLogId}</CTableDataCell>
-                      <CTableDataCell>{log.inventoryId}</CTableDataCell>
+                      <CTableDataCell>IVL{log.inventoryLogId}</CTableDataCell>
+                      <CTableDataCell>
+                        {canReadUser ? (
+                          <NavLink to={`/inventories/${log.inventoryId}/detail`}>
+                            IV{log.inventoryId}
+                          </NavLink>
+                        ) : (
+                          'IV' + log.inventoryId
+                        )}
+                      </CTableDataCell>
                       <CTableDataCell>
                         {canReadUser ? (
                           <NavLink to={`/users/${log.user.userId}/detail`}>

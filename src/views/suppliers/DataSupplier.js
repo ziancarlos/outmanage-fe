@@ -190,7 +190,7 @@ const DataSupplier = () => {
                   <CTable striped bordered responsive>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell scope="col">Id Pemasok</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Email</CTableHeaderCell>
                         <CTableHeaderCell scope="col">No. Hp</CTableHeaderCell>
@@ -205,7 +205,7 @@ const DataSupplier = () => {
                     <CTableBody>
                       {suppliers.map((supplier, idx) => (
                         <CTableRow key={idx}>
-                          <CTableDataCell>#{supplier.supplierId}</CTableDataCell>
+                          <CTableDataCell>S{supplier.supplierId}</CTableDataCell>
                           <CTableDataCell>{supplier.name}</CTableDataCell>
                           <CTableDataCell>{supplier.email || '-'}</CTableDataCell>
                           <CTableDataCell>{supplier.phoneNumber}</CTableDataCell>

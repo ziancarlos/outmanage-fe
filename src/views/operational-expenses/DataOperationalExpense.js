@@ -292,7 +292,7 @@ const DataOperationalExpense = () => {
                   <CTable bordered responsive striped>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell scope="col">Id Pengeluaran Operasional</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Tipe Pengeluaran</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Status Pembayaran</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Total Pembayaran</CTableHeaderCell>
@@ -305,7 +305,7 @@ const DataOperationalExpense = () => {
                     <CTableBody>
                       {operationalExpenses.map((expense, idx) => (
                         <CTableRow key={idx}>
-                          <CTableDataCell>#{expense.operationalExpenseId}</CTableDataCell>
+                          <CTableDataCell>OE{expense.operationalExpenseId}</CTableDataCell>
                           <CTableDataCell>{expense.type}</CTableDataCell>
                           <CTableDataCell>
                             <CBadge

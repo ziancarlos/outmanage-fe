@@ -8,7 +8,6 @@ import {
   CCardBody,
   CAlert,
   CForm,
-  CMultiSelect,
   CFormLabel,
   CFormSelect,
   CDateRangePicker,
@@ -25,9 +24,9 @@ import {
 } from '@coreui/react-pro'
 import { NavLink } from 'react-router-dom'
 import moment from 'moment'
-import { formatRupiah } from '../../utils/CurrencyUtils'
+import { formatRupiah } from '../../../utils/CurrencyUtils'
 
-function TablePurchase({
+function TableSale({
   deliveryStatusOptions,
   paymentStatusOptions,
   navigate,
@@ -43,22 +42,19 @@ function TablePurchase({
   searchEndDateValue,
   setSearchStartDateValue,
   setSearchEndDateValue,
-  purchases,
+  transactionSales,
   page,
   totalPages,
   handlePageChange,
 }) {
   function handleDetail(purchaseId) {
-    navigate(`/purchases/${purchaseId}/detail`)
+    navigate(`/transactions/sales/${purchaseId}/detail`)
   }
 
-  function handleUpdate(purchaseId) {
-    navigate(`/purchases/${purchaseId}/edit`)
-  }
-
-  // Permissions
-  const canReadSupplier = authorizePermissions.some((perm) => perm.name === 'read-supplier')
-  const canReadPurchase = authorizePermissions.some((perm) => perm.name === 'read-purchase')
+  const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
+  const canReadTransactionSale = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale',
+  )
 
   // Render component
   return (
@@ -66,7 +62,7 @@ function TablePurchase({
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader className="d-flex justify-content-between align-items-center">
-            <strong>Data Pembelian</strong>
+            <strong>Data Transaksi Penjualan</strong>
           </CCardHeader>
           <CCardBody>
             {error && (
@@ -135,63 +131,83 @@ function TablePurchase({
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Pemasok</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Klien</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Jumlah Keselurahan</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Tanggal Pembelian</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Status Pembayaran</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Status Pengiriman</CTableHeaderCell>
-                    {canReadPurchase && <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>}
+                    {canReadTransactionSale && (
+                      <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                    )}
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {purchases.map((purchase) => (
-                    <CTableRow key={purchase.purchaseId}>
-                      <CTableDataCell>PO{purchase.purchaseId}</CTableDataCell>
+                  {transactionSales.map((ts) => (
+                    <CTableRow key={ts.transactionSaleId}>
+                      <CTableDataCell>TS{ts.transactionSaleId}</CTableDataCell>
                       <CTableDataCell>
-                        {canReadSupplier ? (
-                          <NavLink to={`/suppliers/${purchase.supplier.supplierId}/detail`}>
-                            {purchase.supplier.name}
+                        {canReadClient ? (
+                          <NavLink to={`/clients/${ts.client.clientId}/detail`}>
+                            {ts.client.name}
                           </NavLink>
                         ) : (
-                          purchase.supplier.name
+                          ts.client.name
                         )}
                       </CTableDataCell>
-                      <CTableDataCell>{formatRupiah(purchase.grandTotal)}</CTableDataCell>
+                      <CTableDataCell>{formatRupiah(ts.grandTotal)}</CTableDataCell>
                       <CTableDataCell>
-                        {moment(purchase.purchaseDate).format('MMMM D, YYYY h:mm A')}
+                        {moment(ts.transactionDate).format('MMMM D, YYYY h:mm A')}
                       </CTableDataCell>
                       <CTableDataCell>
                         <CBadge
                           color={
-                            purchase.paymentStatus === 2
+                            ts.paymentStatus === 2
                               ? 'success'
-                              : purchase.paymentStatus === 1
+                              : ts.paymentStatus === 1
                                 ? 'warning'
-                                : purchase.paymentStatus === 0
+                                : ts.paymentStatus === 0
                                   ? 'danger'
                                   : 'secondary'
                           }
                         >
-                          {purchase.paymentStatus === 2
+                          {ts.paymentStatus === 2
                             ? 'LUNAS'
-                            : purchase.paymentStatus === 1
+                            : ts.paymentStatus === 1
                               ? 'SEBAGIAN'
-                              : purchase.paymentStatus === 0
+                              : ts.paymentStatus === 0
                                 ? 'BELUM LUNAS'
-                                : purchase.paymentStatus}
+                                : ts.paymentStatus}
                         </CBadge>
                       </CTableDataCell>
                       <CTableDataCell>
-                        <CBadge color={purchase.deliveryStatus === 1 ? 'success' : 'warning'}>
-                          {purchase.deliveryStatus === 1 ? 'Selesai' : 'Belum Selesai'}
+                        <CBadge
+                          className="me-2"
+                          color={
+                            ts.shipmentStatus === 2
+                              ? 'success'
+                              : ts.shipmentStatus === 1
+                                ? 'warning'
+                                : ts.shipmentStatus === 0
+                                  ? 'danger'
+                                  : 'secondary'
+                          }
+                        >
+                          {ts.shipmentStatus === 2
+                            ? 'SELESAI'
+                            : ts.shipmentStatus === 1
+                              ? 'PROSES'
+                              : ts.shipmentStatus === 0
+                                ? 'BELUM DIKIRIM'
+                                : ts.shipmentStatus}
                         </CBadge>
                       </CTableDataCell>
-                      {canReadPurchase && (
+
+                      {canReadTransactionSale && (
                         <CTableDataCell>
                           <CButton
                             color="info"
                             size="sm"
-                            onClick={() => handleDetail(purchase.purchaseId)}
+                            onClick={() => handleDetail(ts.transactionSaleId)}
                           >
                             <FontAwesomeIcon icon={faEye} />
                           </CButton>
@@ -217,4 +233,4 @@ function TablePurchase({
   )
 }
 
-export default TablePurchase
+export default TableSale

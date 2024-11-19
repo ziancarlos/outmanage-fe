@@ -40,6 +40,10 @@ function UpdateTruck() {
   }, [truckId])
 
   useEffect(() => {
+    setError('')
+  }, [modelValue])
+
+  useEffect(() => {
     setModelValid(MODEL_REGEX.test(modelValue))
   }, [modelValue])
 

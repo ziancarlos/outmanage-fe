@@ -456,7 +456,7 @@ function DetailOperationalExpense() {
               <CCard>
                 <CCardBody>
                   <CCardTitle>
-                    {'#' + operationalExpense.operationalExpenseId}{' '}
+                    {'OE' + operationalExpense.operationalExpenseId}{' '}
                     <CBadge
                       color={
                         operationalExpense.paymentStatus === 2
@@ -529,7 +529,7 @@ function DetailOperationalExpense() {
                             rowSpan={3}
                             className="text-center align-middle"
                           >
-                            Id Pengeluaran Operasional
+                            Id
                           </CTableHeaderCell>
 
                           <CTableHeaderCell
@@ -579,8 +579,8 @@ function DetailOperationalExpense() {
                       <CTableBody>
                         {operationalExpensePayments.map((payment, idx) => (
                           <CTableRow key={idx}>
-                            <CTableDataCell>
-                              {'#' + payment.operationalExpensePaymentId}
+                            <CTableDataCell className="text-center">
+                              OEP{payment.operationalExpensePaymentId}
                             </CTableDataCell>
                             <CTableDataCell>
                               {moment(payment.paymentDate).format('MMMM D, YYYY h:mm A')}

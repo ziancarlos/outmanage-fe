@@ -43,6 +43,7 @@ function TablePurchaseLog({
   authorizePermissions,
 }) {
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
+  const canReadPurchase = authorizePermissions.some((perm) => perm.name === 'read-purchase')
 
   return (
     <CCard className="mb-4">
@@ -100,8 +101,8 @@ function TablePurchaseLog({
           <CTable striped bordered responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell scope="col">Id Pembelian Log</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Id Pembelian</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Id</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Pembelian</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Perubahaan</CTableHeaderCell>
@@ -111,13 +112,15 @@ function TablePurchaseLog({
             <CTableBody>
               {purchasesLogs.map((log, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>#{log.purchaseLogId}</CTableDataCell>
+                  <CTableDataCell>POL{log.purchaseLogId}</CTableDataCell>
                   <CTableDataCell>
-                    {
+                    {canReadPurchase ? (
                       <NavLink
                         to={`/purchases/${log.purchaseId}/detail`}
-                      >{`#${log.purchaseId}`}</NavLink>
-                    }
+                      >{`PO${log.purchaseId}`}</NavLink>
+                    ) : (
+                      'PO' + log.purchaseId
+                    )}
                   </CTableDataCell>
                   <CTableDataCell>
                     {canReadUser ? (

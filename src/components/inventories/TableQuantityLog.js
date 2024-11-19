@@ -100,10 +100,9 @@ const DataQuantityLog = ({
             <CTable striped bordered responsive>
               <CTableHead>
                 <CTableRow>
-                  <CTableHeaderCell scope="col">Id Kuantitas Log</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Id</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Inventaris</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Kuantitas Awal</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Kuantitas Baru</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Kuantitas Dirubah</CTableHeaderCell>
@@ -114,7 +113,17 @@ const DataQuantityLog = ({
               <CTableBody>
                 {inventoryQuantityLogs.map((item, idx) => (
                   <CTableRow key={idx}>
-                    <CTableDataCell>{'#' + item.inventoryQuantityLog}</CTableDataCell>
+                    <CTableDataCell>{'IVQL' + item.inventoryQuantityLog}</CTableDataCell>
+                    <CTableDataCell>
+                      {canReadInventory ? (
+                        <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
+                          IV{item.inventory.inventoryId}
+                        </NavLink>
+                      ) : (
+                        'IV' + item.inventory.inventoryId
+                      )}
+                    </CTableDataCell>
+
                     <CTableDataCell>
                       {canReadUser ? (
                         <NavLink to={`/users/${item.user.userId}/detail`}>
@@ -122,25 +131,6 @@ const DataQuantityLog = ({
                         </NavLink>
                       ) : (
                         item.user.username
-                      )}
-                    </CTableDataCell>
-
-                    <CTableDataCell>
-                      {canReadInventory ? (
-                        <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                          {item.inventory.name}
-                        </NavLink>
-                      ) : (
-                        item.inventory.name
-                      )}
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      {item.inventory.condition === 0 ? (
-                        <CBadge color="primary">BARU</CBadge>
-                      ) : item.inventory.condition === 1 ? (
-                        <CBadge color="warning">BEKAS</CBadge>
-                      ) : (
-                        <span>{item.inventory.condition}</span>
                       )}
                     </CTableDataCell>
                     <CTableDataCell>{item.oldQuantity.toLocaleString()}</CTableDataCell>

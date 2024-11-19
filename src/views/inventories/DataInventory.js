@@ -188,7 +188,7 @@ const DataInventory = () => {
                   <CTable striped bordered responsive>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell scope="col">Id Inventaris</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
@@ -202,7 +202,7 @@ const DataInventory = () => {
                     <CTableBody>
                       {inventories.map((inventory, idx) => (
                         <CTableRow key={idx}>
-                          <CTableDataCell>#{inventory.inventoryId}</CTableDataCell>
+                          <CTableDataCell>IV{inventory.inventoryId}</CTableDataCell>
                           <CTableDataCell>{inventory.name}</CTableDataCell>
                           <CTableDataCell>
                             {inventory.condition === 0 ? (

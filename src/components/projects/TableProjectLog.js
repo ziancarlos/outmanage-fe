@@ -43,6 +43,7 @@ function TableProjectLog({
   authorizePermissions,
 }) {
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
+  const canReadProject = authorizePermissions.some((perm) => perm.name === 'read-project')
 
   return (
     <CCard className="mb-4">
@@ -100,8 +101,8 @@ function TableProjectLog({
           <CTable striped bordered responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell scope="col">Id Proyek Log</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Id Proyek</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Id</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Proyek</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
@@ -112,8 +113,14 @@ function TableProjectLog({
             <CTableBody>
               {projectsLogs.map((log, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>#{log.projectLogId}</CTableDataCell>
-                  <CTableDataCell>{log.projectId}</CTableDataCell>
+                  <CTableDataCell>PL{log.projectLogId}</CTableDataCell>
+                  <CTableDataCell>
+                    {canReadProject ? (
+                      <NavLink to={`/projects/${log.projectId}/detail`}>P{log.projectId}</NavLink>
+                    ) : (
+                      'P' + log.projectId
+                    )}
+                  </CTableDataCell>
                   <CTableDataCell>
                     {canReadUser ? (
                       <NavLink to={`/users/${log.user.userId}/detail`}>{log.user.username}</NavLink>

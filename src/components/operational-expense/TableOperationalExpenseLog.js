@@ -44,6 +44,9 @@ function TableOperationalExpenseLog({
   authorizePermissions,
 }) {
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
+  const canReadOperationalExpense = authorizePermissions.some(
+    (perm) => perm.name === 'read-operational-expense',
+  )
 
   return (
     <CRow>
@@ -103,8 +106,8 @@ function TableOperationalExpenseLog({
               <CTable striped bordered responsive>
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell scope="col">Id Biaya Operasional Log </CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Id Biaya Operasional</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Id </CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Biaya Operasional</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Detil</CTableHeaderCell>
@@ -114,8 +117,16 @@ function TableOperationalExpenseLog({
                 <CTableBody>
                   {operationalExpenseLog.map((log, idx) => (
                     <CTableRow key={idx}>
-                      <CTableDataCell>#{log.operationalExpenseLogId}</CTableDataCell>
-                      <CTableDataCell>{log.operationalExpenseId}</CTableDataCell>
+                      <CTableDataCell>OEL{log.operationalExpenseLogId}</CTableDataCell>
+                      <CTableDataCell>
+                        {canReadOperationalExpense ? (
+                          <NavLink to={`/operational-expenses/${log.operationalExpenseId}/detail`}>
+                            OE{log.operationalExpenseId}
+                          </NavLink>
+                        ) : (
+                          'OE' + log.operationalExpenseId
+                        )}
+                      </CTableDataCell>
                       <CTableDataCell>
                         {canReadUser ? (
                           <NavLink to={`/users/${log.user.userId}/detail`}>

@@ -1,14 +1,12 @@
 /* eslint-disable react/prop-types */
 import {
   CAlert,
-  CButton,
   CCard,
   CCardBody,
   CCardHeader,
   CCol,
   CDateRangePicker,
   CForm,
-  CFormLabel,
   CFormSelect,
   CLoadingButton,
   CRow,
@@ -16,6 +14,7 @@ import {
   CTable,
   CTableBody,
   CTableDataCell,
+  CFormLabel,
   CTableHead,
   CTableHeaderCell,
   CTableRow,
@@ -26,7 +25,7 @@ import JSONPretty from 'react-json-pretty'
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { NavLink } from 'react-router-dom'
-function TableClientLog({
+function TableTruckLog({
   error,
   handleSearch,
   typeOptions,
@@ -37,19 +36,19 @@ function TableClientLog({
   searchEndDateValue,
   setSearchEndDateValue,
   searchLoading,
-  clientsLogs,
+  truckLogs,
   page,
   totalPages,
   handlePageChange,
   authorizePermissions,
 }) {
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
-  const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
+  const canReadTruck = authorizePermissions.some((perm) => perm.name === 'read-truck')
 
   return (
     <CCard className="mb-4">
       <CCardHeader className="d-flex justify-content-between align-items-center">
-        <strong>Data Log Klien</strong>
+        <strong>Data Log Truk</strong>
       </CCardHeader>
       <CCardBody>
         {!!error && (
@@ -62,18 +61,18 @@ function TableClientLog({
 
         <CForm onSubmit={handleSearch} noValidate>
           <CRow className="mb-4">
-            <CCol xs={12} md={4} className="mb-3">
+            <CCol xs={12} md={4} className="mb-2">
               <CFormLabel htmlFor="typeInput">Tipe Perubahaan</CFormLabel>
               <CFormSelect
                 id="typeInput"
                 options={typeOptions}
-                disabled={searchLoading}
                 value={searchTypeValue}
+                disabled={searchLoading}
                 onChange={(e) => setSearchTypeValue(e.target.value)}
               />
             </CCol>
 
-            <CCol xs={12} md={8} className="mb-3">
+            <CCol xs={12} md={8} className="mb-2">
               <CFormLabel htmlFor="starDateInput">Tanggal</CFormLabel>
               <CDateRangePicker
                 placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
@@ -85,7 +84,7 @@ function TableClientLog({
               />
             </CCol>
 
-            <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
+            <CCol className="d-flex align-items-center " xs={12}>
               <CLoadingButton
                 color="light"
                 type="submit"
@@ -103,7 +102,7 @@ function TableClientLog({
             <CTableHead>
               <CTableRow>
                 <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Klien</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Truk</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
@@ -112,14 +111,14 @@ function TableClientLog({
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              {clientsLogs.map((log, idx) => (
+              {truckLogs.map((log, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>CL{log.clientLogId}</CTableDataCell>
+                  <CTableDataCell>TL{log.truckLogId}</CTableDataCell>
                   <CTableDataCell>
-                    {canReadUser ? (
-                      <NavLink to={`/clients/${log.clientId}/detail`}>{log.client.name}</NavLink>
+                    {canReadTruck ? (
+                      <NavLink to={`/trucks/${log.truckId}/detail`}>T{log.truckId}</NavLink>
                     ) : (
-                      log.client.name
+                      'T' + log.truckId
                     )}
                   </CTableDataCell>
                   <CTableDataCell>
@@ -170,4 +169,4 @@ function TableClientLog({
   )
 }
 
-export default TableClientLog
+export default TableTruckLog

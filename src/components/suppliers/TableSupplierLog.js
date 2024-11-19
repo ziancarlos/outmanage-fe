@@ -43,6 +43,7 @@ function TableSupplierLog({
   authorizePermissions,
 }) {
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
+  const canReadSupplier = authorizePermissions.some((perm) => perm.name === 'read-supplier')
 
   return (
     <CCard className="mb-4">
@@ -100,8 +101,8 @@ function TableSupplierLog({
           <CTable striped bordered responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell scope="col">Id Pemasok Log </CTableHeaderCell>
-                <CTableHeaderCell scope="col">Id Pemasok</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Id</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Pemasok</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
@@ -112,8 +113,17 @@ function TableSupplierLog({
             <CTableBody>
               {suppliersLogs.map((log, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>#{log.supplierLogId}</CTableDataCell>
-                  <CTableDataCell>{log.supplierId}</CTableDataCell>
+                  <CTableDataCell>SL{log.supplierLogId}</CTableDataCell>
+
+                  <CTableDataCell>
+                    {canReadSupplier ? (
+                      <NavLink to={`/suppliers/${log.supplierId}/detail`}>
+                        {log.supplier.name}
+                      </NavLink>
+                    ) : (
+                      log.supplier.name
+                    )}
+                  </CTableDataCell>
                   <CTableDataCell>
                     {canReadUser ? (
                       <NavLink to={`/users/${log.user.userId}/detail`}>{log.user.username}</NavLink>

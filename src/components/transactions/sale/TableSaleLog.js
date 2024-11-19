@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import {
   CAlert,
-  CButton,
   CCard,
   CCardBody,
   CCardHeader,
@@ -22,11 +21,11 @@ import {
 } from '@coreui/react-pro'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import moment from 'moment'
-import JSONPretty from 'react-json-pretty'
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { NavLink } from 'react-router-dom'
-function TableClientLog({
+function TableSaleLog({
+  title,
   error,
   handleSearch,
   typeOptions,
@@ -37,19 +36,21 @@ function TableClientLog({
   searchEndDateValue,
   setSearchEndDateValue,
   searchLoading,
-  clientsLogs,
+  transactionSaleLogs,
   page,
   totalPages,
   handlePageChange,
   authorizePermissions,
 }) {
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
-  const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
+  const canReadTransactionSale = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale',
+  )
 
   return (
     <CCard className="mb-4">
       <CCardHeader className="d-flex justify-content-between align-items-center">
-        <strong>Data Log Klien</strong>
+        <strong>{title}</strong>
       </CCardHeader>
       <CCardBody>
         {!!error && (
@@ -62,18 +63,18 @@ function TableClientLog({
 
         <CForm onSubmit={handleSearch} noValidate>
           <CRow className="mb-4">
-            <CCol xs={12} md={4} className="mb-3">
+            <CCol xs={12} md={4} className="mb-2">
               <CFormLabel htmlFor="typeInput">Tipe Perubahaan</CFormLabel>
               <CFormSelect
                 id="typeInput"
                 options={typeOptions}
-                disabled={searchLoading}
                 value={searchTypeValue}
+                disabled={searchLoading}
                 onChange={(e) => setSearchTypeValue(e.target.value)}
               />
             </CCol>
 
-            <CCol xs={12} md={8} className="mb-3">
+            <CCol xs={12} md={8} className="mb-2">
               <CFormLabel htmlFor="starDateInput">Tanggal</CFormLabel>
               <CDateRangePicker
                 placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
@@ -85,7 +86,7 @@ function TableClientLog({
               />
             </CCol>
 
-            <CCol className="d-flex align-items-center mt-2 mt-md-0" xs={12}>
+            <CCol className="d-flex align-items-center " xs={12}>
               <CLoadingButton
                 color="light"
                 type="submit"
@@ -103,23 +104,24 @@ function TableClientLog({
             <CTableHead>
               <CTableRow>
                 <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Klien</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Transaksi Pembelian</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Jenis Perubahaan</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Nilai Baru</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Perubahaan</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Dibuat Pada</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
-              {clientsLogs.map((log, idx) => (
+              {transactionSaleLogs.map((log, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>CL{log.clientLogId}</CTableDataCell>
+                  <CTableDataCell>TSL{log.transactionSaleLogId}</CTableDataCell>
                   <CTableDataCell>
-                    {canReadUser ? (
-                      <NavLink to={`/clients/${log.clientId}/detail`}>{log.client.name}</NavLink>
+                    {canReadTransactionSale ? (
+                      <NavLink
+                        to={`/transactions/sales/${log.transactionSaleId}/detail`}
+                      >{`TS${log.transactionSaleId}`}</NavLink>
                     ) : (
-                      log.client.name
+                      'TS' + log.transactionSaleId
                     )}
                   </CTableDataCell>
                   <CTableDataCell>
@@ -130,26 +132,7 @@ function TableClientLog({
                     )}
                   </CTableDataCell>
                   <CTableDataCell>{log.changeType}</CTableDataCell>
-                  <CTableDataCell>
-                    {!!log.oldValue ? (
-                      <div className="json-viewer">
-                        <JSONPretty
-                          data={log.oldValue}
-                          theme={{ main: 'monospace', key: 'red', value: 'green' }}
-                        />
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <div className="json-viewer">
-                      <JSONPretty
-                        data={log.newValue}
-                        theme={{ main: 'monospace', key: 'red', value: 'green' }}
-                      />
-                    </div>
-                  </CTableDataCell>
+                  <CTableDataCell>{log.details}</CTableDataCell>
                   <CTableDataCell>
                     {moment(log.createdAt).format('MMMM D, YYYY h:mm A')}
                   </CTableDataCell>
@@ -170,4 +153,4 @@ function TableClientLog({
   )
 }
 
-export default TableClientLog
+export default TableSaleLog

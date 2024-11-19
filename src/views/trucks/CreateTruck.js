@@ -124,7 +124,6 @@ function CreateTruck() {
         navigate('/trucks/data')
       })
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {

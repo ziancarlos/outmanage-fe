@@ -21,6 +21,12 @@ const TruckNavs = [
         to: '/trucks/new',
         permissions: ['read-trucks-brands', 'read-trucks-colors', `create-truck`],
       },
+      {
+        component: CNavItem,
+        name: 'Data Log Truk',
+        to: '/trucks/log',
+        permissions: ['read-trucks-logs'],
+      },
     ],
   },
 ]

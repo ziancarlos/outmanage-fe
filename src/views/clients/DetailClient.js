@@ -283,9 +283,10 @@ const DetailClient = () => {
           <CCol md={12} xs={12} className="mb-4">
             <CCard>
               <CCardBody>
-                <CCardTitle>{'#' + client.clientId + ' ' + client.name}</CCardTitle>
+                <CCardTitle>{'C' + client.clientId}</CCardTitle>
               </CCardBody>
               <CListGroup flush>
+                <CListGroupItem>Nama: {client.name}</CListGroupItem>
                 <CListGroupItem>No. Hp: {client.phoneNumber}</CListGroupItem>
                 {!!client.email && <CListGroupItem>Email: {client.email}</CListGroupItem>}
                 <CListGroupItem>Alamat: {client.address}</CListGroupItem>

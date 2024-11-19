@@ -907,7 +907,7 @@ const DetailInventory = () => {
             <CCard>
               <CCardBody>
                 <CCardTitle>
-                  {'#' + inventory.inventoryId + ' ' + inventory.name}{' '}
+                  {'IV' + inventory.inventoryId + ' ' + inventory.name}{' '}
                   {inventory.condition === 0 ? (
                     <CBadge color="primary">BARU</CBadge>
                   ) : inventory.condition === 1 ? (
@@ -1012,7 +1012,7 @@ const DetailInventory = () => {
                     <CTable striped bordered responsive>
                       <CTableHead>
                         <CTableRow>
-                          <CTableHeaderCell scope="col">Id Depresiasi Inventaris</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Alasan</CTableHeaderCell>
@@ -1024,7 +1024,7 @@ const DetailInventory = () => {
                       <CTableBody>
                         {inventoryDepreciation.map((item, idx) => (
                           <CTableRow key={idx}>
-                            <CTableDataCell>{'#' + item.inventoryDepreciationId}</CTableDataCell>
+                            <CTableDataCell>{'IVD' + item.inventoryDepreciationId}</CTableDataCell>
 
                             <CTableDataCell>
                               {canReadInventory ? (
@@ -1123,7 +1123,7 @@ const DetailInventory = () => {
                     <CTable striped bordered responsive>
                       <CTableHead>
                         <CTableRow>
-                          <CTableHeaderCell scope="col">Id Impor Inventaris</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Alasan</CTableHeaderCell>
@@ -1135,7 +1135,7 @@ const DetailInventory = () => {
                       <CTableBody>
                         {inventoryImport.map((item, idx) => (
                           <CTableRow key={idx}>
-                            <CTableDataCell>{'#' + item.inventoryImportId}</CTableDataCell>
+                            <CTableDataCell>{'IVI' + item.inventoryImportId}</CTableDataCell>
 
                             <CTableDataCell>
                               {canReadInventory ? (

@@ -119,7 +119,7 @@ function TableUser({
           <CTable striped bordered responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell scope="col">Id User</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Nama Pengguna</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Email</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Peran</CTableHeaderCell>
@@ -138,7 +138,7 @@ function TableUser({
             <CTableBody>
               {users.map((user) => (
                 <CTableRow key={user.userId}>
-                  <CTableDataCell>#{user.userId}</CTableDataCell>
+                  <CTableDataCell>U{user.userId}</CTableDataCell>
                   <CTableDataCell>{user.username}</CTableDataCell>
                   <CTableDataCell>{user.email}</CTableDataCell>
                   <CTableDataCell>

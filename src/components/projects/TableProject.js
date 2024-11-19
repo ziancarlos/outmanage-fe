@@ -92,7 +92,7 @@ function TableProject({
           <CTable striped bordered responsive>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell scope="col">Id Proyek</CTableHeaderCell>
+                <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Alamat</CTableHeaderCell>
                 <CTableHeaderCell scope="col">Klien</CTableHeaderCell>
@@ -104,7 +104,7 @@ function TableProject({
             <CTableBody>
               {projects.map((project, idx) => (
                 <CTableRow key={idx}>
-                  <CTableDataCell>#{project.projectId}</CTableDataCell>
+                  <CTableDataCell>P{project.projectId}</CTableDataCell>
                   <CTableDataCell>{project.name}</CTableDataCell>
                   <CTableDataCell>{project.address}</CTableDataCell>
                   <CTableDataCell>

@@ -30,29 +30,36 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash, faPlus, faSave, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { useEffect, useState } from 'react'
-import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-import { formatRupiah, handlePriceInput } from '../../utils/CurrencyUtils'
+import { formatRupiah, handlePriceInput } from '../../../utils/CurrencyUtils'
 import { useNavigate } from 'react-router-dom'
-import useLogout from '../../hooks/useLogout'
+import useLogout from '../../../hooks/useLogout'
 import Swal from 'sweetalert2'
+import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 
 const DESCRIPTION_REGEX = /^.{3,60000}$/
 const CASH_RECIPIENT_REGEX = /^.{2,200}$/
 
-const CreatePurchase = () => {
+const CreateSale = () => {
   const logout = useLogout()
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
+
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
 
-  const [suppliersOptions, setSuppliersOptions] = useState([])
-  const [supplierValue, setSupplierValue] = useState('')
-  const [fetchSuppliersLoading, setFetchSuppliersLoading] = useState(false)
+  const [clientsOptions, setClientsOptions] = useState([])
+  const [fetchClientsLoading, setFetchClientsLoading] = useState(false)
 
   const [inventoriesOptions, setInventoryOptions] = useState([])
   const [fetchInventoriesLoading, setFetchInventoriesLoading] = useState(false)
+
+  const [bankOptions, setBankOptions] = useState([])
+
+  const [bankError, setBankError] = useState('')
+  const [bankSuccess, setBankSuccess] = useState('')
+
+  const [clientValue, setClientValue] = useState('')
 
   const [items, setItems] = useState([])
 
@@ -60,26 +67,16 @@ const CreatePurchase = () => {
   const [quantityValue, setQuantityValue] = useState()
   const [pricePerUnitValue, setPricePerUnitValue] = useState()
 
-  const [amountPaidValue, setAmountPaidValue] = useState(0)
+  const [deliveryFeeValue, setDeliveryFeeValue] = useState('0')
 
   const [bankValue, setBankValue] = useState('')
-  const [bankOptions, setBankOptions] = useState([])
-
   const [accountNumberValue, setAccountNumberValue] = useState('')
   const [accountNameValue, setAccountNameValue] = useState('')
-
+  const [amountPaidValue, setAmountPaidValue] = useState(0)
   const [cashRecipentValue, setCashRecipentValue] = useState('')
-
   const [descriptionValue, setDescriptionValue] = useState('')
 
-  const [bankError, setBankError] = useState('')
-  const [bankSuccess, setBankSuccess] = useState('')
-
   const [checkedPaymentMethodOptions, setCheckedPaymentMethodOptions] = useState('transfer')
-
-  useEffect(() => {
-    setError('')
-  }, [inventoryValue, quantityValue, pricePerUnitValue])
 
   useEffect(() => {
     setLoading(true)
@@ -90,33 +87,6 @@ const CreatePurchase = () => {
     setBankError('')
     setBankSuccess('')
   }, [bankValue, accountNumberValue])
-
-  function calculateTotalPrice() {
-    return items.reduce((total, item) => total + (item.pricePerUnit || 0) * (item.quantity || 0), 0)
-  }
-
-  function handlePaymentAmount(value) {
-    setAmountPaidValue(
-      Math.max(0, Math.min(Number(value.replace(/[^0-9]/g, '')), calculateTotalPrice())),
-    )
-  }
-
-  function handleRemoveItem(index) {
-    if (index < 0 || index >= items.length) return
-
-    const newItems = items.filter((_, i) => i !== index)
-    setItems(newItems)
-
-    const newTotalPrice = newItems.reduce((total, item) => {
-      const price = Number(item.pricePerUnit) || 0
-      const quantity = Number(item.quantity) || 0
-      return total + price * quantity
-    }, 0)
-
-    if (amountPaidValue > newTotalPrice) {
-      setAmountPaidValue(newTotalPrice)
-    }
-  }
 
   function handleAddItem(e) {
     e.preventDefault()
@@ -154,24 +124,55 @@ const CreatePurchase = () => {
     resetForm()
   }
 
-  const fetchSuppliers = async (value) => {
+  function handleRemoveItem(index) {
+    if (index < 0 || index >= items.length) return
+
+    const newItems = items.filter((_, i) => i !== index)
+    setItems(newItems)
+
+    const newTotalPrice = newItems.reduce((total, item) => {
+      const price = Number(item.pricePerUnit) || 0
+      const quantity = Number(item.quantity) || 0
+      return total + price * quantity
+    }, 0)
+
+    if (amountPaidValue > newTotalPrice) {
+      setAmountPaidValue(newTotalPrice)
+    }
+  }
+
+  function calculateTotalPrice() {
+    return (
+      items.reduce((total, item) => total + (item.pricePerUnit || 0) * (item.quantity || 0), 0) +
+      Number(deliveryFeeValue)
+    )
+  }
+
+  function handlePaymentAmount(value) {
+    setAmountPaidValue(
+      Math.max(0, Math.min(Number(value.replace(/[^0-9]/g, '')), calculateTotalPrice())),
+    )
+  }
+
+  const fetchClients = async (value) => {
     if (!value) return
 
-    setFetchSuppliersLoading(true)
+    setFetchClientsLoading(true)
 
     try {
       try {
         const params = value
           ? { name: value, phoneNumber: value, page: 1, size: 5 }
           : { page: 1, size: 5 }
-        const response = await axiosPrivate.get('/api/suppliers', { params })
-        const options = response.data.data.map((supplier) => ({
-          value: supplier.supplierId,
-          label: `${supplier.name} | ${supplier.phoneNumber}`,
+        const response = await axiosPrivate.get('/api/clients', { params })
+        const options = response.data.data.map((client) => ({
+          value: client.clientId,
+          label: `${client.name} | ${client.phoneNumber}`,
         }))
 
-        setSuppliersOptions(options)
+        setClientsOptions(options)
       } catch (e) {
+        console.log(e)
         if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
           await logout()
         } else if (e.response?.status === 401) {
@@ -183,12 +184,12 @@ const CreatePurchase = () => {
         }
       }
     } finally {
-      setFetchSuppliersLoading(false)
+      setFetchClientsLoading(false)
     }
   }
 
-  const debouncedFetchSuppliers = useDebouncedCallback((value) => {
-    fetchSuppliers(value)
+  const debouncedFetchClients = useDebouncedCallback((value) => {
+    fetchClients(value)
   }, 300)
 
   const fetchInventories = async (value) => {
@@ -253,9 +254,9 @@ const CreatePurchase = () => {
     setBankError('')
     setAccountNameValue('')
 
-    try {
-      setLoading(true)
+    setLoading(true)
 
+    try {
       const response = await axiosPrivate.post('/api/bank', {
         bankCode: bankValue.value,
         accountNumber: accountNumberValue,
@@ -279,29 +280,9 @@ const CreatePurchase = () => {
     }
   }
 
-  function clearInput() {
-    setSuppliersOptions([])
-    setSupplierValue('')
-    setInventoryOptions([])
-    setInventoryValue('')
-    setQuantityValue('')
-    setPricePerUnitValue('')
-    setItems([])
-    setCheckedPaymentMethodOptions('transfer')
-    setAmountPaidValue(0)
-    setBankValue('')
-    setAccountNameValue('')
-    setAccountNumberValue('')
-    setDescriptionValue('')
-    setError('')
-    setBankError('')
-    setBankSuccess('')
-    setCashRecipentValue('')
-  }
-
   function validateForm() {
-    if (supplierValue === '') {
-      return 'Harap pilih supplier.'
+    if (clientValue === '') {
+      return 'Harap pilih klien.'
     }
 
     if (items.length < 1) {
@@ -356,7 +337,7 @@ const CreatePurchase = () => {
       }
 
       const request = {
-        supplierId: supplierValue.value,
+        clientId: clientValue.value,
         items: items.map((item) => {
           return {
             inventoryId: item.inventory.value,
@@ -387,12 +368,16 @@ const CreatePurchase = () => {
         }
       }
 
-      await axiosPrivate.post('/api/purchases', request)
+      if (Number(deliveryFeeValue) > 0) {
+        request.deliveryFee = deliveryFeeValue
+      }
+
+      await axiosPrivate.post('/api/transactions/sales', request)
 
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
-        text: 'Pembelian berhasil dibuat.',
+        text: 'Transaksi pembelian berhasil dibuat.',
         confirmButtonText: 'OK',
       })
 
@@ -413,6 +398,27 @@ const CreatePurchase = () => {
     }
   }
 
+  function clearInput() {
+    setClientsOptions([])
+    setClientValue('')
+    setInventoryOptions([])
+    setInventoryValue('')
+    setQuantityValue('')
+    setPricePerUnitValue('')
+    setItems([])
+    setCheckedPaymentMethodOptions('transfer')
+    setAmountPaidValue(0)
+    setBankValue('')
+    setAccountNameValue('')
+    setAccountNumberValue('')
+    setDescriptionValue('')
+    setError('')
+    setBankError('')
+    setBankSuccess('')
+    setCashRecipentValue('')
+    setDeliveryFeeValue('')
+  }
+
   return (
     <>
       {loading ? (
@@ -424,32 +430,31 @@ const CreatePurchase = () => {
           <CCol>
             <CCard>
               <CCardHeader>
-                <strong>Tambah Pembelian</strong>
+                <strong>Tambah Transaksi Pembelian</strong>
               </CCardHeader>
               <CForm onSubmit={handleSubmit}>
                 <CCardBody>
                   {error && <CAlert color="danger">{error}</CAlert>}
-                  {/* Supplier Selection */}
+
                   <div className="mb-3">
                     <CMultiSelect
-                      onFilterChange={debouncedFetchSuppliers}
-                      options={suppliersOptions}
-                      loading={fetchSuppliersLoading}
+                      label={'Klien'}
+                      multiple={false}
+                      onFilterChange={debouncedFetchClients}
+                      options={clientsOptions}
+                      loading={fetchClientsLoading}
                       disabled={submitLoading}
                       onChange={(e) => {
                         if (e.length < 1) return
 
-                        setSupplierValue(e[0])
+                        setClientValue(e[0] || null)
                       }}
-                      onShow={fetchSuppliers}
-                      label={'Pemasok'}
-                      multiple={false}
+                      onShow={fetchClients}
                       resetSelectionOnOptionsChange={true}
                       cleaner={false}
                     />
                   </div>
 
-                  {/* Inventory Items */}
                   <div className="mb-3">
                     <CFormLabel className="fw-bold me-2">Barang Pembelian</CFormLabel>
 
@@ -465,7 +470,7 @@ const CreatePurchase = () => {
                             if (e.length < 1) return
 
                             const itemExists = items.some(
-                              (item) => item?.inventory?.value === e[0].value,
+                              (item) => item?.inventory?.value === e[0]?.value,
                             )
 
                             if (itemExists) {
@@ -582,7 +587,22 @@ const CreatePurchase = () => {
                     </div>
                   </div>
 
-                  {/* Total Price */}
+                  <div className="mb-3">
+                    <CFormLabel className="fw-bold">Ongkos Antar</CFormLabel>
+                    <CFormInput
+                      type="text"
+                      placeholder="Ongkos Antar"
+                      disabled={submitLoading}
+                      value={formatRupiah(deliveryFeeValue || '0')}
+                      onChange={(e) => {
+                        const value = handlePriceInput(e.target.value)
+                        if (!isNaN(value) && Number(value) >= 0) {
+                          setDeliveryFeeValue(value)
+                        }
+                      }}
+                    />
+                  </div>
+
                   <div className="mb-3">
                     <CFormLabel className="fw-bold">Total Harga</CFormLabel>
                     <CFormInput
@@ -593,7 +613,6 @@ const CreatePurchase = () => {
                     />
                   </div>
 
-                  {/* Payment Options */}
                   <div>
                     <div className="mb-3">
                       <CFormLabel className="fw-bold">Jumlah Yang Dibayarkan</CFormLabel>
@@ -620,9 +639,8 @@ const CreatePurchase = () => {
                     {amountPaidValue > 0 && (
                       <>
                         {bankError && <CAlert color="danger">{bankError}</CAlert>}
-
                         {bankSuccess && <CAlert color="success">{bankSuccess}</CAlert>}
-                        {/* Payment Method */}
+
                         <div className="mb-3">
                           <CFormLabel htmlFor="paymentMethod" className="fw-bold d-block">
                             Metode Pembayaran
@@ -723,7 +741,7 @@ const CreatePurchase = () => {
                         )}
                       </>
                     )}
-                    {/* Description */}
+
                     <div className="mb-3">
                       <CFormLabel className="fw-bold">
                         Deskripsi <CBadge color="info">Optional</CBadge>
@@ -733,7 +751,6 @@ const CreatePurchase = () => {
                         placeholder="Masukkan deskripsi"
                         value={descriptionValue}
                         onChange={(e) => setDescriptionValue(e.target.value)}
-                        disabled={submitLoading}
                       />
                     </div>
                   </div>
@@ -743,18 +760,13 @@ const CreatePurchase = () => {
                   <CLoadingButton
                     color="primary"
                     className="me-2"
-                    type="submit"
                     disabled={submitLoading || validateForm() !== null}
                     loading={submitLoading}
+                    type="submit"
                   >
                     <FontAwesomeIcon icon={faSave} />
                   </CLoadingButton>
-                  <CButton
-                    color="danger"
-                    type="button"
-                    onClick={clearInput}
-                    disabled={submitLoading}
-                  >
+                  <CButton color="danger" onClick={clearInput} disabled={submitLoading}>
                     <FontAwesomeIcon icon={faTimes} />
                   </CButton>
                 </CCardFooter>
@@ -767,4 +779,4 @@ const CreatePurchase = () => {
   )
 }
 
-export default CreatePurchase
+export default CreateSale

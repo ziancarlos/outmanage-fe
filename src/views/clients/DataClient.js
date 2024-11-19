@@ -188,7 +188,7 @@ const DataClient = () => {
                   <CTable bordered responsive striped>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell scope="col">Id Klien</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Alamat Email</CTableHeaderCell>
                         <CTableHeaderCell scope="col">No. Hp</CTableHeaderCell>
@@ -203,7 +203,7 @@ const DataClient = () => {
                     <CTableBody>
                       {clients.map((client, idx) => (
                         <CTableRow key={idx}>
-                          <CTableDataCell>#{client.clientId}</CTableDataCell>
+                          <CTableDataCell>C{client.clientId}</CTableDataCell>
                           <CTableDataCell>{client.name}</CTableDataCell>
                           <CTableDataCell>{client.email || '-'}</CTableDataCell>
                           <CTableDataCell>{client.phoneNumber}</CTableDataCell>

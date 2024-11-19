@@ -260,7 +260,7 @@ const DataPurchase = () => {
                           rowSpan={2}
                           className="text-center align-middle"
                         >
-                          Id Pesan Telegram
+                          Id
                         </CTableHeaderCell>
                         <CTableHeaderCell
                           scope="col"
@@ -307,7 +307,7 @@ const DataPurchase = () => {
                     <CTableBody>
                       {telegramMessages.map((message) => (
                         <CTableRow key={message.telegramMessageId}>
-                          <CTableDataCell>#{message.telegramMessageId}</CTableDataCell>
+                          <CTableDataCell>TM{message.telegramMessageId}</CTableDataCell>
                           <CTableDataCell>
                             {canReadUser && message.user ? (
                               <NavLink to={`/users/${message.user.userId}/detail`}>

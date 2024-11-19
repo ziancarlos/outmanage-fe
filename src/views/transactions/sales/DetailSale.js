@@ -33,29 +33,30 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react-pro'
-
-import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
-
-import moment from 'moment'
-import useLogout from '../../hooks/useLogout'
-import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-import useAuth from '../../hooks/useAuth'
-import TablePurchaseLog from '../../components/purchases/TablePurchaseLog'
-import Swal from 'sweetalert2'
 import {
-  faCheck,
-  faCircleCheck,
+  faCheckCircle,
   faEye,
+  faFileAlt,
+  faFlagCheckered,
+  faL,
   faMoneyBill1,
+  faPaperPlane,
   faS,
   faSave,
-  faTimeline,
+  faShippingFast,
   faTimes,
-  faTimesCircle,
 } from '@fortawesome/free-solid-svg-icons'
+
+import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { formatRupiah } from '../../utils/CurrencyUtils'
-import { formatToISODate } from '../../utils/DateUtils'
+
+import moment from 'moment'
+import useLogout from '../../../hooks/useLogout'
+import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
+import useAuth from '../../../hooks/useAuth'
+import Swal from 'sweetalert2'
+import { formatRupiah } from '../../../utils/CurrencyUtils'
+import TableSaleLog from '../../../components/transactions/sale/TableSaleLog'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
@@ -66,31 +67,38 @@ const typeOptions = [
 
 const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
 
-const DetailPurchase = () => {
+const DetailSale = () => {
   const { authorizePermissions } = useAuth()
 
-  const canReadPurchaseLog = authorizePermissions.some((perm) => perm.name === 'read-purchase-logs')
-  const canReadPurchaseInventories = authorizePermissions.some(
-    (perm) => perm.name === 'read-purchase-inventories',
+  const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
+  const canReadTransactionSaleLogs = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale-logs',
   )
-  const canReadPurchaseInventoriesDetails = authorizePermissions.some(
-    (perm) => perm.name === 'read-purchase-inventories-details',
+  const canCreateTransactionSalePayment = authorizePermissions.some(
+    (perm) => perm.name === 'create-transaction-sale-payment',
+  )
+  const canReadTransactionSalePayments = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale-payments',
+  )
+  const canReadTransactionSaleInventories = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale-inventories',
+  )
+  const canReadTruck = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale-inventories',
   )
 
-  const canReadPurchasePayments = authorizePermissions.some(
-    (perm) => perm.name === 'read-purchase-payments',
-  )
-  const canCreatePurchasePayment = authorizePermissions.some(
-    (perm) => perm.name === 'create-purchase-payment',
-  )
-  const canCreatePurchaseInventoryDetail = authorizePermissions.some(
-    (perm) => perm.name === 'create-purchase-inventory-detail',
-  )
-
-  const canReadSupplier = authorizePermissions.some((perm) => perm.name === 'read-supplier')
   const canReadInventory = authorizePermissions.some((perm) => perm.name === 'read-inventory')
+  const canReadTransactionSaleShipments = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale-shipments',
+  )
+  const canReadTransactionSaleShipment = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-sale-shipment',
+  )
+  const canCreateTransactionSaleShipment = authorizePermissions.some(
+    (perm) => perm.name === 'create-transaction-sale-shipment',
+  )
 
-  const { purchaseId } = useParams()
+  const { transactionSaleId } = useParams()
 
   const location = useLocation()
   const logout = useLogout()
@@ -99,24 +107,14 @@ const DetailPurchase = () => {
   const [loading, setLoading] = useState(true)
   const searchParamsRef = useRef()
 
+  const [transactionSale, setTransactionSale] = useState('')
+  const [transactionSalePayments, setTransactionSalePayments] = useState([])
+  const [transactionSaleInventories, setTransactionSaleInventories] = useState([])
+  const [transactionSaleShipment, setTransactionSaleShipment] = useState([])
+
+  const [refetch, setRefetch] = useState(false)
+
   const [visibileModalPayment, setVisibileModalPayment] = useState(false)
-
-  const [purchase, setPurchase] = useState({})
-
-  const [purchaseLogs, setPurchaseLogs] = useState([])
-  const [purchaseLogPage, setPurchaseLogPage] = useState(1)
-  const [purchaseLogTotalPages, setPurchaseLogTotalPages] = useState(1)
-  const [purchaseLogError, setPurchaseLogError] = useState('')
-  const [purchaseLogSearchTypeValue, setPurchaseLogSearchTypeValue] = useState('')
-  const [purchaseLogSearchStartDateValue, setPurchaseLogSearchStartDateValue] = useState('')
-  const [purchaseLogSearchEndDateValue, setPurchaseLogSearchEndDateValue] = useState('')
-  const [purchaseLogSearchLoading, setPurchaseLogSearchLoading] = useState(false)
-
-  const [purchaseInventories, setPurchaseInventories] = useState([])
-
-  const [purchaseInventoriesDetails, setPurchaseInventoriesDetails] = useState([])
-
-  const [purchasePayments, setPurchasePayments] = useState([])
   const [checkedPaymentMethodOptions, setCheckedPaymentMethodOptions] = useState('transfer')
   const [amountPaidValue, setAmountPaidValue] = useState(0)
   const [bankValue, setBankValue] = useState('')
@@ -128,26 +126,32 @@ const DetailPurchase = () => {
   const [paymentSuccess, setPaymentSuccess] = useState('')
   const [paymentLoading, setPaymentLoading] = useState(false)
 
-  const [visibileModalArrivalInventory, setVisibileModalArrivalInventory] = useState(false)
-  const [purchaseInventoryId, setPurchaseInventoryId] = useState(null)
-  const [arrivalPurchaseInventory, setArrivalPurchaseInventory] = useState(null)
-  const [modalArrivalInventoryLoading, setModalInventoryLoading] = useState(false)
-  const [arrivalInventoryError, setArrivalInventoryError] = useState('')
-  const [receivedQuantityValue, setReceivedQuantityValue] = useState(0)
-  const [refetch, setRefetch] = useState(false)
-
-  useEffect(() => {
-    setPurchaseLogError('')
-  }, [purchaseLogSearchTypeValue, purchaseLogSearchStartDateValue, purchaseLogSearchEndDateValue])
+  const [transactionSaleLogs, setTransactionSaleLogs] = useState([])
+  const [transactionSaleLogPage, setTransactionSaleLogPage] = useState(1)
+  const [transactionSaleLogTotalPages, setTransactionSaleLogTotalPages] = useState(1)
+  const [transactionSaleLogError, setTransactionSaleLogError] = useState('')
+  const [transactionSaleLogSearchTypeValue, setTransactionSaleLogSearchTypeValue] = useState('')
+  const [transactionSaleLogSearchStartDateValue, setTransactionSaleLogSearchStartDateValue] =
+    useState('')
+  const [transactionSaleLogSearchEndDateValue, setTransactionSaleLogSearchEndDateValue] =
+    useState('')
+  const [transactionSaleLogSearchLoading, setTransactionSaleLogSearchLoading] = useState(false)
 
   useEffect(() => {
     setLoading(true)
-
     const fetchPromises = []
 
-    fetchPromises.push(fetchPurchase(purchaseId))
+    fetchPromises.push(fetchTransactionSale(transactionSaleId))
 
-    if (canReadPurchaseLog) {
+    if (canReadTransactionSalePayments) {
+      fetchPromises.push(fetchTransactionSalePayments(transactionSaleId))
+    }
+
+    if (canCreateTransactionSalePayment) {
+      fetchPromises.push(fetchBankOptions())
+    }
+
+    if (canReadTransactionSaleLogs) {
       const queryParams = new URLSearchParams(location.search)
       const searchTypeParamValue = queryParams.get('type')
       const startDateParamValue = queryParams.get('startDate')
@@ -165,23 +169,21 @@ const DetailPurchase = () => {
         searchParamsRef.current.endDate = endDateParamValue
       }
 
-      fetchPromises.push(fetchPurchaseLogs(purchaseId, purchaseLogPage, searchParamsRef.current))
+      fetchPromises.push(
+        fetchTransactionSaleLogs(
+          transactionSaleId,
+          transactionSaleLogPage,
+          searchParamsRef.current,
+        ),
+      )
     }
 
-    if (canReadPurchaseInventories) {
-      fetchPromises.push(fetchPurchaseInventories(purchaseId))
+    if (canReadTransactionSaleInventories) {
+      fetchPromises.push(fetchTransactionSaleInventories(transactionSaleId))
     }
 
-    if (canReadPurchasePayments) {
-      fetchPromises.push(fetchPurchasePayments(purchaseId))
-    }
-
-    if (canCreatePurchasePayment) {
-      fetchPromises.push(fetchBankOptions())
-    }
-
-    if (canReadPurchaseInventoriesDetails) {
-      fetchPromises.push(fetchPurchaseInventoriesDetails(purchaseId))
+    if (canReadTransactionSaleShipments) {
+      fetchPromises.push(fetchTransactionSaleShipment(transactionSaleId))
     }
 
     Promise.all(fetchPromises).finally(() => setLoading(false))
@@ -197,7 +199,7 @@ const DetailPurchase = () => {
     if (visibileModalPayment) {
       setLoading(true)
 
-      fetchPurchase(purchaseId).finally(() => setLoading(false))
+      fetchTransactionSale(transactionSaleId).finally(() => setLoading(false))
     }
   }, [visibileModalPayment])
 
@@ -206,123 +208,49 @@ const DetailPurchase = () => {
     setPaymentSuccess('')
   }, [checkedPaymentMethodOptions, bankValue, accountNumberValue])
 
-  async function fetchPurchaseInventoriesDetails(purchaseId) {
+  async function fetchTransactionSaleLogs(transactionSaleId, page, searchParams = {}) {
     try {
-      const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/inventories/details`)
+      const response = await axiosPrivate.get(`/api/transactions/sales/${transactionSaleId}/logs`, {
+        params: { page: page, size: 3, ...searchParams },
+      })
 
-      setPurchaseInventoriesDetails(response.data.data)
+      setTransactionSaleLogs(response.data.data)
+      setTransactionSaleLogTotalPages(response.data.paging.totalPage)
+      setTransactionSaleLogPage(response.data.paging.page)
+
+      setTransactionSaleLogSearchTypeValue('')
+      setTransactionSaleLogSearchStartDateValue('')
+      setTransactionSaleLogSearchEndDateValue('')
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  function handleShowModalArrivalInventory(item) {
-    setVisibileModalArrivalInventory(true)
-    setPurchaseInventoryId(item.purchaseHasInventoryId)
-    setArrivalPurchaseInventory(item)
-  }
-
-  function handleCloseModalArrivalInventory() {
-    setVisibileModalArrivalInventory(false)
-    setPurchaseInventoryId(null)
-    setArrivalPurchaseInventory(null)
-    setReceivedQuantityValue(0)
-  }
-
-  async function fetchPurchase(purchaseId) {
-    try {
-      const response = await axiosPrivate.get(`/api/purchases/${purchaseId}`)
-
-      setPurchase(response.data.data)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  async function fetchPurchaseInventories(purchaseId) {
-    try {
-      const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/inventories`)
-
-      setPurchaseInventories(response.data.data)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  async function fetchPurchasePayments(purchaseId) {
-    try {
-      const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/payments`)
-
-      setPurchasePayments(response.data.data)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if ([400, 401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  async function fetchBankOptions() {
-    try {
-      const response = await axiosPrivate.get('/api/bank')
-
-      const options = response.data.data.map((bank) => ({
-        value: bank.bankCode,
-        label: bank.bankName,
-      }))
-
-      setBankOptions(options)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if (e.response?.status === 401 || e.response?.status === 404) {
+      } else if ([401, 404].includes(e.response?.status)) {
         navigate('/404', { replace: true })
       } else if (e.response?.status === 400) {
-        setPaymentError(e.response?.data.error)
+        setTransactionSaleLogError(e.response.data.error)
       } else {
         navigate('/500')
       }
     }
   }
 
-  function purchaseLogHandleSearch(e) {
+  function transactionSaleLogHandleSearch(e) {
     e.preventDefault()
-    setPurchaseLogSearchLoading(true)
-    setPurchaseLogPage(1)
+    setTransactionSaleLogSearchLoading(true)
+    setTransactionSaleLogPage(1)
 
     const searchParams = {}
 
-    if (matchingTypes.includes(purchaseLogSearchTypeValue)) {
-      searchParams.type = purchaseLogSearchTypeValue
+    if (matchingTypes.includes(transactionSaleLogSearchTypeValue)) {
+      searchParams.type = transactionSaleLogSearchTypeValue
     }
 
-    if (purchaseLogSearchStartDateValue) {
-      searchParams.startDate = formatToISODate(purchaseLogSearchStartDateValue)
+    if (transactionSaleLogSearchStartDateValue) {
+      searchParams.startDate = formatToISODate(transactionSaleLogSearchStartDateValue)
     }
 
-    if (purchaseLogSearchEndDateValue) {
-      searchParams.endDate = formatToISODate(purchaseLogSearchEndDateValue)
+    if (transactionSaleLogSearchEndDateValue) {
+      searchParams.endDate = formatToISODate(transactionSaleLogSearchEndDateValue)
     }
 
     searchParamsRef.current = searchParams
@@ -331,101 +259,28 @@ const DetailPurchase = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/purchases/${purchaseId}/detail`)
+      navigate(`/transactions/sales/${transactionSaleId}/detail`)
     }
 
-    fetchPurchaseLogs(purchaseId, 1, searchParams).finally(() => setPurchaseLogSearchLoading(false))
-  }
-
-  async function fetchPurchaseLogs(purchaseId, page, searchParams = {}) {
-    try {
-      const response = await axiosPrivate.get(`/api/purchases/${purchaseId}/logs`, {
-        params: { page: page, size: 3, ...searchParams },
-      })
-
-      setPurchaseLogs(response.data.data)
-      setPurchaseLogTotalPages(response.data.paging.totalPage)
-      setPurchaseLogPage(response.data.paging.page)
-
-      setPurchaseLogSearchTypeValue('')
-      setPurchaseLogSearchStartDateValue('')
-      setPurchaseLogSearchEndDateValue('')
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if ([401, 404].includes(e.response?.status)) {
-        navigate('/404', { replace: true })
-      } else if (e.response?.status === 400) {
-        setPurchaseLogError(e.response.data.error)
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  const handlePurchaseLogPageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= purchaseLogTotalPages && newPage !== purchaseLogPage) {
-      setPurchaseLogPage(newPage)
-
-      setLoading(true)
-
-      fetchPurchaseLogs(purchaseId, newPage, searchParamsRef).finally(() => setLoading(false))
-    }
-  }
-
-  function handlePaymentAmount(value) {
-    setAmountPaidValue(
-      Math.max(0, Math.min(Number(value.replace(/[^0-9]/g, '')), purchase.remainingBalance)),
+    fetchTransactionSaleLogs(transactionSaleId, 1, searchParams).finally(() =>
+      setTransactionSaleLogSearchLoading(false),
     )
   }
 
-  async function handleCheckAccountNumber() {
-    setAccountNameValue('')
-    setPaymentError('')
-    setPaymentSuccess('')
-
-    try {
-      setLoading(true)
-
-      const response = await axiosPrivate.post('/api/bank', {
-        bankCode: bankValue.value,
-        accountNumber: accountNumberValue,
-      })
-
-      setPaymentSuccess('Bank dan nomor rekening ditemukkan')
-      setAccountNameValue(response.data.data.accountName)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if (e.response?.status === 401) {
-        navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
-        setPaymentError(e.response?.data.error)
-      } else {
-        navigate('/500')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function validatePaymentForm() {
+  const handleTransactionSaleLogPageChange = (newPage) => {
     if (
-      checkedPaymentMethodOptions === 'transfer' &&
-      (!bankValue || !accountNumberValue || !accountNameValue)
+      newPage >= 1 &&
+      newPage <= transactionSaleLogTotalPages &&
+      newPage !== transactionSaleLogPage
     ) {
-      return 'Harap berikan rincian bank dan rekening yang valid untuk transfer.'
-    }
+      setTransactionSaleLogPage(newPage)
 
-    if (checkedPaymentMethodOptions === 'cash' && !cashRecipentValue) {
-      return 'Harap berikan nama penerima uang tunai untuk pembayaran tunai.'
-    }
+      setTransactionSaleLogSearchLoading(true)
 
-    if (amountPaidValue < 1) {
-      return 'Harap jumlah yang dibayarkan lebih besar dari 0.'
+      fetchTransactionSaleLogs(transactionSaleId, newPage, searchParamsRef).finally(() =>
+        setTransactionSaleLogSearchLoading(false),
+      )
     }
-
-    return null
   }
 
   function clearPaymentMethodForm() {
@@ -475,7 +330,7 @@ const DetailPurchase = () => {
         }
       }
 
-      await axiosPrivate.post(`/api/purchases/${purchaseId}/payments`, request)
+      await axiosPrivate.post(`/api/transactions/sales/${transactionSaleId}/payments`, request)
 
       Swal.fire({
         icon: 'success',
@@ -486,6 +341,7 @@ const DetailPurchase = () => {
 
       clearPaymentForm()
     } catch (e) {
+      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
@@ -503,43 +359,204 @@ const DetailPurchase = () => {
     }
   }
 
-  async function handldeArrivalInventorySubmit(e) {
-    e.preventDefault()
+  async function handleCheckAccountNumber() {
+    setAccountNameValue('')
+    setPaymentError('')
+    setPaymentSuccess('')
 
     try {
-      setModalInventoryLoading(true)
+      setLoading(true)
 
-      await axiosPrivate.post(`/api/purchases/${purchaseId}/inventories/${purchaseInventoryId}`, {
-        receivedQuantity: receivedQuantityValue,
+      const response = await axiosPrivate.post('/api/bank', {
+        bankCode: bankValue.value,
+        accountNumber: accountNumberValue,
       })
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: 'Penerimaan barang berhasil diproses.',
-        confirmButtonText: 'OK',
-      })
-
-      setVisibileModalArrivalInventory(false)
+      setPaymentSuccess('Bank dan nomor rekening ditemukkan')
+      setAccountNameValue(response.data.data.accountName)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
-      } else if ([400, 404, 409].includes(e.response?.status)) {
-        setArrivalInventoryError(e.response.data.error)
+      } else if ([400, 404].includes(e.response?.status)) {
+        setPaymentError(e.response?.data.error)
       } else {
         navigate('/500')
       }
     } finally {
-      setReceivedQuantityValue(0)
-
-      setModalInventoryLoading(false)
-
-      setRefetch((prev) => !prev)
+      setLoading(false)
     }
   }
 
+  async function generateOfferingLetter(transactionSaleId) {
+    setLoading(true)
+    try {
+      const response = await axiosPrivate.get(
+        `/api/transactions/sales/${transactionSaleId}/download-offer-letter`,
+        {
+          responseType: 'blob', // Ensure the response is treated as a file
+        },
+      )
+
+      // Create a URL for the file
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `surat-penawaran-TS${transactionSaleId}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401) {
+        navigate('/404', { replace: true })
+      } else if ([400, 404].includes(e.response?.status)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: 'Gagal mendapatkan surat penawaran',
+          confirmButtonText: 'OK',
+        })
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function validatePaymentForm() {
+    if (
+      checkedPaymentMethodOptions === 'transfer' &&
+      (!bankValue || !accountNumberValue || !accountNameValue)
+    ) {
+      return 'Harap berikan rincian bank dan rekening yang valid untuk transfer.'
+    }
+
+    if (checkedPaymentMethodOptions === 'cash' && !cashRecipentValue) {
+      return 'Harap berikan nama penerima uang tunai untuk pembayaran tunai.'
+    }
+
+    if (amountPaidValue < 1) {
+      return 'Harap jumlah yang dibayarkan lebih besar dari 0.'
+    }
+
+    return null
+  }
+
+  async function fetchBankOptions() {
+    try {
+      const response = await axiosPrivate.get('/api/bank')
+
+      const options = response.data.data.map((bank) => ({
+        value: bank.bankCode,
+        label: bank.bankName,
+      }))
+
+      setBankOptions(options)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401 || e.response?.status === 404) {
+        navigate('/404', { replace: true })
+      } else if (e.response?.status === 400) {
+        setPaymentError(e.response?.data.error)
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  function handlePaymentAmount(value) {
+    setAmountPaidValue(
+      Math.max(0, Math.min(Number(value.replace(/[^0-9]/g, '')), transactionSale.remainingBalance)),
+    )
+  }
+
+  async function fetchTransactionSalePayments(transactionSaleId) {
+    try {
+      const response = await axiosPrivate.get(
+        `/api/transactions/sales/${transactionSaleId}/payments`,
+      )
+
+      setTransactionSalePayments(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  async function fetchTransactionSale(transactionSaleId) {
+    try {
+      const response = await axiosPrivate.get(`/api/transactions/sales/${transactionSaleId}`)
+
+      setTransactionSale(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  async function fetchTransactionSaleInventories(transactionSaleId) {
+    try {
+      const response = await axiosPrivate.get(
+        `/api/transactions/sales/${transactionSaleId}/inventories`,
+      )
+
+      setTransactionSaleInventories(response.data.data)
+    } catch (e) {
+      console.log(e)
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  async function fetchTransactionSaleShipment(transactionSaleId) {
+    try {
+      const response = await axiosPrivate.get(
+        `/api/transactions/sales/${transactionSaleId}/shipments`,
+      )
+
+      console.log(response.data.data)
+      setTransactionSaleShipment(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
+
+  function handleShipment(transactionSaleId) {
+    navigate(`/transactions/sales/${transactionSaleId}/shipment`)
+  }
+
+  function handleDetail(transactionSaleId, transactionSaleHasInventoryShipmentId) {
+    navigate(
+      `/transactions/sales/${transactionSaleId}/shipment/${transactionSaleHasInventoryShipmentId}/detail`,
+    )
+  }
   return (
     <>
       {loading ? (
@@ -552,77 +569,149 @@ const DetailPurchase = () => {
             <CCard>
               <CCardBody>
                 <CCardTitle>
-                  {'PO' + purchase.purchaseId}{' '}
+                  {'TS' + transactionSale.transactionSaleId}
                   <CBadge
                     className="me-2"
-                    color={purchase.deliveryStatus == 1 ? 'success' : 'warning'}
-                  >
-                    {purchase.deliveryStatus === 1 ? 'SAMPAI' : 'BELUM SAMPAI'}
-                  </CBadge>
-                  <CBadge
                     color={
-                      purchase.paymentStatus === 2
+                      transactionSale.shipmentStatus === 2
                         ? 'success'
-                        : purchase.paymentStatus === 1
+                        : transactionSale.shipmentStatus === 1
                           ? 'warning'
-                          : purchase.paymentStatus === 0
+                          : transactionSale.shipmentStatus === 0
                             ? 'danger'
                             : 'secondary'
                     }
                   >
-                    {purchase.paymentStatus === 2
+                    {transactionSale.shipmentStatus === 2
+                      ? 'SELESAI'
+                      : transactionSale.shipmentStatus === 1
+                        ? 'PROSES'
+                        : transactionSale.shipmentStatus === 0
+                          ? 'BELUM DIKIRIM'
+                          : transactionSale.shipmentStatus}
+                  </CBadge>
+                  <CBadge
+                    color={
+                      transactionSale.paymentStatus === 2
+                        ? 'success'
+                        : transactionSale.paymentStatus === 1
+                          ? 'warning'
+                          : transactionSale.paymentStatus === 0
+                            ? 'danger'
+                            : 'secondary'
+                    }
+                  >
+                    {transactionSale.paymentStatus === 2
                       ? 'LUNAS'
-                      : purchase.paymentStatus === 1
+                      : transactionSale.paymentStatus === 1
                         ? 'SEBAGIAN'
-                        : purchase.paymentStatus === 0
+                        : transactionSale.paymentStatus === 0
                           ? 'BELUM LUNAS'
-                          : purchase.paymentStatus}
+                          : transactionSale.paymentStatus}
                   </CBadge>
                 </CCardTitle>
               </CCardBody>
               <CListGroup flush>
                 <CListGroupItem>
-                  Pemasok:{' '}
-                  {canReadSupplier ? (
-                    <NavLink to={`/suppliers/${purchase.supplier.supplierId}/detail`}>
-                      {purchase.supplier.name}
+                  Klien:{' '}
+                  {canReadClient ? (
+                    <NavLink to={`/clients/${transactionSale.client.clientId}/detail`}>
+                      {transactionSale.client.name}
                     </NavLink>
                   ) : (
-                    purchase.supplier.name
+                    transactionSale.client.name
                   )}
                 </CListGroupItem>
                 <CListGroupItem>
-                  Total Keseluruhan: {formatRupiah(purchase.grandTotal)}
+                  Total Keseluruhan: {formatRupiah(transactionSale.grandTotal)}
                 </CListGroupItem>
                 <CListGroupItem>
-                  Tanggal Pembelian: {moment(purchase.purchaseDate).format('MMMM D, YYYY h:mm A')}
+                  Tanggal Pembelian:{' '}
+                  {moment(transactionSale.transactionDate).format('MMMM D, YYYY h:mm A')}
                 </CListGroupItem>
-                {!!purchase.description && (
-                  <CListGroupItem>Deskripsi: {purchase.description}</CListGroupItem>
+                {!!transactionSale.description && (
+                  <CListGroupItem>Deskripsi: {transactionSale.description}</CListGroupItem>
                 )}
-                <CListGroupItem>Jumlah Dibayar: {formatRupiah(purchase.totalPaid)}</CListGroupItem>
-                {purchase.remainingBalance > 0 && (
+                <CListGroupItem>
+                  Jumlah Dibayar: {formatRupiah(transactionSale.totalPaid || 0)}
+                </CListGroupItem>
+                <CListGroupItem>
+                  Ongkos Pengiriman: {formatRupiah(transactionSale.deliveryFee || 0)}
+                </CListGroupItem>
+                {transactionSale.remainingBalance > 0 && (
                   <CListGroupItem>
-                    Sisa Pembayaran: {formatRupiah(purchase.remainingBalance)}
+                    Sisa Pembayaran: {formatRupiah(transactionSale.remainingBalance || 0)}
                   </CListGroupItem>
                 )}
               </CListGroup>
 
-              {purchase.totalPaid !== purchase.grandTotal && canCreatePurchasePayment && (
-                <CCardFooter>
+              {(() => {
+                // Define permission and status checks
+                const needsPayment =
+                  transactionSale.totalPaid !== transactionSale.grandTotal &&
+                  canCreateTransactionSalePayment
+
+                const canInitiateShipment =
+                  canReadTransactionSaleInventories &&
+                  canReadTruck &&
+                  canCreateTransactionSaleShipment &&
+                  transactionSale.shipmentStatus !== 2
+
+                const canGenerateOfferingLetter =
+                  transactionSale.shipmentStatus === 0 && transactionSale.paymentStatus === 0
+
+                // Render Payment Button
+                const renderPaymentButton = needsPayment && (
                   <CButton
                     color="warning"
                     variant="outline"
                     onClick={() => setVisibileModalPayment(!visibileModalPayment)}
+                    className="me-1"
                   >
                     <FontAwesomeIcon icon={faMoneyBill1} className="me-2" /> Pembayaran
                   </CButton>
-                </CCardFooter>
-              )}
+                )
+
+                // Render Shipment Button
+                const renderShipmentButton = canInitiateShipment && (
+                  <CButton
+                    color="info"
+                    variant="outline"
+                    className="me-1"
+                    onClick={() => handleShipment(transactionSaleId)}
+                  >
+                    <FontAwesomeIcon icon={faShippingFast} className="me-2" /> Pengantaran
+                  </CButton>
+                )
+
+                // Render Offering Letter Button
+                const renderOfferingLetterButton = canGenerateOfferingLetter && (
+                  <CButton
+                    color="success"
+                    variant="outline"
+                    onClick={() => generateOfferingLetter(transactionSaleId)}
+                  >
+                    <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Penawaran
+                  </CButton>
+                )
+
+                // Check if any button should be rendered
+                const shouldRenderFooter =
+                  renderPaymentButton || renderShipmentButton || renderOfferingLetterButton
+
+                // Conditionally render the footer
+                return shouldRenderFooter ? (
+                  <CCardFooter>
+                    {renderPaymentButton}
+                    {renderShipmentButton}
+                    {renderOfferingLetterButton}
+                  </CCardFooter>
+                ) : null
+              })()}
             </CCard>
           </CCol>
 
-          {canReadPurchaseInventories && (
+          {canReadTransactionSaleInventories && (
             <CCol md={12} className="mb-4">
               <CCard>
                 <CCardHeader className="d-flex justify-content-between align-items-center">
@@ -639,16 +728,13 @@ const DetailPurchase = () => {
                           <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
-                          {canCreatePurchaseInventoryDetail && (
-                            <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
-                          )}
+                          <CTableHeaderCell scope="col">Kuantitas Dipesan</CTableHeaderCell>
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
-                        {purchaseInventories.map((item, idx) => (
+                        {transactionSaleInventories.map((item, idx) => (
                           <CTableRow key={idx}>
-                            <CTableDataCell>POI{item.purchaseHasInventoryId}</CTableDataCell>
+                            <CTableDataCell>TSI{item.transactionSaleHasInventoryId}</CTableDataCell>
 
                             <CTableDataCell>
                               {canReadInventory ? (
@@ -676,23 +762,6 @@ const DetailPurchase = () => {
                             <CTableDataCell>
                               {parseInt(item.arrivedQuantity).toLocaleString()}
                             </CTableDataCell>
-                            <CTableDataCell className="d-flex align-middle">
-                              {item.arrivedQuantity != item.quantity &&
-                              canCreatePurchaseInventoryDetail ? (
-                                <CButton
-                                  color="primary"
-                                  size="sm"
-                                  className="me-1"
-                                  onClick={() => {
-                                    handleShowModalArrivalInventory(item)
-                                  }}
-                                >
-                                  <FontAwesomeIcon color="white" icon={faCircleCheck} />
-                                </CButton>
-                              ) : (
-                                '-'
-                              )}
-                            </CTableDataCell>
                           </CTableRow>
                         ))}
                       </CTableBody>
@@ -703,11 +772,11 @@ const DetailPurchase = () => {
             </CCol>
           )}
 
-          {canReadPurchaseInventoriesDetails && (
+          {canReadTransactionSaleShipments && (
             <CCol md={12} className="mb-4">
               <CCard>
                 <CCardHeader className="d-flex justify-content-between align-items-center">
-                  <strong>Rincian Penerimaan Barang</strong>
+                  <strong>Rincian Pengiriman Barang</strong>
                 </CCardHeader>
                 <CCardBody>
                   <div className="table-responsive">
@@ -715,41 +784,72 @@ const DetailPurchase = () => {
                       <CTableHead>
                         <CTableRow>
                           <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Tanggal Diterima</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Truk</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Status Pengiriman</CTableHeaderCell>
+                          {canReadTransactionSaleShipment && (
+                            <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                          )}
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
-                        {purchaseInventoriesDetails.map((item, idx) => (
+                        {transactionSaleShipment.map((item, idx) => (
                           <CTableRow key={idx}>
                             <CTableDataCell>
-                              {'PORG' + item.purchaseHasInventoryDetailId}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {canReadInventory ? (
-                                <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                                  {item.inventory.name}
-                                </NavLink>
-                              ) : (
-                                item.inventory.name
-                              )}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {item.inventory.condition === 0 ? (
-                                <CBadge color="primary">BARU</CBadge>
-                              ) : item.inventory.condition === 1 ? (
-                                <CBadge color="warning">BEKAS</CBadge>
-                              ) : (
-                                <span>{item.inventory.condition}</span> // Fallback for any other condition
-                              )}
+                              TSIS{item.transactionSaleHasInventoryShipmentId}
                             </CTableDataCell>
 
                             <CTableDataCell>
-                              {moment(item.arrivalDate).format('MMMM D, YYYY h:mm A')}
+                              {item.truck?.truckId ? (
+                                canReadTruck ? (
+                                  <NavLink to={`/trucks/${item.truck.truckId}/detail`}>
+                                    {item.truck.licensePlate}
+                                  </NavLink>
+                                ) : (
+                                  item.truck.licensePlate
+                                )
+                              ) : (
+                                '-'
+                              )}
                             </CTableDataCell>
-                            <CTableDataCell>{item.arrivedQuantity.toLocaleString()}</CTableDataCell>
+                            <CTableDataCell>
+                              <CBadge
+                                className="me-2"
+                                color={
+                                  item.shipmentStatus === 2
+                                    ? 'success'
+                                    : item.shipmentStatus === 1
+                                      ? 'warning'
+                                      : item.shipmentStatus === 0
+                                        ? 'danger'
+                                        : 'secondary'
+                                }
+                              >
+                                {item.shipmentStatus === 2
+                                  ? 'SELESAI'
+                                  : item.shipmentStatus === 1
+                                    ? 'PROSES'
+                                    : item.shipmentStatus === 0
+                                      ? 'BELUM DIKIRIM'
+                                      : item.shipmentStatus}
+                              </CBadge>
+                            </CTableDataCell>
+
+                            {canReadTransactionSaleShipment && (
+                              <CTableDataCell>
+                                <CButton
+                                  color="info"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDetail(
+                                      transactionSaleId,
+                                      item.transactionSaleHasInventoryShipmentId,
+                                    )
+                                  }
+                                >
+                                  <FontAwesomeIcon icon={faEye} />
+                                </CButton>
+                              </CTableDataCell>
+                            )}
                           </CTableRow>
                         ))}
                       </CTableBody>
@@ -760,7 +860,7 @@ const DetailPurchase = () => {
             </CCol>
           )}
 
-          {canReadPurchasePayments && (
+          {canReadTransactionSalePayments && (
             <CCol md={12}>
               <CCard className="mb-4">
                 <CCardHeader className="d-flex justify-content-between align-items-center">
@@ -825,10 +925,10 @@ const DetailPurchase = () => {
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
-                        {purchasePayments.map((payment, idx) => (
+                        {transactionSalePayments.map((payment, idx) => (
                           <CTableRow key={idx}>
                             <CTableDataCell className="text-center">
-                              POP{payment.purchasePaymentId}
+                              TSP{payment.transactionSalePaymentId}
                             </CTableDataCell>
                             <CTableDataCell>
                               {moment(payment.paymentDate).format('MMMM D, YYYY h:mm A')}
@@ -853,7 +953,7 @@ const DetailPurchase = () => {
                           <CTableDataCell>
                             <strong>
                               {formatRupiah(
-                                purchasePayments.reduce(
+                                transactionSalePayments.reduce(
                                   (total, payment) => total + Number(payment.amountPaid),
                                   0,
                                 ),
@@ -869,115 +969,30 @@ const DetailPurchase = () => {
             </CCol>
           )}
 
-          {canReadPurchaseLog && (
+          {canReadTransactionSaleLogs && (
             <CCol md={12} xs={12}>
-              <TablePurchaseLog
-                title={'Data Log Pembelian'}
-                error={purchaseLogError}
-                handleSearch={purchaseLogHandleSearch}
+              <TableSaleLog
+                title={'Data Log Transaksi Pembelian'}
+                error={transactionSaleLogError}
+                handleSearch={transactionSaleLogHandleSearch}
                 typeOptions={typeOptions}
-                searchTypeValue={purchaseLogSearchTypeValue}
-                setSearchTypeValue={setPurchaseLogSearchTypeValue}
-                searchStartDateValue={purchaseLogSearchStartDateValue}
-                setSearchStartDateValue={setPurchaseLogSearchStartDateValue}
-                searchEndDateValue={purchaseLogSearchEndDateValue}
-                setSearchEndDateValue={setPurchaseLogSearchEndDateValue}
-                searchLoading={purchaseLogSearchLoading}
-                purchasesLogs={purchaseLogs}
-                page={purchaseLogPage}
-                totalPages={purchaseLogTotalPages}
-                handlePageChange={handlePurchaseLogPageChange}
+                searchTypeValue={transactionSaleLogSearchTypeValue}
+                setSearchTypeValue={setTransactionSaleLogSearchTypeValue}
+                searchStartDateValue={transactionSaleLogSearchStartDateValue}
+                setSearchStartDateValue={setTransactionSaleLogSearchStartDateValue}
+                searchEndDateValue={transactionSaleLogSearchEndDateValue}
+                setSearchEndDateValue={setTransactionSaleLogSearchEndDateValue}
+                searchLoading={transactionSaleLogSearchLoading}
+                transactionSaleLogs={transactionSaleLogs}
+                page={transactionSaleLogPage}
+                totalPages={transactionSaleLogTotalPages}
+                handlePageChange={handleTransactionSaleLogPageChange}
                 authorizePermissions={authorizePermissions}
               />
             </CCol>
           )}
 
-          {canCreatePurchaseInventoryDetail && (
-            <CModal
-              visible={visibileModalArrivalInventory}
-              onClose={handleCloseModalArrivalInventory}
-              aria-labelledby="LiveDemoExampleLabel"
-            >
-              <CModalHeader>
-                <CModalTitle id="LiveDemoExampleLabel">Konfirmasi Penerimaan Barang</CModalTitle>
-              </CModalHeader>
-              <CForm noValidate onSubmit={handldeArrivalInventorySubmit}>
-                <CModalBody>
-                  {modalArrivalInventoryLoading || arrivalPurchaseInventory === null ? (
-                    <div className="pt-3 text-center">
-                      <CSpinner color="primary" variant="grow" />
-                    </div>
-                  ) : (
-                    <>
-                      {arrivalInventoryError && (
-                        <CAlert color="danger">{arrivalInventoryError}</CAlert>
-                      )}
-
-                      <div className="mb-3">
-                        <CFormInput
-                          value={`${arrivalPurchaseInventory?.inventory.name} | ${arrivalPurchaseInventory?.inventory.condition === 0 ? 'BARU' : 'BEKAS'}`}
-                          label="Barang"
-                          disabled
-                          readOnly
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <CFormInput
-                          value={`${(arrivalPurchaseInventory?.quantity - arrivalPurchaseInventory?.arrivedQuantity).toLocaleString()}`}
-                          label="Kuantitas Belum Diterima"
-                          disabled
-                          readOnly
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <CFormInput
-                          type="text"
-                          value={`${arrivalPurchaseInventory?.arrivedQuantity.toLocaleString()}`}
-                          label="Kuantitas Diterima"
-                          disabled
-                          readOnly
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <CFormInput
-                          label="Kuantitas Diterima Sekarang"
-                          value={receivedQuantityValue.toLocaleString()} // Display formatted number
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/[^0-9.-]+/g, '') // Clean the input
-                            const numberValue = Number(value) // Convert to number
-
-                            // Only update the state if the cleaned value is a valid number and greater than 0
-                            if (!isNaN(numberValue)) {
-                              setReceivedQuantityValue(numberValue) // Update the state with the number
-                            }
-                          }}
-                        />
-                      </div>
-                    </>
-                  )}
-                </CModalBody>
-
-                <CModalFooter>
-                  <CLoadingButton
-                    color="primary"
-                    type="submit"
-                    disabled={modalArrivalInventoryLoading}
-                    loading={modalArrivalInventoryLoading}
-                  >
-                    <FontAwesomeIcon icon={faSave} />
-                  </CLoadingButton>
-
-                  <CButton color="secondary" onClick={() => handleCloseModalArrivalInventory()}>
-                    <FontAwesomeIcon icon={faTimes} />
-                  </CButton>
-                </CModalFooter>
-              </CForm>
-            </CModal>
-          )}
-
-          {canCreatePurchasePayment && (
+          {canCreateTransactionSalePayment && (
             <CModal
               visible={visibileModalPayment}
               onClose={() => setVisibileModalPayment(false)}
@@ -997,7 +1012,7 @@ const DetailPurchase = () => {
                     <CFormRange
                       id="customRange1"
                       min={0}
-                      max={purchase.remainingBalance}
+                      max={transactionSale.remainingBalance}
                       onChange={(e) => setAmountPaidValue(e.target.value)}
                       disabled={paymentLoading}
                       value={amountPaidValue}
@@ -1131,4 +1146,4 @@ const DetailPurchase = () => {
   )
 }
 
-export default DetailPurchase
+export default DetailSale

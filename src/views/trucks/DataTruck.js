@@ -167,7 +167,7 @@ const DataProject = () => {
                   <CTable striped bordered responsive>
                     <CTableHead>
                       <CTableRow>
-                        <CTableHeaderCell scope="col">Id Truk</CTableHeaderCell>
+                        <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Model</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Plat Nomor</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Merek</CTableHeaderCell>
@@ -178,7 +178,7 @@ const DataProject = () => {
                     <CTableBody>
                       {trucks.map((truck, idx) => (
                         <CTableRow key={idx}>
-                          <CTableDataCell>#{truck.truckId}</CTableDataCell>
+                          <CTableDataCell>T{truck.truckId}</CTableDataCell>
                           <CTableDataCell>{truck.model}</CTableDataCell>
                           <CTableDataCell>{truck.licensePlate}</CTableDataCell>
                           <CTableDataCell>{truck.brand.name}</CTableDataCell>
@@ -200,7 +200,7 @@ const DataProject = () => {
                               <CButton
                                 color="info"
                                 size="sm"
-                                onClick={() => handleDetail(project.projectId)}
+                                onClick={() => handleDetail(truck.truckId)}
                               >
                                 <FontAwesomeIcon icon={faEye} />
                               </CButton>

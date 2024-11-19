@@ -362,7 +362,7 @@ const DetailSupplier = () => {
           <CCol md={12} xs={12} className="mb-3">
             <CCard>
               <CCardBody>
-                <CCardTitle>{'#' + supplier.supplierId + ' ' + supplier.name}</CCardTitle>
+                <CCardTitle>{'S' + supplier.supplierId + ' ' + supplier.name}</CCardTitle>
               </CCardBody>
               <CListGroup flush>
                 {!!supplier.email && <CListGroupItem>Email: {supplier.email}</CListGroupItem>}

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scaffolding Invoice</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .header img {
+        max-width: 150px;
+        margin-bottom: 10px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        color: #007bff;
+      }
+
+      .details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .details div {
+        width: 48%;
+      }
+
+      .info p {
+        margin-bottom: 5px;
+        line-height: 1.4;
+      }
+
+      .info strong {
+        color: #007bff;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+
+      th {
+        background-color: #007bff;
+        color: #fff;
+      }
+
+      .summary {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      .summary table {
+        width: 300px;
+        border: none;
+      }
+
+      .summary td {
+        padding: 8px;
+      }
+
+      .total {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .payment-info {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .signature {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 40px;
+      }
+
+      .signature div {
+        width: 45%;
+        text-align: center;
+      }
+
+      .note {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #666;
+      }
+
+      @media (max-width: 600px) {
+        .details {
+          flex-direction: column;
+        }
+
+        .details div {
+          width: 100%;
+          margin-bottom: 10px;
+        }
+
+        .summary table {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="logo.png" alt="Company Logo" />
+        <h1>Invoice</h1>
+        <p>UD. Sahabat Abadi - Scaffolding Solutions</p>
+        <p>Jl. Padang Golf, Komplek CBD Polonia No. 103, Medan, 20157</p>
+        <p>Phone: 0813 6294 7877 | Email: sahabatabadi@example.com</p>
+      </div>
+
+      <div class="details">
+        <div class="info">
+          <h3>Invoice Details</h3>
+          <p><strong>Invoice No:</strong> SA-INV-2024-001</p>
+          <p><strong>Date:</strong> [Current Date]</p>
+          <p><strong>Due Date:</strong> [Due Date]</p>
+        </div>
+
+        <div class="info">
+          <h3>Client Information</h3>
+          <p><strong>Client Name:</strong> [Client Name]</p>
+          <p><strong>Address:</strong> [Client Address]</p>
+          <p><strong>Phone:</strong> [Client Phone]</p>
+        </div>
+      </div>
+
+      <h3>Project Information</h3>
+      <p><strong>Project Name:</strong> [Project Name]</p>
+      <p><strong>Location:</strong> [Project Location]</p>
+
+      <h3>Itemized List</h3>
+      <table>
+        <tr>
+          <th>No</th>
+          <th>Description</th>
+          <th>Quantity</th>
+          <th>Unit Price</th>
+          <th>Total</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>Scaffolding Rental (10 days)</td>
+          <td>100 units</td>
+          <td>Rp 50,000</td>
+          <td>Rp 5,000,000</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Labor (Setup & Dismantle)</td>
+          <td>3 workers</td>
+          <td>Rp 300,000</td>
+          <td>Rp 900,000</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Materials (Safety Gear, Planks)</td>
+          <td>1 package</td>
+          <td>Rp 1,500,000</td>
+          <td>Rp 1,500,000</td>
+        </tr>
+      </table>
+
+      <div class="summary">
+        <table>
+          <tr>
+            <td>Subtotal:</td>
+            <td>Rp 7,400,000</td>
+          </tr>
+          <tr>
+            <td>Tax (10%):</td>
+            <td>Rp 740,000</td>
+          </tr>
+          <tr class="total">
+            <td>Total:</td>
+            <td>Rp 8,140,000</td>
+          </tr>
+          <tr>
+            <td>Amount Paid:</td>
+            <td>Rp 0</td>
+          </tr>
+          <tr class="total">
+            <td>Balance Due:</td>
+            <td>Rp 8,140,000</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="payment-info">
+        <p><strong>Payment Methods:</strong> Bank Transfer, Cash</p>
+        <p><strong>Bank Account:</strong> BCA - 123-456-789 (UD. Sahabat Abadi)</p>
+      </div>
+
+      <div class="signature">
+        <div>
+          <p>Authorized Signature</p>
+          <br /><br />
+          <p>(___________________)</p>
+        </div>
+        <div>
+          <p>Client Signature</p>
+          <br /><br />
+          <p>(___________________)</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <p>
+          <strong>Note:</strong> Payment is due within 14 days. Late payments may incur additional
+          fees.
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>Thank you for your business!</p>
+      </div>
+    </div>
+  </body>
+</html>

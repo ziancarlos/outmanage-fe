@@ -30,8 +30,10 @@ import PurchaseRoutes from './routes/PurchaseRoutes'
 import PurchaseNavs from './navs/PurchaseNavs'
 import OperationalExpenseNavs from './navs/OperationalExpenseNavs'
 import TelegramMessage from './navs/TelegramMessageNavs'
-import TransactionNavs from './navs/TransactionNavs'
+import TransactionNavs from './navs/transactions/SaleNavs'
 import TruckNavs from './navs/TruckNavs'
+import SaleNavs from './navs/transactions/SaleNavs'
+import RentNavs from './navs/transactions/RentNavs'
 
 const _nav = [
   {
@@ -73,7 +75,9 @@ const _nav = [
 
   ...OperationalExpenseNavs,
 
-  ...TransactionNavs,
+  ...RentNavs,
+
+  ...SaleNavs,
 
   ...TruckNavs,
 

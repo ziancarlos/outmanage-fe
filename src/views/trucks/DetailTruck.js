@@ -12,12 +12,11 @@ import {
 
 import { NavLink, useNavigate, useParams } from 'react-router-dom'
 
-import moment from 'moment'
 import useLogout from '../../hooks/useLogout'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useAuth from '../../hooks/useAuth'
 import { formatToISODate } from '../../utils/DateUtils'
-import TableProjectLog from '../../components/projects/TableProjectLog'
+import TableTruckLog from '../../components/trucks/TableTruckLog'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
@@ -26,20 +25,19 @@ const typeOptions = [
 ]
 const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
 
-const DetailProject = () => {
+const DetailTruck = () => {
   const { authorizePermissions } = useAuth()
-  const canReadProjectLogs = authorizePermissions.some((perm) => perm.name === 'read-project-logs')
-  const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
+  const canReadTruckLogs = authorizePermissions.some((perm) => perm.name === 'read-truck-logs')
 
-  const { projectId } = useParams()
+  const { truckId } = useParams()
 
   const logout = useLogout()
 
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
 
-  const [project, setProject] = useState({})
-  const [projectLogs, setProjectLogs] = useState([])
+  const [truck, setTruck] = useState({})
+  const [truckLogs, setTruckLogs] = useState([])
 
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -61,9 +59,9 @@ const DetailProject = () => {
   useEffect(() => {
     setLoading(true)
 
-    const fetchPromises = [fetchProject(projectId)]
+    const fetchPromises = [fetchTruck(truckId)]
 
-    if (canReadProjectLogs) {
+    if (canReadTruckLogs) {
       const queryParams = new URLSearchParams(location.search)
       const searchActivityParamValue = queryParams.get('type')
       const startDateParamValue = queryParams.get('startDate')
@@ -81,7 +79,7 @@ const DetailProject = () => {
         searchParamsRef.current.endDate = endDateParamValue
       }
 
-      fetchPromises.push(fetchProjectLogs(projectId, page, searchParamsRef.current))
+      fetchPromises.push(fetchTruckLogs(truckId, page, searchParamsRef.current))
     }
 
     Promise.all(fetchPromises).finally(() => setLoading(false))
@@ -114,18 +112,20 @@ const DetailProject = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/projects/${projectId}/detail`)
+      navigate(`/trucks/${truckId}/detail`)
     }
 
-    fetchProjectLogs(projectId, 1, searchParamsRef.current).finally(() => setSearchLoading(false))
+    fetchTruckLogs(truckId, 1, searchParamsRef.current).finally(() => setSearchLoading(false))
   }
 
-  async function fetchProject(projectId) {
+  async function fetchTruck(truckId) {
     try {
-      const response = await axiosPrivate.get(`/api/projects/${projectId}`)
+      const response = await axiosPrivate.get(`/api/trucks/${truckId}`)
 
-      setProject(response.data.data)
+      setTruck(response.data.data)
     } catch (e) {
+      console.log(e)
+
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([400, 401, 404].includes(e.response?.status)) {
@@ -136,18 +136,19 @@ const DetailProject = () => {
     }
   }
 
-  async function fetchProjectLogs(projectId, page, searchParams) {
+  async function fetchTruckLogs(truckId, page, searchParams) {
     try {
-      const response = await axiosPrivate.get(`/api/projects/${projectId}/logs`, {
+      const response = await axiosPrivate.get(`/api/trucks/${truckId}/logs`, {
         params: { page: page, size: 3, ...searchParams },
       })
 
-      setProjectLogs(response.data.data)
+      setTruckLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
 
       clearInput()
     } catch (e) {
+      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([401, 404].includes(e.response?.status)) {
@@ -166,7 +167,7 @@ const DetailProject = () => {
 
       setSearchLoading(true)
 
-      fetchProjectLogs(projectId, newPage, searchParamsRef).finally(() => setSearchLoading(false))
+      fetchTruckLogs(truckId, newPage, searchParamsRef).finally(() => setSearchLoading(false))
     }
   }
 
@@ -187,33 +188,40 @@ const DetailProject = () => {
           <CCol md={12} xs={12}>
             <CCard>
               <CCardBody>
-                <CCardTitle>{'P' + project.projectId + ' ' + project.name}</CCardTitle>
+                <CCardTitle>{'T' + truck.truckId + ' ' + truck.model}</CCardTitle>
               </CCardBody>
               <CListGroup flush>
-                <CListGroupItem>
-                  Klien:{' '}
-                  {canReadClient ? (
-                    <NavLink to={`/clients/${project.client.clientId}/detail`}>
-                      {project.client.name}
-                    </NavLink>
-                  ) : (
-                    project.client.name
+                <CListGroupItem>Model: {truck.model}</CListGroupItem>
+                <CListGroupItem>Plat Nomor: {truck.licensePlate}</CListGroupItem>
+                <CListGroupItem>Model: {truck.model}</CListGroupItem>
+                <CListGroupItem>Brand: {truck.brand.name}</CListGroupItem>
+                <CListGroupItem style={{ display: 'flex', alignItems: 'center' }}>
+                  Warna: {truck.color.name}{' '}
+                  {truck.color?.rgb && (
+                    <div
+                      style={{
+                        display: 'inline-block',
+                        width: '60px',
+                        height: '30px',
+                        backgroundColor: `${truck.color.rgb}`,
+                        marginLeft: '10px',
+                        borderRadius: '4px',
+                        border: `1px solid ${truck.color.rgb}`,
+                        boxShadow: '0 0 5px rgba(0, 0, 0, 0.15)',
+                        cursor: 'pointer',
+                        marginTop: '2px', // Center align with text
+                      }}
+                      title={`RGB: ${truck.color.rgb}`}
+                    />
                   )}
-                </CListGroupItem>
-                <CListGroupItem>Alamat: {project.address}</CListGroupItem>
-                {project.description && (
-                  <CListGroupItem>Deskripsi: {project.description}</CListGroupItem>
-                )}
-                <CListGroupItem>
-                  Dibuat Pada: {moment(project.createdAt).format('MMMM D, YYYY h:mm A')}
                 </CListGroupItem>
               </CListGroup>
             </CCard>
           </CCol>
 
-          {canReadProjectLogs && (
+          {canReadTruckLogs && (
             <CCol className="mt-3" md={12} xs={12}>
-              <TableProjectLog
+              <TableTruckLog
                 error={error}
                 handleSearch={handleSearch}
                 typeOptions={typeOptions}
@@ -224,7 +232,7 @@ const DetailProject = () => {
                 searchEndDateValue={searchEndDateValue}
                 setSearchEndDateValue={setSearchEndDateValue}
                 searchLoading={searchLoading}
-                projectsLogs={projectLogs}
+                truckLogs={truckLogs}
                 page={page}
                 totalPages={totalPages}
                 handlePageChange={handlePageChange}
@@ -238,4 +246,4 @@ const DetailProject = () => {
   )
 }
 
-export default DetailProject
+export default DetailTruck
