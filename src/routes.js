@@ -11,9 +11,8 @@ import PurchaseRoutes from './routes/PurchaseRoutes'
 import OperationalExpensesRoutes from './routes/OperationalExpensesRoutes'
 import TelegramMessageRoutes from './routes/TelegramMessagesRoutes'
 import TruckRoutes from './routes/TruckRoutes'
-import TransactionSaleNavs from './navs/transactions/SaleNavs'
-import SaleRoutes from './routes/transactions/SaleRoutes'
 import TransactionSaleRoutes from './routes/transactions/SaleRoutes'
+import TransactionRentRoutes from './routes/transactions/RentRoutes'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -210,6 +209,7 @@ export default [
   ...OperationalExpensesRoutes,
   ...TelegramMessageRoutes,
   ...TransactionSaleRoutes,
+  ...TransactionRentRoutes,
   ...TruckRoutes,
   ...routes,
 ]

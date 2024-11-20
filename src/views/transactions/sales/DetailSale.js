@@ -34,14 +34,11 @@ import {
   CTableRow,
 } from '@coreui/react-pro'
 import {
-  faCheckCircle,
   faEye,
   faFileAlt,
-  faFlagCheckered,
   faL,
   faMoneyBill1,
   faPaperPlane,
-  faS,
   faSave,
   faShippingFast,
   faTimes,
