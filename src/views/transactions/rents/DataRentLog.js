@@ -1,21 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { CCol, CRow, CSpinner } from '@coreui/react-pro'
-import { useLocation, useNavigate } from 'react-router-dom'
-import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-import useLogout from '../../hooks/useLogout'
-import useAuth from '../../hooks/useAuth'
-import { formatToISODate } from '../../utils/DateUtils'
-import TableSecurityDepositLog from '../../components/security-deposit/TableSecurityDepositLog'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
+import useLogout from '../../../hooks/useLogout'
+import useAuth from '../../../hooks/useAuth'
+import { formatToISODate } from '../../../utils/DateUtils'
+import TableRentLog from '../../../components/transactions/rent/TableRentLog'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
+  { label: 'DELETE', value: 'DELETE' },
 ]
-
 const matchingTypes = typeOptions.filter((option) => option.value).map((option) => option.value)
 
-const DataOperationalExpenseLog = () => {
+const DataRentLog = () => {
   const { authorizePermissions } = useAuth()
 
   const axiosPrivate = useAxiosPrivate()
@@ -28,7 +28,7 @@ const DataOperationalExpenseLog = () => {
 
   const [loading, setLoading] = useState(true)
 
-  const [securityDepositLogs, setSecurityDepositLogs] = useState([])
+  const [transactionRentLogs, setPurchasesLogs] = useState([])
 
   const [error, setError] = useState('')
 
@@ -55,6 +55,7 @@ const DataOperationalExpenseLog = () => {
     if (matchingTypes.includes(searchTypeValue)) {
       searchParams.type = searchTypeValue
     }
+
     if (searchStartDateValue) {
       searchParams.startDate = formatToISODate(searchStartDateValue)
     }
@@ -69,25 +70,29 @@ const DataOperationalExpenseLog = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/deposits/log`)
+      navigate(`/transactions/rents/log`)
     }
 
-    fetchData(1, searchParamsRef.current).finally(() => setSearchLoading(false))
+    fetchData(1, searchParams).finally(() => setSearchLoading(false))
+  }
+
+  function clearInput() {
+    setSearchTypeValue('')
+    setSearchStartDateValue('')
+    setSearchEndDateValue('')
   }
 
   async function fetchData(page, searchParams) {
     try {
-      const response = await axiosPrivate.get('/api/deposits/logs', {
+      const response = await axiosPrivate.get('/api/transactions/rents/logs', {
         params: { page: page, size: 5, ...searchParams },
       })
 
-      setSecurityDepositLogs(response.data.data)
+      setPurchasesLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
 
-      setSearchTypeValue('')
-      setSearchStartDateValue('')
-      setSearchEndDateValue('')
+      clearInput()
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -139,27 +144,31 @@ const DataOperationalExpenseLog = () => {
           <CSpinner color="primary" variant="grow" />
         </div>
       ) : (
-        <TableSecurityDepositLog
-          title={'Data Log Deposit Keamanan'}
-          error={error}
-          handleSearch={handleSearch}
-          typeOptions={typeOptions}
-          searchTypeValue={searchTypeValue}
-          setSearchTypeValue={setSearchTypeValue}
-          searchStartDateValue={searchStartDateValue}
-          setSearchStartDateValue={setSearchStartDateValue}
-          searchEndDateValue={searchEndDateValue}
-          setSearchEndDateValue={setSearchEndDateValue}
-          searchLoading={searchLoading}
-          securityDepositLogs={securityDepositLogs}
-          page={page}
-          totalPages={totalPages}
-          handlePageChange={handlePageChange}
-          authorizePermissions={authorizePermissions}
-        />
+        <CRow>
+          <CCol>
+            <TableRentLog
+              title={'Data Log Transaksi Penyewaan'}
+              error={error}
+              handleSearch={handleSearch}
+              typeOptions={typeOptions}
+              searchTypeValue={searchTypeValue}
+              setSearchTypeValue={setSearchTypeValue}
+              searchStartDateValue={searchStartDateValue}
+              setSearchStartDateValue={setSearchStartDateValue}
+              searchEndDateValue={searchEndDateValue}
+              setSearchEndDateValue={setSearchEndDateValue}
+              searchLoading={searchLoading}
+              transactionRentLogs={transactionRentLogs}
+              page={page}
+              totalPages={totalPages}
+              handlePageChange={handlePageChange}
+              authorizePermissions={authorizePermissions}
+            />
+          </CCol>
+        </CRow>
       )}
     </>
   )
 }
 
-export default DataOperationalExpenseLog
+export default DataRentLog

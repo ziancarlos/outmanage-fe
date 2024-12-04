@@ -51,8 +51,8 @@ const TransactionSaleRoutes = [
   },
 
   {
-    path: '/transactions/sales/:transactionSaleId/shipment/:transactionSaleHasInventoryShipmentId/detail',
-    name: 'Data Log Transaski Penjualan',
+    path: '/transactions/sales/:transactionSaleId/shipment/:transactionSaleShipmentId/detail',
+    name: 'Detil Pengiriman Transaski Penjualan',
     element: DetailSaleShipment,
     permissions: ['read-transaction-sale-shipment'],
   },

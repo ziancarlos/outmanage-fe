@@ -88,7 +88,7 @@ const DetailSaleShipment = () => {
     (perm) => perm.name === 'update-transaction-sale-shipment-completed',
   )
 
-  const { transactionSaleId, transactionSaleHasInventoryShipmentId } = useParams()
+  const { transactionSaleId, transactionSaleShipmentId } = useParams()
 
   const [transactionSaleShipment, setTransactionSaleShipment] = useState({})
   const [transactionSaleShipmentDetails, setTransactionSaleShipmentDetails] = useState({})
@@ -105,32 +105,24 @@ const DetailSaleShipment = () => {
     setLoading(true)
     const fetchPromises = []
 
-    fetchPromises.push(
-      fetchTransactionSaleShipment(transactionSaleId, transactionSaleHasInventoryShipmentId),
-    )
+    console.log(transactionSaleShipmentId)
+
+    fetchPromises.push(fetchTransactionSaleShipment(transactionSaleId, transactionSaleShipmentId))
 
     if (canReadTransactionSaleShipmentDetails) {
       fetchPromises.push(
-        fetchTransactionSaleShipmentDetails(
-          transactionSaleId,
-          transactionSaleHasInventoryShipmentId,
-        ),
+        fetchTransactionSaleShipmentDetails(transactionSaleId, transactionSaleShipmentId),
       )
     }
 
     Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [refetch])
 
-  async function fetchTransactionSaleShipment(
-    transactionSaleId,
-    transactionSaleHasInventoryShipmentId,
-  ) {
+  async function fetchTransactionSaleShipment(transactionSaleId, transactionSaleShipmentId) {
     try {
       const response = await axiosPrivate.get(
-        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleHasInventoryShipmentId}`,
+        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleShipmentId}`,
       )
-
-      console.log(response.data.data)
 
       setTransactionSaleShipment(response.data.data)
     } catch (e) {
@@ -145,13 +137,10 @@ const DetailSaleShipment = () => {
     }
   }
 
-  async function fetchTransactionSaleShipmentDetails(
-    transactionSaleId,
-    transactionSaleHasInventoryShipmentId,
-  ) {
+  async function fetchTransactionSaleShipmentDetails(transactionSaleId, transactionSaleShipmentId) {
     try {
       const response = await axiosPrivate.get(
-        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleHasInventoryShipmentId}/details`,
+        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleShipmentId}/details`,
       )
 
       setTransactionSaleShipmentDetails(response.data.data)
@@ -166,11 +155,11 @@ const DetailSaleShipment = () => {
     }
   }
 
-  async function generateDeliveryNote(transactionSaleId, transactionSaleHasInventoryShipmentId) {
+  async function generateDeliveryNote(transactionSaleId, transactionSaleShipmentId) {
     setLoading(true)
     try {
       const response = await axiosPrivate.get(
-        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleHasInventoryShipmentId}/download-delivery-note`,
+        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleShipmentId}/download-delivery-note`,
         {
           responseType: 'blob', // Ensure the response is treated as a file
         },
@@ -206,11 +195,11 @@ const DetailSaleShipment = () => {
     }
   }
 
-  async function updateShipmentShipped(transactionSaleId, transactionSaleHasInventoryShipmentId) {
+  async function updateShipmentShipped(transactionSaleId, transactionSaleShipmentId) {
     setLoading(true)
     try {
       const response = await axiosPrivate.patch(
-        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleHasInventoryShipmentId}/shipped`,
+        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleShipmentId}/shipped`,
       )
 
       setRefetch(!refetch)
@@ -241,11 +230,11 @@ const DetailSaleShipment = () => {
     }
   }
 
-  async function updateShipmentCompleted(transactionSaleId, transactionSaleHasInventoryShipmentId) {
+  async function updateShipmentCompleted(transactionSaleId, transactionSaleShipmentId) {
     setLoading(true)
     try {
       const response = await axiosPrivate.patch(
-        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleHasInventoryShipmentId}/completed`,
+        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleShipmentId}/completed`,
       )
 
       Swal.fire({
@@ -287,7 +276,7 @@ const DetailSaleShipment = () => {
             <CCard>
               <CCardBody>
                 <CCardTitle>
-                  TSIS{transactionSaleShipment.transactionSaleHasInventoryShipmentId}
+                  TSIS{transactionSaleShipment.transactionSaleShipmentId}
                   <CBadge
                     className="ms-2"
                     color={
@@ -360,7 +349,7 @@ const DetailSaleShipment = () => {
                     variant="outline"
                     className="me-1"
                     onClick={() =>
-                      generateDeliveryNote(transactionSaleId, transactionSaleHasInventoryShipmentId)
+                      generateDeliveryNote(transactionSaleId, transactionSaleShipmentId)
                     }
                   >
                     <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Pengantar
@@ -373,10 +362,7 @@ const DetailSaleShipment = () => {
                     variant="outline"
                     className="me-1"
                     onClick={() =>
-                      updateShipmentShipped(
-                        transactionSaleId,
-                        transactionSaleHasInventoryShipmentId,
-                      )
+                      updateShipmentShipped(transactionSaleId, transactionSaleShipmentId)
                     }
                   >
                     <FontAwesomeIcon icon={faTruckFast} className="me-2" /> Dikirim
@@ -388,10 +374,7 @@ const DetailSaleShipment = () => {
                     color="primary"
                     variant="outline"
                     onClick={() =>
-                      updateShipmentCompleted(
-                        transactionSaleId,
-                        transactionSaleHasInventoryShipmentId,
-                      )
+                      updateShipmentCompleted(transactionSaleId, transactionSaleShipmentId)
                     }
                   >
                     <FontAwesomeIcon icon={faCheckCircle} className="me-2" /> Selesai

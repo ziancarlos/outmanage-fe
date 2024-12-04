@@ -182,8 +182,8 @@ function TablePurchase({
                         </CBadge>
                       </CTableDataCell>
                       <CTableDataCell>
-                        <CBadge color={purchase.deliveryStatus === 1 ? 'success' : 'warning'}>
-                          {purchase.deliveryStatus === 1 ? 'Selesai' : 'Belum Selesai'}
+                        <CBadge color={purchase.deliveryStatus === 1 ? 'success' : 'danger'}>
+                          {purchase.deliveryStatus === 1 ? 'SAMPAI' : 'BELUM SAMPAI'}
                         </CBadge>
                       </CTableDataCell>
                       {canReadPurchase && (

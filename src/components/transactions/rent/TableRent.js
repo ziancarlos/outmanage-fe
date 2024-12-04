@@ -28,6 +28,7 @@ import { formatRupiah } from '../../../utils/CurrencyUtils'
 
 function TableRent({
   deliveryStatusOptions,
+  returnedStatusOptions,
   paymentStatusOptions,
   navigate,
   authorizePermissions,
@@ -36,6 +37,8 @@ function TableRent({
   searchLoading,
   searchDeliveryStatusValue,
   setSearchDeliveryStatusValue,
+  searchReturnedStatusValue,
+  setSearchReturnedStatusValue,
   searchPaymentStatusValue,
   setSearchPaymentStatusValue,
   searchStartDateValue,
@@ -74,16 +77,7 @@ function TableRent({
             {/* Filter Form */}
             <CForm onSubmit={handleSearch} noValidate>
               <CRow className="mb-4">
-                <CCol xs={12} md={6} className="mb-2">
-                  <CFormLabel htmlFor="deliveryStatusInput">Status Pengiriman</CFormLabel>
-                  <CFormSelect
-                    id="deliveryStatusInput"
-                    value={searchDeliveryStatusValue}
-                    onChange={(e) => setSearchDeliveryStatusValue(e.target.value)}
-                    options={deliveryStatusOptions}
-                  />
-                </CCol>
-                <CCol xs={12} md={6} className="mb-2">
+                <CCol xs={12} md={4} className="mb-2">
                   <CFormLabel htmlFor="paymentStatusInput">Status Pembayaran</CFormLabel>
                   <CFormSelect
                     id="paymentStatusInput"
@@ -92,6 +86,25 @@ function TableRent({
                     options={paymentStatusOptions}
                   />
                 </CCol>
+                <CCol xs={12} md={4} className="mb-2">
+                  <CFormLabel htmlFor="deliveryStatusInput">Status Pengiriman</CFormLabel>
+                  <CFormSelect
+                    id="deliveryStatusInput"
+                    value={searchDeliveryStatusValue}
+                    onChange={(e) => setSearchDeliveryStatusValue(e.target.value)}
+                    options={deliveryStatusOptions}
+                  />
+                </CCol>
+                <CCol xs={12} md={4} className="mb-2">
+                  <CFormLabel htmlFor="deliveryStatusInput">Status Pengembalian</CFormLabel>
+                  <CFormSelect
+                    id="deliveryStatusInput"
+                    value={searchReturnedStatusValue}
+                    onChange={(e) => setSearchReturnedStatusValue(e.target.value)}
+                    options={returnedStatusOptions}
+                  />
+                </CCol>
+
                 <CCol xs={12} md={12} className="mb-2">
                   <CFormLabel htmlFor="dateRangeInput">Tanggal</CFormLabel>
                   <CDateRangePicker
@@ -128,6 +141,7 @@ function TableRent({
                     <CTableHeaderCell>Tanggal</CTableHeaderCell>
                     <CTableHeaderCell>Status Pembayaran</CTableHeaderCell>
                     <CTableHeaderCell>Status Pengiriman</CTableHeaderCell>
+                    <CTableHeaderCell>Status Pengembalian</CTableHeaderCell>
                     <CTableHeaderCell>Aksi</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
@@ -192,6 +206,23 @@ function TableRent({
                             : ts.shipmentStatus === 1
                               ? 'PROSES'
                               : 'BELUM DIKIRIM'}
+                        </CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge
+                          color={
+                            ts.returnStatus === 2
+                              ? 'success'
+                              : ts.returnStatus === 1
+                                ? 'warning'
+                                : 'danger'
+                          }
+                        >
+                          {ts.returnStatus === 2
+                            ? 'DIKEMBALIKAN'
+                            : ts.returnStatus === 1
+                              ? 'PROSES'
+                              : 'BELUM DIKEMBALIKAN'}
                         </CBadge>
                       </CTableDataCell>
                       {canReadTransactionRent && (

@@ -32,16 +32,22 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
+  CWidgetStatsF,
 } from '@coreui/react-pro'
 import {
   faEye,
   faFileAlt,
   faL,
+  faMoneyBill,
   faMoneyBill1,
+  faMoneyBill1Wave,
+  faMoneyBillTrendUp,
   faPaperPlane,
   faSave,
   faShippingFast,
   faTimes,
+  faTruck,
+  faWallet,
 } from '@fortawesome/free-solid-svg-icons'
 
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -134,6 +140,13 @@ const DetailSale = () => {
     useState('')
   const [transactionSaleLogSearchLoading, setTransactionSaleLogSearchLoading] = useState(false)
 
+  useEffect(() => {
+    setTransactionSaleLogError('')
+  }, [
+    transactionSaleLogSearchTypeValue,
+    transactionSaleLogSearchStartDateValue,
+    transactionSaleLogSearchEndDateValue,
+  ])
   useEffect(() => {
     setLoading(true)
     const fetchPromises = []
@@ -549,9 +562,9 @@ const DetailSale = () => {
     navigate(`/transactions/sales/${transactionSaleId}/shipment`)
   }
 
-  function handleDetail(transactionSaleId, transactionSaleHasInventoryShipmentId) {
+  function handleDetail(transactionSaleId, transactionSaleShipmentId) {
     navigate(
-      `/transactions/sales/${transactionSaleId}/shipment/${transactionSaleHasInventoryShipmentId}/detail`,
+      `/transactions/sales/${transactionSaleId}/shipment/${transactionSaleShipmentId}/detail`,
     )
   }
   return (
@@ -561,583 +574,627 @@ const DetailSale = () => {
           <CSpinner color="primary" variant="grow" />
         </div>
       ) : (
-        <CRow>
-          <CCol md={12} xs={12} className="mb-4">
-            <CCard>
-              <CCardBody>
-                <CCardTitle>
-                  {'TS' + transactionSale.transactionSaleId}
-                  <CBadge
-                    className="me-2"
-                    color={
-                      transactionSale.shipmentStatus === 2
-                        ? 'success'
-                        : transactionSale.shipmentStatus === 1
-                          ? 'warning'
-                          : transactionSale.shipmentStatus === 0
-                            ? 'danger'
-                            : 'secondary'
-                    }
-                  >
-                    {transactionSale.shipmentStatus === 2
-                      ? 'SELESAI'
-                      : transactionSale.shipmentStatus === 1
-                        ? 'PROSES'
-                        : transactionSale.shipmentStatus === 0
-                          ? 'BELUM DIKIRIM'
-                          : transactionSale.shipmentStatus}
-                  </CBadge>
-                  <CBadge
-                    color={
-                      transactionSale.paymentStatus === 2
-                        ? 'success'
-                        : transactionSale.paymentStatus === 1
-                          ? 'warning'
-                          : transactionSale.paymentStatus === 0
-                            ? 'danger'
-                            : 'secondary'
-                    }
-                  >
-                    {transactionSale.paymentStatus === 2
-                      ? 'LUNAS'
-                      : transactionSale.paymentStatus === 1
-                        ? 'SEBAGIAN'
-                        : transactionSale.paymentStatus === 0
-                          ? 'BELUM LUNAS'
-                          : transactionSale.paymentStatus}
-                  </CBadge>
-                </CCardTitle>
-              </CCardBody>
-              <CListGroup flush>
-                <CListGroupItem>
-                  Klien:{' '}
-                  {canReadClient ? (
-                    <NavLink to={`/clients/${transactionSale.client.clientId}/detail`}>
-                      {transactionSale.client.name}
-                    </NavLink>
-                  ) : (
-                    transactionSale.client.name
-                  )}
-                </CListGroupItem>
-                <CListGroupItem>
-                  Total Keseluruhan: {formatRupiah(transactionSale.grandTotal)}
-                </CListGroupItem>
-                <CListGroupItem>
-                  Tanggal Pembelian:{' '}
-                  {moment(transactionSale.transactionDate).format('MMMM D, YYYY h:mm A')}
-                </CListGroupItem>
-                {!!transactionSale.description && (
-                  <CListGroupItem>Deskripsi: {transactionSale.description}</CListGroupItem>
-                )}
-                <CListGroupItem>
-                  Jumlah Dibayar: {formatRupiah(transactionSale.totalPaid || 0)}
-                </CListGroupItem>
-                <CListGroupItem>
-                  Ongkos Pengiriman: {formatRupiah(transactionSale.deliveryFee || 0)}
-                </CListGroupItem>
-                {transactionSale.remainingBalance > 0 && (
-                  <CListGroupItem>
-                    Sisa Pembayaran: {formatRupiah(transactionSale.remainingBalance || 0)}
-                  </CListGroupItem>
-                )}
-              </CListGroup>
-
-              {(() => {
-                // Define permission and status checks
-                const needsPayment =
-                  transactionSale.totalPaid !== transactionSale.grandTotal &&
-                  canCreateTransactionSalePayment
-
-                const canInitiateShipment =
-                  canReadTransactionSaleInventories &&
-                  canReadTruck &&
-                  canCreateTransactionSaleShipment &&
-                  transactionSale.shipmentStatus !== 2
-
-                const canGenerateOfferingLetter =
-                  transactionSale.shipmentStatus === 0 && transactionSale.paymentStatus === 0
-
-                // Render Payment Button
-                const renderPaymentButton = needsPayment && (
-                  <CButton
-                    color="warning"
-                    variant="outline"
-                    onClick={() => setVisibileModalPayment(!visibileModalPayment)}
-                    className="me-1"
-                  >
-                    <FontAwesomeIcon icon={faMoneyBill1} className="me-2" /> Pembayaran
-                  </CButton>
-                )
-
-                // Render Shipment Button
-                const renderShipmentButton = canInitiateShipment && (
-                  <CButton
-                    color="info"
-                    variant="outline"
-                    className="me-1"
-                    onClick={() => handleShipment(transactionSaleId)}
-                  >
-                    <FontAwesomeIcon icon={faShippingFast} className="me-2" /> Pengantaran
-                  </CButton>
-                )
-
-                // Render Offering Letter Button
-                const renderOfferingLetterButton = canGenerateOfferingLetter && (
-                  <CButton
-                    color="success"
-                    variant="outline"
-                    onClick={() => generateOfferingLetter(transactionSaleId)}
-                  >
-                    <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Penawaran
-                  </CButton>
-                )
-
-                // Check if any button should be rendered
-                const shouldRenderFooter =
-                  renderPaymentButton || renderShipmentButton || renderOfferingLetterButton
-
-                // Conditionally render the footer
-                return shouldRenderFooter ? (
-                  <CCardFooter>
-                    {renderPaymentButton}
-                    {renderShipmentButton}
-                    {renderOfferingLetterButton}
-                  </CCardFooter>
-                ) : null
-              })()}
-            </CCard>
-          </CCol>
-
-          {canReadTransactionSaleInventories && (
-            <CCol md={12} className="mb-4">
-              <CCard>
-                <CCardHeader className="d-flex justify-content-between align-items-center">
-                  <strong>Rincian Pembelian Barang</strong>
-                </CCardHeader>
-                <CCardBody>
-                  <div className="table-responsive">
-                    <CTable striped bordered responsive>
-                      <CTableHead>
-                        <CTableRow>
-                          <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kuantitas Dipesan</CTableHeaderCell>
-                        </CTableRow>
-                      </CTableHead>
-                      <CTableBody>
-                        {transactionSaleInventories.map((item, idx) => (
-                          <CTableRow key={idx}>
-                            <CTableDataCell>TSI{item.transactionSaleHasInventoryId}</CTableDataCell>
-
-                            <CTableDataCell>
-                              {canReadInventory ? (
-                                <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                                  {item.inventory.name}
-                                </NavLink>
-                              ) : (
-                                item.inventory.name
-                              )}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {item.inventory.condition === 0 ? (
-                                <CBadge color="primary">BARU</CBadge>
-                              ) : item.inventory.condition === 1 ? (
-                                <CBadge color="warning">BEKAS</CBadge>
-                              ) : (
-                                <span>{item.inventory.condition}</span> // Fallback for any other condition
-                              )}
-                            </CTableDataCell>
-                            <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
-                            <CTableDataCell>
-                              {formatRupiah(item.pricePerUnit * item.quantity)}
-                            </CTableDataCell>
-                            <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
-                            <CTableDataCell>
-                              {parseInt(item.arrivedQuantity).toLocaleString()}
-                            </CTableDataCell>
-                          </CTableRow>
-                        ))}
-                      </CTableBody>
-                    </CTable>
-                  </div>
-                </CCardBody>
-              </CCard>
-            </CCol>
-          )}
-
-          {canReadTransactionSaleShipments && (
-            <CCol md={12} className="mb-4">
-              <CCard>
-                <CCardHeader className="d-flex justify-content-between align-items-center">
-                  <strong>Rincian Pengiriman Barang</strong>
-                </CCardHeader>
-                <CCardBody>
-                  <div className="table-responsive">
-                    <CTable striped bordered responsive>
-                      <CTableHead>
-                        <CTableRow>
-                          <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Truk</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Status Pengiriman</CTableHeaderCell>
-                          {canReadTransactionSaleShipment && (
-                            <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
-                          )}
-                        </CTableRow>
-                      </CTableHead>
-                      <CTableBody>
-                        {transactionSaleShipment.map((item, idx) => (
-                          <CTableRow key={idx}>
-                            <CTableDataCell>
-                              TSIS{item.transactionSaleHasInventoryShipmentId}
-                            </CTableDataCell>
-
-                            <CTableDataCell>
-                              {item.truck?.truckId ? (
-                                canReadTruck ? (
-                                  <NavLink to={`/trucks/${item.truck.truckId}/detail`}>
-                                    {item.truck.licensePlate}
-                                  </NavLink>
-                                ) : (
-                                  item.truck.licensePlate
-                                )
-                              ) : (
-                                '-'
-                              )}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              <CBadge
-                                className="me-2"
-                                color={
-                                  item.shipmentStatus === 2
-                                    ? 'success'
-                                    : item.shipmentStatus === 1
-                                      ? 'warning'
-                                      : item.shipmentStatus === 0
-                                        ? 'danger'
-                                        : 'secondary'
-                                }
-                              >
-                                {item.shipmentStatus === 2
-                                  ? 'SELESAI'
-                                  : item.shipmentStatus === 1
-                                    ? 'PROSES'
-                                    : item.shipmentStatus === 0
-                                      ? 'BELUM DIKIRIM'
-                                      : item.shipmentStatus}
-                              </CBadge>
-                            </CTableDataCell>
-
-                            {canReadTransactionSaleShipment && (
-                              <CTableDataCell>
-                                <CButton
-                                  color="info"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDetail(
-                                      transactionSaleId,
-                                      item.transactionSaleHasInventoryShipmentId,
-                                    )
-                                  }
-                                >
-                                  <FontAwesomeIcon icon={faEye} />
-                                </CButton>
-                              </CTableDataCell>
-                            )}
-                          </CTableRow>
-                        ))}
-                      </CTableBody>
-                    </CTable>
-                  </div>
-                </CCardBody>
-              </CCard>
-            </CCol>
-          )}
-
-          {canReadTransactionSalePayments && (
-            <CCol md={12}>
-              <CCard className="mb-4">
-                <CCardHeader className="d-flex justify-content-between align-items-center">
-                  <strong>Rincian Pembayaran</strong>
-                </CCardHeader>
-                <CCardBody>
-                  <div className="table-responsive">
-                    <CTable striped bordered responsive>
-                      <CTableHead>
-                        <CTableRow>
-                          <CTableHeaderCell
-                            scope="col"
-                            rowSpan={3}
-                            className="text-center align-middle"
-                          >
-                            Id
-                          </CTableHeaderCell>
-
-                          <CTableHeaderCell
-                            scope="col"
-                            rowSpan={3}
-                            className="text-center align-middle"
-                          >
-                            Tanggal Pembayaran
-                          </CTableHeaderCell>
-                          <CTableHeaderCell
-                            scope="col"
-                            colSpan={3}
-                            className="text-center align-middle"
-                          >
-                            Metode Pembayaran
-                          </CTableHeaderCell>
-
-                          <CTableHeaderCell
-                            scope="col"
-                            rowSpan={3}
-                            className="text-center align-middle"
-                          >
-                            Jumlah Yang Dibayarkan
-                          </CTableHeaderCell>
-                        </CTableRow>
-                        <CTableRow>
-                          <CTableHeaderCell
-                            scope="col"
-                            rowSpan={2}
-                            className="text-center align-middle"
-                          >
-                            Penerima Uang Tunai
-                          </CTableHeaderCell>
-                          <CTableHeaderCell
-                            scope="col"
-                            colSpan={2}
-                            className="text-center align-middle"
-                          >
-                            Transfer
-                          </CTableHeaderCell>
-                        </CTableRow>
-
-                        <CTableRow>
-                          <CTableHeaderCell scope="col">Nomor Rekening</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Bank</CTableHeaderCell>
-                        </CTableRow>
-                      </CTableHead>
-                      <CTableBody>
-                        {transactionSalePayments.map((payment, idx) => (
-                          <CTableRow key={idx}>
-                            <CTableDataCell className="text-center">
-                              TSP{payment.transactionSalePaymentId}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {moment(payment.paymentDate).format('MMMM D, YYYY h:mm A')}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {payment.cashRecipent ? payment.cashRecipent : '-'}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {payment.accountNumber ? payment.accountNumber : '-'}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {payment.bankName ? payment.bankName : '-'}
-                            </CTableDataCell>
-                            <CTableDataCell>{formatRupiah(payment.amountPaid)}</CTableDataCell>
-                          </CTableRow>
-                        ))}
-
-                        <CTableRow>
-                          <CTableHeaderCell className="text-center align-middle" colSpan={5}>
-                            <strong>Total</strong>
-                          </CTableHeaderCell>
-                          <CTableDataCell>
-                            <strong>
-                              {formatRupiah(
-                                transactionSalePayments.reduce(
-                                  (total, payment) => total + Number(payment.amountPaid),
-                                  0,
-                                ),
-                              )}
-                            </strong>
-                          </CTableDataCell>
-                        </CTableRow>
-                      </CTableBody>
-                    </CTable>
-                  </div>
-                </CCardBody>
-              </CCard>
-            </CCol>
-          )}
-
-          {canReadTransactionSaleLogs && (
-            <CCol md={12} xs={12}>
-              <TableSaleLog
-                title={'Data Log Transaksi Pembelian'}
-                error={transactionSaleLogError}
-                handleSearch={transactionSaleLogHandleSearch}
-                typeOptions={typeOptions}
-                searchTypeValue={transactionSaleLogSearchTypeValue}
-                setSearchTypeValue={setTransactionSaleLogSearchTypeValue}
-                searchStartDateValue={transactionSaleLogSearchStartDateValue}
-                setSearchStartDateValue={setTransactionSaleLogSearchStartDateValue}
-                searchEndDateValue={transactionSaleLogSearchEndDateValue}
-                setSearchEndDateValue={setTransactionSaleLogSearchEndDateValue}
-                searchLoading={transactionSaleLogSearchLoading}
-                transactionSaleLogs={transactionSaleLogs}
-                page={transactionSaleLogPage}
-                totalPages={transactionSaleLogTotalPages}
-                handlePageChange={handleTransactionSaleLogPageChange}
-                authorizePermissions={authorizePermissions}
+        <>
+          <CRow>
+            <CCol xs={6}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="info"
+                icon={<FontAwesomeIcon icon={faMoneyBill1Wave} size="lg" />}
+                padding={false}
+                title="Total Pembelian"
+                value={formatRupiah(transactionSale.purchaseTotal || 0)}
               />
             </CCol>
-          )}
 
-          {canCreateTransactionSalePayment && (
-            <CModal
-              visible={visibileModalPayment}
-              onClose={() => setVisibileModalPayment(false)}
-              aria-labelledby="LiveDemoExampleLabel"
-            >
-              <CForm onSubmit={handlePaymentSubmit} noValidate>
-                <CModalHeader>
-                  <CModalTitle id="LiveDemoExampleLabel">Pembayaran</CModalTitle>
-                </CModalHeader>
-                <CModalBody>
-                  {paymentError && <CAlert color="danger">{paymentError}</CAlert>}
-                  {paymentSuccess && <CAlert color="success">{paymentSuccess}</CAlert>}
+            <CCol xs={6}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="primary"
+                icon={<FontAwesomeIcon icon={faTruck} size="lg" />}
+                padding={false}
+                title="Ongkos Pengiriman"
+                value={formatRupiah(transactionSale.deliveryFee || 0)}
+              />
+            </CCol>
 
-                  <div className="mt-3 mb-3">
-                    <CFormLabel className="fw-bold">Jumlah Yang Dibayarkan</CFormLabel>
+            <CCol xs={12}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="success"
+                icon={<FontAwesomeIcon icon={faWallet} size="lg" />}
+                padding={false}
+                title="Total Keseluruhan"
+                value={formatRupiah(transactionSale.grandTotal || 0)}
+              />
+            </CCol>
 
-                    <CFormRange
-                      id="customRange1"
-                      min={0}
-                      max={transactionSale.remainingBalance}
-                      onChange={(e) => setAmountPaidValue(e.target.value)}
-                      disabled={paymentLoading}
-                      value={amountPaidValue}
-                    />
+            <CCol xs={12}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="secondary"
+                icon={<FontAwesomeIcon icon={faMoneyBillTrendUp} size="lg" />}
+                padding={false}
+                title="Jumlah Dibayar"
+                value={formatRupiah(transactionSale.totalPaid || 0)}
+              />
+            </CCol>
+            <CCol xs={12}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="danger"
+                icon={<FontAwesomeIcon icon={faMoneyBill} size="lg" />}
+                padding={false}
+                title="Sisa Pembayaran"
+                value={formatRupiah(transactionSale.remainingBalance || 0)}
+              />
+            </CCol>
+          </CRow>
 
-                    <CFormInput
-                      type="text"
-                      value={formatRupiah(amountPaidValue)}
-                      onChange={(e) => handlePaymentAmount(e.target.value)}
-                      disabled={paymentLoading}
-                    />
-                  </div>
+          <CRow>
+            <CCol md={12} xs={12} className="mb-4">
+              <CCard>
+                <CCardBody>
+                  <CCardTitle>
+                    {'TS' + transactionSale.transactionSaleId}
+                    <CBadge
+                      className="ms-2 me-2"
+                      color={
+                        transactionSale.paymentStatus === 2
+                          ? 'success'
+                          : transactionSale.paymentStatus === 1
+                            ? 'warning'
+                            : transactionSale.paymentStatus === 0
+                              ? 'danger'
+                              : 'secondary'
+                      }
+                    >
+                      {transactionSale.paymentStatus === 2
+                        ? 'LUNAS'
+                        : transactionSale.paymentStatus === 1
+                          ? 'SEBAGIAN'
+                          : transactionSale.paymentStatus === 0
+                            ? 'BELUM LUNAS'
+                            : transactionSale.paymentStatus}
+                    </CBadge>
 
-                  <div className="mb-3">
-                    <CFormLabel htmlFor="paymentMethod" className="fw-bold d-block">
-                      Metode Pembayaran
-                    </CFormLabel>
-                    <CFormCheck
-                      inline
-                      type="radio"
-                      name="paymentMethod"
-                      id="transfer"
-                      label="Transfer"
-                      value="transfer"
-                      checked={checkedPaymentMethodOptions === 'transfer'}
-                      onChange={(e) => setCheckedPaymentMethodOptions(e.target.value)}
-                      disabled={paymentLoading}
-                    />
+                    <CBadge
+                      className="me-2"
+                      color={
+                        transactionSale.shipmentStatus === 2
+                          ? 'success'
+                          : transactionSale.shipmentStatus === 1
+                            ? 'warning'
+                            : transactionSale.shipmentStatus === 0
+                              ? 'danger'
+                              : 'secondary'
+                      }
+                    >
+                      {transactionSale.shipmentStatus === 2
+                        ? 'SELESAI'
+                        : transactionSale.shipmentStatus === 1
+                          ? 'PROSES'
+                          : transactionSale.shipmentStatus === 0
+                            ? 'BELUM DIKIRIM'
+                            : transactionSale.shipmentStatus}
+                    </CBadge>
+                  </CCardTitle>
+                </CCardBody>
+                <CListGroup flush>
+                  <CListGroupItem>
+                    Tanggal Pembelian:{' '}
+                    {moment(transactionSale.transactionDate).format('MMMM D, YYYY h:mm A')}
+                  </CListGroupItem>
+                  <CListGroupItem>
+                    Klien:{' '}
+                    {canReadClient ? (
+                      <NavLink to={`/clients/${transactionSale.client.clientId}/detail`}>
+                        {transactionSale.client.name}
+                      </NavLink>
+                    ) : (
+                      transactionSale.client.name
+                    )}
+                  </CListGroupItem>
+                  <CListGroupItem>Deskripsi: {transactionSale.description || '-'}</CListGroupItem>
+                </CListGroup>
 
-                    <CFormCheck
-                      inline
-                      type="radio"
-                      name="paymentMethod"
-                      id="cash"
-                      label="Tunai"
-                      value="cash"
-                      checked={checkedPaymentMethodOptions === 'cash'}
-                      onChange={(e) => setCheckedPaymentMethodOptions(e.target.value)}
-                      className="me-3"
-                      disabled={paymentLoading}
-                    />
-                  </div>
+                {(() => {
+                  // Define permission and status checks
+                  const needsPayment =
+                    transactionSale.totalPaid !== transactionSale.grandTotal &&
+                    canCreateTransactionSalePayment
 
-                  {checkedPaymentMethodOptions === 'cash' && (
-                    <div className="mb-3">
-                      <CFormLabel className="fw-bold">Penerima uang tunai</CFormLabel>
+                  const canInitiateShipment =
+                    canReadTransactionSaleInventories &&
+                    canReadTruck &&
+                    canCreateTransactionSaleShipment &&
+                    transactionSale.shipmentStatus !== 2
+
+                  const canGenerateOfferingLetter =
+                    transactionSale.shipmentStatus === 0 && transactionSale.paymentStatus === 0
+
+                  // Render Payment Button
+                  const renderPaymentButton = needsPayment && (
+                    <CButton
+                      color="success"
+                      variant="outline"
+                      onClick={() => setVisibileModalPayment(!visibileModalPayment)}
+                      className="me-1"
+                    >
+                      <FontAwesomeIcon icon={faMoneyBill1} className="me-2" /> Pembayaran
+                    </CButton>
+                  )
+
+                  // Render Shipment Button
+                  const renderShipmentButton = canInitiateShipment && (
+                    <CButton
+                      color="info"
+                      variant="outline"
+                      className="me-1"
+                      onClick={() => handleShipment(transactionSaleId)}
+                    >
+                      <FontAwesomeIcon icon={faShippingFast} className="me-2" /> Pengiriman
+                    </CButton>
+                  )
+
+                  // Render Offering Letter Button
+                  const renderOfferingLetterButton = canGenerateOfferingLetter && (
+                    <CButton
+                      color="warning"
+                      variant="outline"
+                      onClick={() => generateOfferingLetter(transactionSaleId)}
+                    >
+                      <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Penawaran
+                    </CButton>
+                  )
+
+                  // Check if any button should be rendered
+                  const shouldRenderFooter =
+                    renderPaymentButton || renderShipmentButton || renderOfferingLetterButton
+
+                  // Conditionally render the footer
+                  return shouldRenderFooter ? (
+                    <CCardFooter>
+                      {renderPaymentButton}
+                      {renderShipmentButton}
+                      {renderOfferingLetterButton}
+                    </CCardFooter>
+                  ) : null
+                })()}
+              </CCard>
+            </CCol>
+
+            {canReadTransactionSaleInventories && (
+              <CCol md={12} className="mb-4">
+                <CCard>
+                  <CCardHeader className="d-flex justify-content-between align-items-center">
+                    <strong>Rincian Pembelian Barang</strong>
+                  </CCardHeader>
+                  <CCardBody>
+                    <div className="table-responsive">
+                      <CTable striped bordered responsive>
+                        <CTableHead>
+                          <CTableRow>
+                            <CTableHeaderCell scope="col">Id</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Kuantitas Dipesan</CTableHeaderCell>
+                          </CTableRow>
+                        </CTableHead>
+                        <CTableBody>
+                          {transactionSaleInventories.map((item, idx) => (
+                            <CTableRow key={idx}>
+                              <CTableDataCell>
+                                TSI{item.transactionSaleHasInventoryId}
+                              </CTableDataCell>
+
+                              <CTableDataCell>
+                                {canReadInventory ? (
+                                  <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
+                                    {item.inventory.name}
+                                  </NavLink>
+                                ) : (
+                                  item.inventory.name
+                                )}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                {item.inventory.condition === 0 ? (
+                                  <CBadge color="primary">BARU</CBadge>
+                                ) : item.inventory.condition === 1 ? (
+                                  <CBadge color="warning">BEKAS</CBadge>
+                                ) : (
+                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                )}
+                              </CTableDataCell>
+                              <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
+                              <CTableDataCell>
+                                {formatRupiah(item.pricePerUnit * item.quantity)}
+                              </CTableDataCell>
+                              <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
+                              <CTableDataCell>
+                                {parseInt(item.arrivedQuantity).toLocaleString()}
+                              </CTableDataCell>
+                            </CTableRow>
+                          ))}
+                        </CTableBody>
+                      </CTable>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCol>
+            )}
+
+            {canReadTransactionSaleShipments && (
+              <CCol md={12} className="mb-4">
+                <CCard>
+                  <CCardHeader className="d-flex justify-content-between align-items-center">
+                    <strong>Rincian Pengiriman Barang</strong>
+                  </CCardHeader>
+                  <CCardBody>
+                    <div className="table-responsive">
+                      <CTable striped bordered responsive>
+                        <CTableHead>
+                          <CTableRow>
+                            <CTableHeaderCell scope="col">Id</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Truk</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Status Pengiriman</CTableHeaderCell>
+                            {canReadTransactionSaleShipment && (
+                              <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                            )}
+                          </CTableRow>
+                        </CTableHead>
+                        <CTableBody>
+                          {transactionSaleShipment.map((item, idx) => (
+                            <CTableRow key={idx}>
+                              <CTableDataCell>TSS{item.transactionSaleShipmentId}</CTableDataCell>
+
+                              <CTableDataCell>
+                                {item.truck?.truckId ? (
+                                  canReadTruck ? (
+                                    <NavLink to={`/trucks/${item.truck.truckId}/detail`}>
+                                      {item.truck.licensePlate}
+                                    </NavLink>
+                                  ) : (
+                                    item.truck.licensePlate
+                                  )
+                                ) : (
+                                  '-'
+                                )}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                <CBadge
+                                  className="me-2"
+                                  color={
+                                    item.shipmentStatus === 2
+                                      ? 'success'
+                                      : item.shipmentStatus === 1
+                                        ? 'warning'
+                                        : item.shipmentStatus === 0
+                                          ? 'danger'
+                                          : 'secondary'
+                                  }
+                                >
+                                  {item.shipmentStatus === 2
+                                    ? 'SELESAI'
+                                    : item.shipmentStatus === 1
+                                      ? 'PROSES'
+                                      : item.shipmentStatus === 0
+                                        ? 'BELUM DIKIRIM'
+                                        : item.shipmentStatus}
+                                </CBadge>
+                              </CTableDataCell>
+
+                              {canReadTransactionSaleShipment && (
+                                <CTableDataCell>
+                                  <CButton
+                                    color="info"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleDetail(
+                                        transactionSaleId,
+                                        item.transactionSaleShipmentId,
+                                      )
+                                    }
+                                  >
+                                    <FontAwesomeIcon icon={faEye} />
+                                  </CButton>
+                                </CTableDataCell>
+                              )}
+                            </CTableRow>
+                          ))}
+                        </CTableBody>
+                      </CTable>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCol>
+            )}
+
+            {canReadTransactionSalePayments && (
+              <CCol md={12}>
+                <CCard className="mb-4">
+                  <CCardHeader className="d-flex justify-content-between align-items-center">
+                    <strong>Rincian Pembayaran</strong>
+                  </CCardHeader>
+                  <CCardBody>
+                    <div className="table-responsive">
+                      <CTable striped bordered responsive>
+                        <CTableHead>
+                          <CTableRow>
+                            <CTableHeaderCell
+                              scope="col"
+                              rowSpan={3}
+                              className="text-center align-middle"
+                            >
+                              Id
+                            </CTableHeaderCell>
+
+                            <CTableHeaderCell
+                              scope="col"
+                              rowSpan={3}
+                              className="text-center align-middle"
+                            >
+                              Tanggal Pembayaran
+                            </CTableHeaderCell>
+                            <CTableHeaderCell
+                              scope="col"
+                              colSpan={3}
+                              className="text-center align-middle"
+                            >
+                              Metode Pembayaran
+                            </CTableHeaderCell>
+
+                            <CTableHeaderCell
+                              scope="col"
+                              rowSpan={3}
+                              className="text-center align-middle"
+                            >
+                              Jumlah Yang Dibayarkan
+                            </CTableHeaderCell>
+                          </CTableRow>
+                          <CTableRow>
+                            <CTableHeaderCell
+                              scope="col"
+                              rowSpan={2}
+                              className="text-center align-middle"
+                            >
+                              Penerima Uang Tunai
+                            </CTableHeaderCell>
+                            <CTableHeaderCell
+                              scope="col"
+                              colSpan={2}
+                              className="text-center align-middle"
+                            >
+                              Transfer
+                            </CTableHeaderCell>
+                          </CTableRow>
+
+                          <CTableRow>
+                            <CTableHeaderCell scope="col">Nomor Rekening</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Bank</CTableHeaderCell>
+                          </CTableRow>
+                        </CTableHead>
+                        <CTableBody>
+                          {transactionSalePayments.map((payment, idx) => (
+                            <CTableRow key={idx}>
+                              <CTableDataCell className="text-center">
+                                TSP{payment.transactionSalePaymentId}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                {moment(payment.paymentDate).format('MMMM D, YYYY h:mm A')}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                {payment.cashRecipent ? payment.cashRecipent : '-'}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                {payment.accountNumber ? payment.accountNumber : '-'}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                {payment.bankName ? payment.bankName : '-'}
+                              </CTableDataCell>
+                              <CTableDataCell>{formatRupiah(payment.amountPaid)}</CTableDataCell>
+                            </CTableRow>
+                          ))}
+
+                          <CTableRow>
+                            <CTableHeaderCell className="text-center align-middle" colSpan={5}>
+                              <strong>Total</strong>
+                            </CTableHeaderCell>
+                            <CTableDataCell>
+                              <strong>
+                                {formatRupiah(
+                                  transactionSalePayments.reduce(
+                                    (total, payment) => total + Number(payment.amountPaid),
+                                    0,
+                                  ),
+                                )}
+                              </strong>
+                            </CTableDataCell>
+                          </CTableRow>
+                        </CTableBody>
+                      </CTable>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCol>
+            )}
+
+            {canReadTransactionSaleLogs && (
+              <CCol md={12} xs={12}>
+                <TableSaleLog
+                  title={'Data Log Transaksi Pembelian'}
+                  error={transactionSaleLogError}
+                  handleSearch={transactionSaleLogHandleSearch}
+                  typeOptions={typeOptions}
+                  searchTypeValue={transactionSaleLogSearchTypeValue}
+                  setSearchTypeValue={setTransactionSaleLogSearchTypeValue}
+                  searchStartDateValue={transactionSaleLogSearchStartDateValue}
+                  setSearchStartDateValue={setTransactionSaleLogSearchStartDateValue}
+                  searchEndDateValue={transactionSaleLogSearchEndDateValue}
+                  setSearchEndDateValue={setTransactionSaleLogSearchEndDateValue}
+                  searchLoading={transactionSaleLogSearchLoading}
+                  transactionSaleLogs={transactionSaleLogs}
+                  page={transactionSaleLogPage}
+                  totalPages={transactionSaleLogTotalPages}
+                  handlePageChange={handleTransactionSaleLogPageChange}
+                  authorizePermissions={authorizePermissions}
+                />
+              </CCol>
+            )}
+
+            {canCreateTransactionSalePayment && (
+              <CModal
+                visible={visibileModalPayment}
+                onClose={() => setVisibileModalPayment(false)}
+                aria-labelledby="LiveDemoExampleLabel"
+              >
+                <CForm onSubmit={handlePaymentSubmit} noValidate>
+                  <CModalHeader>
+                    <CModalTitle id="LiveDemoExampleLabel">Pembayaran</CModalTitle>
+                  </CModalHeader>
+                  <CModalBody>
+                    {paymentError && <CAlert color="danger">{paymentError}</CAlert>}
+                    {paymentSuccess && <CAlert color="success">{paymentSuccess}</CAlert>}
+
+                    <div className="mt-3 mb-3">
+                      <CFormLabel className="fw-bold">Jumlah Yang Dibayarkan</CFormLabel>
+
+                      <CFormRange
+                        id="customRange1"
+                        min={0}
+                        max={transactionSale.remainingBalance}
+                        onChange={(e) => setAmountPaidValue(e.target.value)}
+                        disabled={paymentLoading}
+                        value={amountPaidValue}
+                      />
+
                       <CFormInput
                         type="text"
-                        value={cashRecipentValue}
-                        onChange={(e) => setCashRecipentValue(e.target.value)}
-                        placeholder="Masukkan penerima uang tunai"
+                        value={formatRupiah(amountPaidValue)}
+                        onChange={(e) => handlePaymentAmount(e.target.value)}
                         disabled={paymentLoading}
                       />
                     </div>
-                  )}
 
-                  {checkedPaymentMethodOptions === 'transfer' && (
-                    <div>
+                    <div className="mb-3">
+                      <CFormLabel htmlFor="paymentMethod" className="fw-bold d-block">
+                        Metode Pembayaran
+                      </CFormLabel>
+                      <CFormCheck
+                        inline
+                        type="radio"
+                        name="paymentMethod"
+                        id="transfer"
+                        label="Transfer"
+                        value="transfer"
+                        checked={checkedPaymentMethodOptions === 'transfer'}
+                        onChange={(e) => setCheckedPaymentMethodOptions(e.target.value)}
+                        disabled={paymentLoading}
+                      />
+
+                      <CFormCheck
+                        inline
+                        type="radio"
+                        name="paymentMethod"
+                        id="cash"
+                        label="Tunai"
+                        value="cash"
+                        checked={checkedPaymentMethodOptions === 'cash'}
+                        onChange={(e) => setCheckedPaymentMethodOptions(e.target.value)}
+                        className="me-3"
+                        disabled={paymentLoading}
+                      />
+                    </div>
+
+                    {checkedPaymentMethodOptions === 'cash' && (
                       <div className="mb-3">
-                        <CFormLabel className="fw-bold">Bank</CFormLabel>
-                        <CMultiSelect
-                          options={bankOptions.map((option) => ({
-                            ...option,
-                            selected: option.value === bankValue.value,
-                          }))}
-                          onChange={(e) => {
-                            if (e.length < 1) return
-                            if (e[0].value === bankValue.value) return
-
-                            setBankValue(e[0])
-                          }}
-                          multiple={false}
-                          virtualScroller
-                          visibleItems={5}
-                          placeholder="Pilih bank"
-                          cleaner={false}
+                        <CFormLabel className="fw-bold">Penerima uang tunai</CFormLabel>
+                        <CFormInput
+                          type="text"
+                          value={cashRecipentValue}
+                          onChange={(e) => setCashRecipentValue(e.target.value)}
+                          placeholder="Masukkan penerima uang tunai"
                           disabled={paymentLoading}
                         />
                       </div>
-                      <div className="mb-3">
-                        <CFormLabel className="fw-bold">Nomor Rekening</CFormLabel>
-                        <CInputGroup>
-                          <CFormInput
-                            placeholder="Masukkan nomor rekening"
-                            value={accountNumberValue}
-                            onChange={(e) => setAccountNumberValue(e.target.value)}
+                    )}
+
+                    {checkedPaymentMethodOptions === 'transfer' && (
+                      <div>
+                        <div className="mb-3">
+                          <CFormLabel className="fw-bold">Bank</CFormLabel>
+                          <CMultiSelect
+                            options={bankOptions.map((option) => ({
+                              ...option,
+                              selected: option.value === bankValue.value,
+                            }))}
+                            onChange={(e) => {
+                              if (e.length < 1) return
+                              if (e[0].value === bankValue.value) return
+
+                              setBankValue(e[0])
+                            }}
+                            multiple={false}
+                            virtualScroller
+                            visibleItems={5}
+                            placeholder="Pilih bank"
+                            cleaner={false}
                             disabled={paymentLoading}
                           />
+                        </div>
+                        <div className="mb-3">
+                          <CFormLabel className="fw-bold">Nomor Rekening</CFormLabel>
+                          <CInputGroup>
+                            <CFormInput
+                              placeholder="Masukkan nomor rekening"
+                              value={accountNumberValue}
+                              onChange={(e) => setAccountNumberValue(e.target.value)}
+                              disabled={paymentLoading}
+                            />
 
-                          <CButton
-                            type="button"
-                            color="primary"
-                            variant="outline"
-                            id="button-addon1"
-                            onClick={handleCheckAccountNumber}
-                            disabled={!!paymentError || paymentLoading}
-                          >
-                            Cek
-                          </CButton>
-                        </CInputGroup>
+                            <CButton
+                              type="button"
+                              color="primary"
+                              variant="outline"
+                              id="button-addon1"
+                              onClick={handleCheckAccountNumber}
+                              disabled={!!paymentError || paymentLoading}
+                            >
+                              Cek
+                            </CButton>
+                          </CInputGroup>
+                        </div>
+
+                        <div className="mb-3">
+                          <CFormLabel className="fw-bold">Nama Rekening</CFormLabel>
+                          <CFormInput type="text" readOnly value={accountNameValue} disabled />
+                        </div>
                       </div>
+                    )}
+                  </CModalBody>
 
-                      <div className="mb-3">
-                        <CFormLabel className="fw-bold">Nama Rekening</CFormLabel>
-                        <CFormInput type="text" readOnly value={accountNameValue} disabled />
-                      </div>
-                    </div>
-                  )}
-                </CModalBody>
+                  <CModalFooter>
+                    <CLoadingButton
+                      color="primary"
+                      type="submit"
+                      disabled={validatePaymentForm() !== null || paymentLoading}
+                      loading={paymentLoading}
+                    >
+                      <FontAwesomeIcon icon={faSave} />
+                    </CLoadingButton>
 
-                <CModalFooter>
-                  <CLoadingButton
-                    color="primary"
-                    type="submit"
-                    disabled={validatePaymentForm() !== null || paymentLoading}
-                    loading={paymentLoading}
-                  >
-                    <FontAwesomeIcon icon={faSave} />
-                  </CLoadingButton>
-
-                  <CButton color="secondary" onClick={() => setVisibileModalPayment(false)}>
-                    <FontAwesomeIcon icon={faTimes} />
-                  </CButton>
-                </CModalFooter>
-              </CForm>
-            </CModal>
-          )}
-        </CRow>
+                    <CButton color="secondary" onClick={() => setVisibileModalPayment(false)}>
+                      <FontAwesomeIcon icon={faTimes} />
+                    </CButton>
+                  </CModalFooter>
+                </CForm>
+              </CModal>
+            )}
+          </CRow>
+        </>
       )}
     </>
   )

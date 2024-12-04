@@ -13,7 +13,7 @@ const SaleNavs = [
         component: CNavItem,
         name: 'Transaksi Penjualan',
         to: '/transactions/sales/data',
-        permissions: ['read-operational-expenses'],
+        permissions: ['read-transaction-sales'],
       },
       {
         component: CNavItem,
@@ -25,7 +25,7 @@ const SaleNavs = [
         component: CNavItem,
         name: 'Log Transaksi Penjualan',
         to: '/transactions/sales/log',
-        permissions: ['read-operational-expenses-logs'],
+        permissions: ['read-transaction-sales-logs'],
       },
     ],
   },

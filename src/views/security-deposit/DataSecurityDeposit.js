@@ -19,7 +19,7 @@ const returnPaymentStatusOptions = [
   { label: 'Pilih Status Pengembalian', value: '' },
   { label: 'Dikembalikan', value: 'DIKEMBALIKAN' },
   { label: 'Sebagian', value: 'SEBAGIAN' },
-  { label: 'Belum dikembalikan', value: 'BELUM-DIKEMBALIKAN' },
+  { label: 'Belum Dikembalikan', value: 'BELUM-DIKEMBALIKAN' },
 ]
 
 const matchingPaymentStatus = paymentStatusOptions

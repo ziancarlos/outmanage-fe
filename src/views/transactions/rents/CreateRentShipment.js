@@ -36,8 +36,8 @@ import useLogout from '../../../hooks/useLogout'
 import Swal from 'sweetalert2'
 import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 
-function CreateSaleShipment() {
-  const { transactionSaleId } = useParams()
+function CreateRentShipment() {
+  const { transactionRentId } = useParams()
 
   const location = useLocation()
   const logout = useLogout()
@@ -66,8 +66,8 @@ function CreateSaleShipment() {
   useEffect(() => {
     setLoading(true)
 
-    Promise.all([fetchTransactionSaleInventories(transactionSaleId), fetchTruckOptions()]).finally(
-      () => setLoading(false),
+    Promise.all([fetchTransactionInventories(transactionRentId), fetchTruckOptions()]).finally(() =>
+      setLoading(false),
     )
   }, [])
 
@@ -94,16 +94,16 @@ function CreateSaleShipment() {
     }
   }
 
-  async function fetchTransactionSaleInventories(transactionSaleId) {
+  async function fetchTransactionInventories(transactionRentId) {
     try {
       const response = await axiosPrivate.get(
-        `/api/transactions/sales/${transactionSaleId}/inventories`,
+        `/api/transactions/rents/${transactionRentId}/inventories`,
       )
 
       inventoryOptionsRef.current = response.data.data.map((item) => ({
-        value: item.transactionSaleShipmentId,
-        label: `${item.inventory.name} | ${item.inventory.condition === 0 ? 'BARU' : 'BEKAS'} | Belum Dikirim: ${Number(item.quantity) - Number(item.arrivedQuantity)}`,
-        arrivedQuantity: item.arrivedQuantity,
+        value: item.transactionRentHasInventoryId,
+        label: `${item.inventory.name} | ${item.inventory.condition === 0 ? 'BARU' : 'BEKAS'} | Belum Dikirim: ${Number(item.unprocessedQuantity)}`,
+        unprocessedQuantity: item.unprocessedQuantity,
         quantity: item.quantity,
         inventory: item.inventory,
       }))
@@ -141,10 +141,7 @@ function CreateSaleShipment() {
       return
     }
 
-    const undeliveredQuantity =
-      Number(inventoryValue.quantity) - Number(inventoryValue.arrivedQuantity)
-
-    if (undeliveredQuantity < Number(quantityValue)) {
+    if (inventoryValue?.unprocessedQuantity < Number(quantityValue)) {
       setError('Jumlah barang yang ingin dikirim melebihi kuantitas yang dipesan')
       return
     }
@@ -153,7 +150,7 @@ function CreateSaleShipment() {
       return [
         ...prev,
         {
-          transactionSaleShipmentId: inventoryValue.value,
+          transactionRentHasInventoryId: inventoryValue.value,
           inventory: inventoryValue.inventory,
           quantity: quantityValue,
         },
@@ -190,7 +187,7 @@ function CreateSaleShipment() {
       return 'Catatan internal harus diisi dan memiliki panjang lebih dari 3 karakter dan kurang dari 60000 karakter.'
     }
 
-    if (addressValue && (addressValue.length <= 3 || internalNoteValue.length >= 60000)) {
+    if (addressValue && (addressValue.length <= 3 || addressValue.length >= 60000)) {
       return 'Alamat harus diisi dan memiliki panjang lebih dari 3 karakter dan kurang dari 60000 karakter.'
     }
 
@@ -211,7 +208,7 @@ function CreateSaleShipment() {
 
       const request = {
         items: items.map((item) => ({
-          transactionSaleShipmentId: item.transactionSaleShipmentId,
+          transactionRentHasInventoryId: item.transactionRentHasInventoryId,
           quantity: item.quantity,
         })),
         internalNote: internalNoteValue,
@@ -225,7 +222,7 @@ function CreateSaleShipment() {
         request.truckId = truckValue.value
       }
 
-      await axiosPrivate.post(`/api/transactions/sales/${transactionSaleId}/shipments`, request)
+      await axiosPrivate.post(`/api/transactions/rents/${transactionRentId}/shipments`, request)
 
       Swal.fire({
         icon: 'success',
@@ -234,7 +231,7 @@ function CreateSaleShipment() {
         confirmButtonText: 'OK',
       })
       clearInput()
-      navigate(`/transactions/sales/${transactionSaleId}/detail`)
+      navigate(`/transactions/rents/${transactionRentId}/detail`)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -285,7 +282,7 @@ function CreateSaleShipment() {
                           options={inventoryOptions}
                           onChange={(e) => {
                             const itemExists = items.some((item) => {
-                              return item?.transactionSaleShipmentId === e[0]?.value
+                              return item?.transactionRentHasInventoryId === e[0]?.value
                             })
 
                             if (itemExists) {
@@ -345,7 +342,6 @@ function CreateSaleShipment() {
                         <CTableHead>
                           <CTableRow>
                             <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
-                            <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                           </CTableRow>
@@ -353,16 +349,21 @@ function CreateSaleShipment() {
                         <CTableBody>
                           {items.map((item, index) => (
                             <CTableRow key={index}>
-                              <CTableDataCell>{item.inventory.name}</CTableDataCell>
                               <CTableDataCell>
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
-                                )}{' '}
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                  <span style={{ marginRight: '5px' }}>{item.inventory.name}</span>
+                                  <div>
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </div>
+                                </div>
                               </CTableDataCell>
+
                               <CTableDataCell>{item.quantity}</CTableDataCell>
                               <CTableDataCell>
                                 <CButton
@@ -450,4 +451,4 @@ function CreateSaleShipment() {
   )
 }
 
-export default CreateSaleShipment
+export default CreateRentShipment

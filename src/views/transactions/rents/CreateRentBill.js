@@ -36,8 +36,8 @@ import useLogout from '../../../hooks/useLogout'
 import Swal from 'sweetalert2'
 import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 
-function CreateSaleShipment() {
-  const { transactionSaleId } = useParams()
+function CreateRentBi() {
+  const { transactionRentId } = useParams()
 
   const location = useLocation()
   const logout = useLogout()
@@ -49,61 +49,33 @@ function CreateSaleShipment() {
 
   const [items, setItems] = useState([])
 
-  const [truckValue, setTruckValue] = useState('')
-  const [truckOptions, setTruckOptions] = useState([])
   const [inventoryOptions, setInventoryOptions] = useState([])
   const inventoryOptionsRef = useRef([])
   const [inventoryValue, setInventoryValue] = useState('')
   const [quantityValue, setQuantityValue] = useState()
   const [multiSelectKey, setMultiSelectKey] = useState(0)
   const [internalNoteValue, setInternalNoteValue] = useState('')
-  const [addressValue, setAddressValue] = useState('')
 
   useEffect(() => {
     setError('')
-  }, [inventoryValue, quantityValue, items, truckValue, internalNoteValue, addressValue])
+  }, [inventoryValue, quantityValue, items, internalNoteValue])
 
   useEffect(() => {
     setLoading(true)
 
-    Promise.all([fetchTransactionSaleInventories(transactionSaleId), fetchTruckOptions()]).finally(
-      () => setLoading(false),
-    )
+    Promise.all([fetchTransactionInventories(transactionRentId)]).finally(() => setLoading(false))
   }, [])
 
-  async function fetchTruckOptions() {
-    try {
-      const response = await axiosPrivate.get('/api/trucks')
-
-      const options = response.data.data.map((truck) => ({
-        value: truck.truckId,
-        label: ` ${truck.model} | ${truck.licensePlate} | ${truck.color.name} `,
-      }))
-
-      setTruckOptions(options)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if (e.response?.status === 401 || e.response?.status === 404) {
-        navigate('/404', { replace: true })
-      } else if (e.response?.status === 400) {
-        setPaymentError(e.response?.data.error)
-      } else {
-        navigate('/500')
-      }
-    }
-  }
-
-  async function fetchTransactionSaleInventories(transactionSaleId) {
+  async function fetchTransactionInventories(transactionRentId) {
     try {
       const response = await axiosPrivate.get(
-        `/api/transactions/sales/${transactionSaleId}/inventories`,
+        `/api/transactions/rents/${transactionRentId}/inventories`,
       )
 
       inventoryOptionsRef.current = response.data.data.map((item) => ({
-        value: item.transactionSaleShipmentId,
-        label: `${item.inventory.name} | ${item.inventory.condition === 0 ? 'BARU' : 'BEKAS'} | Belum Dikirim: ${Number(item.quantity) - Number(item.arrivedQuantity)}`,
-        arrivedQuantity: item.arrivedQuantity,
+        value: item.transactionRentHasInventoryId,
+        label: `${item.inventory.name} | ${item.inventory.condition === 0 ? 'BARU' : 'BEKAS'} | Kuantitas Tersedia: ${Number(item.availableRentQuantity)}`,
+        availableRentQuantity: item.availableRentQuantity,
         quantity: item.quantity,
         inventory: item.inventory,
       }))
@@ -141,10 +113,7 @@ function CreateSaleShipment() {
       return
     }
 
-    const undeliveredQuantity =
-      Number(inventoryValue.quantity) - Number(inventoryValue.arrivedQuantity)
-
-    if (undeliveredQuantity < Number(quantityValue)) {
+    if (inventoryValue?.availableRentQuantity < Number(quantityValue)) {
       setError('Jumlah barang yang ingin dikirim melebihi kuantitas yang dipesan')
       return
     }
@@ -153,7 +122,7 @@ function CreateSaleShipment() {
       return [
         ...prev,
         {
-          transactionSaleShipmentId: inventoryValue.value,
+          transactionRentHasInventoryId: inventoryValue.value,
           inventory: inventoryValue.inventory,
           quantity: quantityValue,
         },
@@ -186,15 +155,11 @@ function CreateSaleShipment() {
       return 'Kuantitas barang harus lebih besar dari 0.'
     }
 
-    if (!internalNoteValue || internalNoteValue.length <= 3 || internalNoteValue.length >= 60000) {
+    if (internalNoteValue && (internalNoteValue.length <= 3 || internalNoteValue.length >= 60000)) {
       return 'Catatan internal harus diisi dan memiliki panjang lebih dari 3 karakter dan kurang dari 60000 karakter.'
     }
 
-    if (addressValue && (addressValue.length <= 3 || internalNoteValue.length >= 60000)) {
-      return 'Alamat harus diisi dan memiliki panjang lebih dari 3 karakter dan kurang dari 60000 karakter.'
-    }
-
-    return null // No validation errors
+    return null
   }
 
   async function handleSubmit(e) {
@@ -211,30 +176,24 @@ function CreateSaleShipment() {
 
       const request = {
         items: items.map((item) => ({
-          transactionSaleShipmentId: item.transactionSaleShipmentId,
+          transactionRentHasInventoryId: item.transactionRentHasInventoryId,
           quantity: item.quantity,
         })),
-        internalNote: internalNoteValue,
       }
 
-      if (addressValue) {
-        request.address = addressValue
+      if (internalNoteValue) {
+        request.internalNote = internalNoteValue
       }
-
-      if (truckValue) {
-        request.truckId = truckValue.value
-      }
-
-      await axiosPrivate.post(`/api/transactions/sales/${transactionSaleId}/shipments`, request)
+      await axiosPrivate.post(`/api/transactions/rents/${transactionRentId}/bills`, request)
 
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
-        text: 'Proses Pengiriman Transaksi pembelian berhasil dibuat.',
+        text: 'Tagihan Transaksi pembelian berhasil dibuat.',
         confirmButtonText: 'OK',
       })
       clearInput()
-      navigate(`/transactions/sales/${transactionSaleId}/detail`)
+      navigate(`/transactions/rents/${transactionRentId}/detail`)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -251,7 +210,6 @@ function CreateSaleShipment() {
   }
 
   async function clearInput() {
-    setTruckValue('')
     setItems([])
     setInternalNoteValue('')
     setInventoryValue('')
@@ -269,7 +227,7 @@ function CreateSaleShipment() {
           <CCol>
             <CCard>
               <CCardHeader>
-                <strong>Tambah Transaksi Penjualan Pengiriman</strong>
+                <strong>Tambah Tagihan Transaksi Penjualan</strong>
               </CCardHeader>
               <CForm onSubmit={handleSubmit}>
                 <CCardBody>
@@ -285,7 +243,7 @@ function CreateSaleShipment() {
                           options={inventoryOptions}
                           onChange={(e) => {
                             const itemExists = items.some((item) => {
-                              return item?.transactionSaleShipmentId === e[0]?.value
+                              return item?.transactionRentHasInventoryId === e[0]?.value
                             })
 
                             if (itemExists) {
@@ -345,7 +303,6 @@ function CreateSaleShipment() {
                         <CTableHead>
                           <CTableRow>
                             <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
-                            <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                           </CTableRow>
@@ -353,15 +310,19 @@ function CreateSaleShipment() {
                         <CTableBody>
                           {items.map((item, index) => (
                             <CTableRow key={index}>
-                              <CTableDataCell>{item.inventory.name}</CTableDataCell>
                               <CTableDataCell>
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
-                                )}{' '}
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                  <span style={{ marginRight: '5px' }}>{item.inventory.name}</span>
+                                  <div>
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </div>
+                                </div>
                               </CTableDataCell>
                               <CTableDataCell>{item.quantity}</CTableDataCell>
                               <CTableDataCell>
@@ -382,42 +343,8 @@ function CreateSaleShipment() {
 
                   <div className="mb-3">
                     <CFormLabel className="fw-bold">
-                      Truk <CBadge color="info">Optional</CBadge>
+                      Catatan Internal <CBadge color="info">Optional</CBadge>
                     </CFormLabel>
-                    <CMultiSelect
-                      options={truckOptions.map((option) => ({
-                        ...option,
-                        selected: option.value === truckValue.value,
-                      }))}
-                      onChange={(e) => {
-                        if (e.length < 1) return
-                        if (e[0].value === truckValue.value) return
-
-                        setTruckValue(e[0])
-                      }}
-                      multiple={false}
-                      virtualScroller
-                      visibleItems={5}
-                      placeholder="Pilih truk"
-                      cleaner={false}
-                      disabled={submitLoading}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <CFormLabel className="fw-bold">
-                      Alamat Pengiriman <CBadge color="info">Optional</CBadge>
-                    </CFormLabel>
-                    <CFormTextarea
-                      rows={3}
-                      placeholder="Masukkan alamat pengiriman"
-                      value={addressValue}
-                      onChange={(e) => setAddressValue(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <CFormLabel className="fw-bold">Catatan Internal</CFormLabel>
                     <CFormTextarea
                       rows={3}
                       placeholder="Masukkan catatan internal"
@@ -450,4 +377,4 @@ function CreateSaleShipment() {
   )
 }
 
-export default CreateSaleShipment
+export default CreateRentBi

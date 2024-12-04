@@ -35,12 +35,20 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
+  CWidgetStatsF,
 } from '@coreui/react-pro'
 import useAuth from '../../hooks/useAuth'
 import moment from 'moment'
 import TableOperationalExpenseLog from '../../components/operational-expense/TableOperationalExpenseLog'
 import { formatToISODate } from '../../utils/DateUtils'
-import { faMoneyBill, faMoneyBill1, faSave, faTimes } from '@fortawesome/free-solid-svg-icons'
+import {
+  faMoneyBill,
+  faMoneyBill1,
+  faMoneyBillTrendUp,
+  faSave,
+  faTimes,
+  faWallet,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Swal from 'sweetalert2'
 
@@ -452,12 +460,46 @@ function DetailOperationalExpense() {
       ) : (
         <>
           <CRow>
+            <CCol xs={12}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="success"
+                icon={<FontAwesomeIcon icon={faWallet} size="lg" />}
+                padding={false}
+                title="Total Keseluruhan"
+                value={formatRupiah(operationalExpense.grandTotal || 0)}
+              />
+            </CCol>
+            <CCol xs={12}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="secondary"
+                icon={<FontAwesomeIcon icon={faMoneyBillTrendUp} size="lg" />}
+                padding={false}
+                title="Jumlah Dibayar"
+                value={formatRupiah(operationalExpense.totalPaid || 0)}
+              />
+            </CCol>
+            <CCol xs={12}>
+              <CWidgetStatsF
+                className="mb-3"
+                color="danger"
+                icon={<FontAwesomeIcon icon={faMoneyBill} size="lg" />}
+                padding={false}
+                title="Sisa Pembayaran"
+                value={formatRupiah(operationalExpense.remainingBalance || 0)}
+              />
+            </CCol>
+          </CRow>
+
+          <CRow>
             <CCol md={12} xs={12} className="mb-4">
               <CCard>
                 <CCardBody>
                   <CCardTitle>
                     {'OE' + operationalExpense.operationalExpenseId}{' '}
                     <CBadge
+                      className="ms-2 me-2"
                       color={
                         operationalExpense.paymentStatus === 2
                           ? 'success'
@@ -480,35 +522,26 @@ function DetailOperationalExpense() {
                 </CCardBody>
                 <CListGroup flush>
                   <CListGroupItem>
-                    Total Keseluruhan: {formatRupiah(operationalExpense.grandTotal)}
-                  </CListGroupItem>
-                  <CListGroupItem>
-                    Yang Sudah Dibayar: {formatRupiah(operationalExpense.totalPaid)}
-                  </CListGroupItem>
-
-                  {operationalExpense.description && (
-                    <CListGroupItem>Deskripsi: {operationalExpense.description}</CListGroupItem>
-                  )}
-                  <CListGroupItem>
                     Tanggal Pengeluaran:{' '}
                     {moment(operationalExpense.date).format('MMMM D, YYYY h:mm A')}
                   </CListGroupItem>
+                  <CListGroupItem>
+                    Deskripsi: {operationalExpense.description || '-'}
+                  </CListGroupItem>
                 </CListGroup>
 
-                {(operationalExpense.paymentStatus === 1 ||
-                  operationalExpense.paymentStatus === 0) &&
-                  canReadOperationalExpensePayments && (
-                    <CCardFooter>
-                      <CButton
-                        color="warning"
-                        variant="outline"
-                        onClick={() => setVisibileModalPayment(!visibileModalPayment)}
-                      >
-                        <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />
-                        Pembayaran
-                      </CButton>
-                    </CCardFooter>
-                  )}
+                {operationalExpense.paymentStatus != 2 && canReadOperationalExpensePayments && (
+                  <CCardFooter>
+                    <CButton
+                      color="success"
+                      variant="outline"
+                      onClick={() => setVisibileModalPayment(!visibileModalPayment)}
+                    >
+                      <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />
+                      Pembayaran
+                    </CButton>
+                  </CCardFooter>
+                )}
               </CCard>
             </CCol>
           </CRow>

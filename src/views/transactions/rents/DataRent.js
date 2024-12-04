@@ -16,6 +16,13 @@ const deliveryStatusOptions = [
   { label: 'Belum Dikirim', value: 'BELUM-DIKIRIM' },
 ]
 
+const returnedStatusOptions = [
+  { label: 'Pilih Status Pengiriman', value: '' },
+  { label: 'Sudah Dikembalikan', value: 'SUDAH-DIBALIKAN' },
+  { label: 'Proses', value: 'PROSES' },
+  { label: 'Belum Dikembalikan', value: 'BELUM-DIBALIKAN' },
+]
+
 const paymentStatusOptions = [
   { label: 'Pilih Status Pembayaran', value: '' },
   { label: 'Lunas', value: 'LUNAS' },
@@ -24,6 +31,10 @@ const paymentStatusOptions = [
 ]
 
 const matchingDeliveryStatus = deliveryStatusOptions
+  .filter((option) => option.value)
+  .map((option) => option.value)
+
+const matchingReturnedStatus = returnedStatusOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
@@ -50,6 +61,7 @@ const DataRent = () => {
   const [searchStartDateValue, setSearchStartDateValue] = useState('')
   const [searchEndDateValue, setSearchEndDateValue] = useState('')
   const [searchDeliveryStatusValue, setSearchDeliveryStatusValue] = useState('')
+  const [searchReturnedStatusValue, setSearchReturnedStatusValue] = useState('')
   const [searchPaymentStatusValue, setSearchPaymentStatusValue] = useState('')
 
   const searchParamsRef = useRef()
@@ -92,6 +104,7 @@ const DataRent = () => {
     setError('')
   }, [
     searchDeliveryStatusValue,
+    searchReturnedStatusValue,
     searchPaymentStatusValue,
     searchStartDateValue,
     searchEndDateValue,
@@ -102,6 +115,7 @@ const DataRent = () => {
 
     const queryParams = new URLSearchParams(location.search)
     const deliveryStatusValue = queryParams.get('deliveryStatus')
+    const returnedStatusValue = queryParams.get('returnedStatus')
     const paymentStatusValue = queryParams.get('paymentStatus')
     const startDateParamValue = queryParams.get('startDate')
     const endDateParamValue = queryParams.get('endDate')
@@ -110,6 +124,9 @@ const DataRent = () => {
 
     if (matchingDeliveryStatus.includes(deliveryStatusValue)) {
       searchParamsRef.current.deliveryStatus = deliveryStatusValue
+    }
+    if (matchingReturnedStatus.includes(returnedStatusValue)) {
+      searchParamsRef.current.returnedStatus = returnedStatusValue
     }
     if (matchingPaymentStatus.includes(paymentStatusValue)) {
       searchParamsRef.current.paymentStatus = paymentStatusValue
@@ -135,6 +152,9 @@ const DataRent = () => {
 
     if (matchingDeliveryStatus.includes(searchDeliveryStatusValue)) {
       searchParams.deliveryStatus = searchDeliveryStatusValue
+    }
+    if (matchingReturnedStatus.includes(searchReturnedStatusValue)) {
+      searchParams.returnedStatus = searchReturnedStatusValue
     }
 
     if (matchingPaymentStatus.includes(searchPaymentStatusValue)) {
@@ -163,6 +183,7 @@ const DataRent = () => {
 
   function clearInput() {
     setSearchDeliveryStatusValue('')
+    setSearchReturnedStatusValue('')
     setSearchPaymentStatusValue('')
     setSearchStartDateValue('')
     setSearchEndDateValue('')
@@ -177,6 +198,7 @@ const DataRent = () => {
       ) : (
         <TableRent
           deliveryStatusOptions={deliveryStatusOptions}
+          returnedStatusOptions={returnedStatusOptions}
           paymentStatusOptions={paymentStatusOptions}
           navigate={navigate}
           authorizePermissions={authorizePermissions}
@@ -185,6 +207,8 @@ const DataRent = () => {
           searchLoading={searchLoading}
           searchDeliveryStatusValue={searchDeliveryStatusValue}
           setSearchDeliveryStatusValue={setSearchDeliveryStatusValue}
+          searchReturnedStatusValue={searchReturnedStatusValue}
+          setSearchReturnedStatusValue={setSearchReturnedStatusValue}
           searchPaymentStatusValue={searchPaymentStatusValue}
           setSearchPaymentStatusValue={setSearchPaymentStatusValue}
           searchStartDateValue={searchStartDateValue}

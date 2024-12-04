@@ -46,6 +46,8 @@ function TableSecurityDeposit({
     navigate(`/deposits/${transactionRentSecurityDepositId}/detail`)
   }
 
+  const canReadDeposit = authorizePermissions.some((perm) => perm.name === 'read-deposit')
+
   // Render component
   return (
     <CRow>
@@ -114,7 +116,7 @@ function TableSecurityDeposit({
                     <CTableHeaderCell scope="col">Jumlah Deposit</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Status Pembayaran</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Status Pengembalian</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                    {canReadDeposit && <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>}
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
@@ -127,7 +129,6 @@ function TableSecurityDeposit({
                         </NavLink>
                       </CTableDataCell>
                       <CTableDataCell>{formatRupiah(deposit.amount)}</CTableDataCell>
-
                       <CTableDataCell>
                         <CBadge
                           color={
@@ -170,15 +171,17 @@ function TableSecurityDeposit({
                                 : deposit.returnPaymentStatus}
                         </CBadge>
                       </CTableDataCell>
-                      <CTableDataCell>
-                        <CButton
-                          color="info"
-                          size="sm"
-                          onClick={() => handleDetail(deposit.transactionRentSecurityDepositId)}
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </CButton>
-                      </CTableDataCell>
+                      {canReadDeposit && (
+                        <CTableDataCell>
+                          <CButton
+                            color="info"
+                            size="sm"
+                            onClick={() => handleDetail(deposit.transactionRentSecurityDepositId)}
+                          >
+                            <FontAwesomeIcon icon={faEye} />
+                          </CButton>
+                        </CTableDataCell>
+                      )}
                     </CTableRow>
                   ))}
                 </CTableBody>
