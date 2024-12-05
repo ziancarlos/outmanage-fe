@@ -135,7 +135,7 @@ const DetailPurchase = () => {
   const [visibileModalArrivalInventory, setVisibileModalArrivalInventory] = useState(false)
   const [purchaseInventoryId, setPurchaseInventoryId] = useState(null)
   const [arrivalPurchaseInventory, setArrivalPurchaseInventory] = useState(null)
-  const [modalArrivalInventoryLoading, setModalInventoryLoading] = useState(false)
+  const [modalArrivalInventoryLoading, setModalArrivalInventoryLoading] = useState(false)
   const [arrivalInventoryError, setArrivalInventoryError] = useState('')
   const [receivedQuantityValue, setReceivedQuantityValue] = useState(0)
   const [refetch, setRefetch] = useState(false)
@@ -507,11 +507,29 @@ const DetailPurchase = () => {
     }
   }
 
+  useEffect(() => {
+    setArrivalInventoryError('')
+  }, [receivedQuantityValue])
+
+  function validateArrivalInventoryForm() {
+    if (receivedQuantityValue < 1) {
+      return 'Kuantitas harus lebih besar dari 0.'
+    }
+
+    return null
+  }
+
   async function handldeArrivalInventorySubmit(e) {
     e.preventDefault()
 
+    const errorMessage = validateArrivalInventoryForm()
+
+    if (errorMessage) {
+      return setArrivalInventoryError(errorMessage)
+    }
+
     try {
-      setModalInventoryLoading(true)
+      setModalArrivalInventoryLoading(true)
 
       await axiosPrivate.post(`/api/purchases/${purchaseId}/inventories/${purchaseInventoryId}`, {
         receivedQuantity: receivedQuantityValue,
@@ -525,6 +543,10 @@ const DetailPurchase = () => {
       })
 
       setVisibileModalArrivalInventory(false)
+
+      setRefetch((prev) => !prev)
+
+      setReceivedQuantityValue(0)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -536,11 +558,7 @@ const DetailPurchase = () => {
         navigate('/500')
       }
     } finally {
-      setReceivedQuantityValue(0)
-
-      setModalInventoryLoading(false)
-
-      setRefetch((prev) => !prev)
+      setModalArrivalInventoryLoading(false)
     }
   }
 
@@ -663,7 +681,6 @@ const DetailPurchase = () => {
                           <CTableRow>
                             <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                            <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
@@ -680,20 +697,32 @@ const DetailPurchase = () => {
 
                               <CTableDataCell>
                                 {canReadInventory ? (
-                                  <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                                    {item.inventory.name}
-                                  </NavLink>
+                                  <>
+                                    <NavLink
+                                      to={`/inventories/${item.inventory.inventoryId}/detail`}
+                                      className="me-2"
+                                    >
+                                      {item.inventory.name}
+                                    </NavLink>
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </>
                                 ) : (
-                                  item.inventory.name
-                                )}
-                              </CTableDataCell>
-                              <CTableDataCell>
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                  <>
+                                    <a className="me-2">{item.inventory.name}</a>{' '}
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </>
                                 )}
                               </CTableDataCell>
                               <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
@@ -744,7 +773,6 @@ const DetailPurchase = () => {
                           <CTableRow>
                             <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                            <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Tanggal Diterima</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
                           </CTableRow>
@@ -757,11 +785,32 @@ const DetailPurchase = () => {
                               </CTableDataCell>
                               <CTableDataCell>
                                 {canReadInventory ? (
-                                  <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                                    {item.inventory.name}
-                                  </NavLink>
+                                  <>
+                                    <NavLink
+                                      to={`/inventories/${item.inventory.inventoryId}/detail`}
+                                      className="me-2"
+                                    >
+                                      {item.inventory.name}
+                                    </NavLink>
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </>
                                 ) : (
-                                  item.inventory.name
+                                  <>
+                                    <a className="me-2">{item.inventory.name}</a>{' '}
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </>
                                 )}
                               </CTableDataCell>
                               <CTableDataCell>
@@ -983,6 +1032,7 @@ const DetailPurchase = () => {
                                 setReceivedQuantityValue(numberValue) // Update the state with the number
                               }
                             }}
+                            disabled={modalArrivalInventoryLoading}
                           />
                         </div>
                       </>
@@ -993,7 +1043,9 @@ const DetailPurchase = () => {
                     <CLoadingButton
                       color="primary"
                       type="submit"
-                      disabled={modalArrivalInventoryLoading}
+                      disabled={
+                        modalArrivalInventoryLoading || validateArrivalInventoryForm() !== null
+                      }
                       loading={modalArrivalInventoryLoading}
                     >
                       <FontAwesomeIcon icon={faSave} />

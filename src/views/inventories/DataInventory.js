@@ -23,7 +23,7 @@ import {
   CTableRow,
 } from '@coreui/react-pro'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { faEye, faSearch } from '@fortawesome/free-solid-svg-icons'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useLogout from '../../hooks/useLogout'
@@ -190,7 +190,6 @@ const DataInventory = () => {
                       <CTableRow>
                         <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
-                        <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                         <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                         {canReadInventory || canReadInventoryLogs ? (
                           <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
@@ -203,14 +202,34 @@ const DataInventory = () => {
                       {inventories.map((inventory, idx) => (
                         <CTableRow key={idx}>
                           <CTableDataCell>IV{inventory.inventoryId}</CTableDataCell>
-                          <CTableDataCell>{inventory.name}</CTableDataCell>
                           <CTableDataCell>
-                            {inventory.condition === 0 ? (
-                              <CBadge color="primary">BARU</CBadge>
-                            ) : inventory.condition === 1 ? (
-                              <CBadge color="warning">BEKAS</CBadge>
+                            {canReadInventory ? (
+                              <>
+                                <NavLink
+                                  to={`/inventories/${inventory.inventoryId}/detail`}
+                                  className="me-2"
+                                >
+                                  {inventory.name}
+                                </NavLink>
+                                {inventory.condition === 0 ? (
+                                  <CBadge color="primary">BARU</CBadge>
+                                ) : inventory.condition === 1 ? (
+                                  <CBadge color="warning">BEKAS</CBadge>
+                                ) : (
+                                  <span>{inventory.condition}</span> // Fallback for any other condition
+                                )}
+                              </>
                             ) : (
-                              <span>{inventory.condition}</span> // Fallback for any other condition
+                              <>
+                                <a className="me-2">{inventory.name}</a>{' '}
+                                {inventory.condition === 0 ? (
+                                  <CBadge color="primary">BARU</CBadge>
+                                ) : inventory.condition === 1 ? (
+                                  <CBadge color="warning">BEKAS</CBadge>
+                                ) : (
+                                  <span>{inventory.condition}</span> // Fallback for any other condition
+                                )}
+                              </>
                             )}
                           </CTableDataCell>
                           <CTableDataCell>{inventory.quantity.toLocaleString()}</CTableDataCell>

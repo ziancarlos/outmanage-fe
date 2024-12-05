@@ -74,6 +74,12 @@ const DetailRentShipment = () => {
     (perm) => perm.name === 'read-transaction-sale-inventories',
   )
   const canReadInventory = authorizePermissions.some((perm) => perm.name === 'read-inventory')
+  const canReadTransactionRentShipmentInventories = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-rent-shipment-inventories',
+  )
+  const canUpdateTransactionRentShipmentShipped = authorizePermissions.some(
+    (perm) => perm.name === 'update-transaction-rent-shipment-shipped',
+  )
 
   const { transactionRentId, transactionRentShipmentId } = useParams()
 
@@ -94,7 +100,7 @@ const DetailRentShipment = () => {
 
     fetchPromises.push(fetchTransactionRentShipment(transactionRentId, transactionRentShipmentId))
 
-    if (true) {
+    if (canReadTransactionRentShipmentInventories) {
       fetchPromises.push(
         fetchTransactionRentShipmentDetails(transactionRentId, transactionRentShipmentId),
       )
@@ -113,7 +119,6 @@ const DetailRentShipment = () => {
 
       setTransactionRentShipment(response.data.data)
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([400, 401, 404].includes(e.response?.status)) {
@@ -162,7 +167,6 @@ const DetailRentShipment = () => {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
@@ -203,40 +207,6 @@ const DetailRentShipment = () => {
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
       } else if ([400, 404, 409].includes(e.response?.status)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal!',
-          text: e.response.data.error,
-          confirmButtonText: 'OK',
-        })
-      } else {
-        navigate('/500')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function updateShipmentCompleted(transactionRentId, transactionRentShipmentId) {
-    setLoading(true)
-    try {
-      const response = await axiosPrivate.patch(
-        `/api/transactions/rents/${transactionRentId}/shipments/${transactionRentShipmentId}/completed`,
-      )
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: 'Berhasil mengubah status pengiriman menjadi selesai',
-        confirmButtonText: 'OK',
-      })
-      setRefetch(!refetch)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if (e.response?.status === 401) {
-        navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
         Swal.fire({
           icon: 'error',
           title: 'Gagal!',
@@ -318,80 +288,83 @@ const DetailRentShipment = () => {
                   <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Pengantar
                 </CButton>
 
-                {transactionRentShipment.shipmentStatus === 0 && (
-                  <CButton
-                    color="info"
-                    variant="outline"
-                    className="me-1"
-                    onClick={() =>
-                      updateShipmentShipped(transactionRentId, transactionRentShipmentId)
-                    }
-                  >
-                    <FontAwesomeIcon icon={faTruckFast} className="me-2" /> Dikirim
-                  </CButton>
-                )}
+                {canUpdateTransactionRentShipmentShipped &&
+                  transactionRentShipment.shipmentStatus === 0 && (
+                    <CButton
+                      color="info"
+                      variant="outline"
+                      className="me-1"
+                      onClick={() =>
+                        updateShipmentShipped(transactionRentId, transactionRentShipmentId)
+                      }
+                    >
+                      <FontAwesomeIcon icon={faTruckFast} className="me-2" /> Dikirim
+                    </CButton>
+                  )}
               </CCardFooter>
             </CCard>
           </CCol>
 
-          <CCol md={12} className="mb-4">
-            <CCard>
-              <CCardHeader className="d-flex justify-content-between align-items-center">
-                <strong>Rincian Barang Yang Dikirim</strong>
-              </CCardHeader>
-              <CCardBody>
-                <div className="table-responsive">
-                  <CTable striped bordered responsive>
-                    <CTableHead>
-                      <CTableRow>
-                        <CTableHeaderCell scope="col">No.</CTableHeaderCell>
-                        <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                        <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
-                      </CTableRow>
-                    </CTableHead>
-                    <CTableBody>
-                      {transactionRentShipmentDetails.map((item, idx) => (
-                        <CTableRow key={idx}>
-                          <CTableDataCell>{idx + 1}.</CTableDataCell>
-                          <CTableDataCell>
-                            {canReadInventory ? (
-                              <>
-                                <NavLink
-                                  to={`/inventories/${item.inventory.inventoryId}/detail`}
-                                  className="me-2"
-                                >
-                                  {item.inventory.name}
-                                </NavLink>
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                <a className="me-2">{item.inventory.name}</a>{' '}
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
-                                )}
-                              </>
-                            )}
-                          </CTableDataCell>
-                          <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
+          {canReadTransactionRentShipmentInventories && (
+            <CCol md={12} className="mb-4">
+              <CCard>
+                <CCardHeader className="d-flex justify-content-between align-items-center">
+                  <strong>Rincian Barang Yang Dikirim</strong>
+                </CCardHeader>
+                <CCardBody>
+                  <div className="table-responsive">
+                    <CTable striped bordered responsive>
+                      <CTableHead>
+                        <CTableRow>
+                          <CTableHeaderCell scope="col">No.</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                         </CTableRow>
-                      ))}
-                    </CTableBody>
-                  </CTable>
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
+                      </CTableHead>
+                      <CTableBody>
+                        {transactionRentShipmentDetails.map((item, idx) => (
+                          <CTableRow key={idx}>
+                            <CTableDataCell>{idx + 1}.</CTableDataCell>
+                            <CTableDataCell>
+                              {canReadInventory ? (
+                                <>
+                                  <NavLink
+                                    to={`/inventories/${item.inventory.inventoryId}/detail`}
+                                    className="me-2"
+                                  >
+                                    {item.inventory.name}
+                                  </NavLink>
+                                  {item.inventory.condition === 0 ? (
+                                    <CBadge color="primary">BARU</CBadge>
+                                  ) : item.inventory.condition === 1 ? (
+                                    <CBadge color="warning">BEKAS</CBadge>
+                                  ) : (
+                                    <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <a className="me-2">{item.inventory.name}</a>{' '}
+                                  {item.inventory.condition === 0 ? (
+                                    <CBadge color="primary">BARU</CBadge>
+                                  ) : item.inventory.condition === 1 ? (
+                                    <CBadge color="warning">BEKAS</CBadge>
+                                  ) : (
+                                    <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                  )}
+                                </>
+                              )}
+                            </CTableDataCell>
+                            <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  </div>
+                </CCardBody>
+              </CCard>
+            </CCol>
+          )}
         </CRow>
       )}
     </>

@@ -409,7 +409,6 @@ const DetailSaleShipment = () => {
                         <CTableRow>
                           <CTableHeaderCell scope="col">No.</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                          <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                           <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                         </CTableRow>
                       </CTableHead>
@@ -419,20 +418,32 @@ const DetailSaleShipment = () => {
                             <CTableDataCell>{idx + 1}.</CTableDataCell>
                             <CTableDataCell>
                               {canReadInventory ? (
-                                <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                                  {item.inventory.name}
-                                </NavLink>
+                                <>
+                                  <NavLink
+                                    to={`/inventories/${item.inventory.inventoryId}/detail`}
+                                    className="me-2"
+                                  >
+                                    {item.inventory.name}
+                                  </NavLink>
+                                  {item.inventory.condition === 0 ? (
+                                    <CBadge color="primary">BARU</CBadge>
+                                  ) : item.inventory.condition === 1 ? (
+                                    <CBadge color="warning">BEKAS</CBadge>
+                                  ) : (
+                                    <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                  )}
+                                </>
                               ) : (
-                                item.inventory.name
-                              )}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {item.inventory.condition === 0 ? (
-                                <CBadge color="primary">BARU</CBadge>
-                              ) : item.inventory.condition === 1 ? (
-                                <CBadge color="warning">BEKAS</CBadge>
-                              ) : (
-                                <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                <>
+                                  <a className="me-2">{item.inventory.name}</a>{' '}
+                                  {item.inventory.condition === 0 ? (
+                                    <CBadge color="primary">BARU</CBadge>
+                                  ) : item.inventory.condition === 1 ? (
+                                    <CBadge color="warning">BEKAS</CBadge>
+                                  ) : (
+                                    <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                  )}
+                                </>
                               )}
                             </CTableDataCell>
                             <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>

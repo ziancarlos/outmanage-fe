@@ -75,6 +75,12 @@ const DetailRentBill = () => {
     (perm) => perm.name === 'read-transaction-sale-inventories',
   )
   const canReadInventory = authorizePermissions.some((perm) => perm.name === 'read-inventory')
+  const canReadRentBillInventories = authorizePermissions.some(
+    (perm) => perm.name === 'read-transaction-rent-bill-inventories',
+  )
+  const canUpdateTransactionRentBillCompleted = authorizePermissions.some(
+    (perm) => perm.name === 'update-transaction-rent-bill-completed',
+  )
 
   const { transactionRentId, transactionRentBillId } = useParams()
 
@@ -95,7 +101,7 @@ const DetailRentBill = () => {
 
     fetchPromises.push(fetchTransactionRentBill(transactionRentId, transactionRentBillId))
 
-    if (true) {
+    if (canReadRentBillInventories) {
       fetchPromises.push(
         fetchTransactionRentBillInventories(transactionRentId, transactionRentBillId),
       )
@@ -186,7 +192,7 @@ const DetailRentBill = () => {
   async function updateBillToComplete(transactionRentId, transactionRentBillId) {
     setLoading(true)
     try {
-      const response = await axiosPrivate.patch(
+      await axiosPrivate.patch(
         `/api/transactions/rents/${transactionRentId}/bills/${transactionRentBillId}/completed`,
       )
 
@@ -259,7 +265,7 @@ const DetailRentBill = () => {
                   <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Tagihan
                 </CButton>
 
-                {!transactionRentBill.endDate && (
+                {canUpdateTransactionRentBillCompleted && !transactionRentBill.endDate && (
                   <CButton
                     color="info"
                     variant="outline"
@@ -273,64 +279,66 @@ const DetailRentBill = () => {
             </CCard>
           </CCol>
 
-          <CCol md={12} className="mb-4">
-            <CCard>
-              <CCardHeader className="d-flex justify-content-between align-items-center">
-                <strong>Rincian Barang Yang Disewakan</strong>
-              </CCardHeader>
-              <CCardBody>
-                <div className="table-responsive">
-                  <CTable striped bordered responsive>
-                    <CTableHead>
-                      <CTableRow>
-                        <CTableHeaderCell scope="col">No.</CTableHeaderCell>
-                        <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                        <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
-                      </CTableRow>
-                    </CTableHead>
-                    <CTableBody>
-                      {transactionRentBillDetails.map((item, idx) => (
-                        <CTableRow key={idx}>
-                          <CTableDataCell>{idx + 1}.</CTableDataCell>
-                          <CTableDataCell>
-                            {canReadInventory ? (
-                              <>
-                                <NavLink
-                                  to={`/inventories/${item.inventory.inventoryId}/detail`}
-                                  className="me-2"
-                                >
-                                  {item.inventory.name}
-                                </NavLink>
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                <a className="me-2">{item.inventory.name}</a>{' '}
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
-                                )}
-                              </>
-                            )}
-                          </CTableDataCell>
-                          <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
+          {canReadRentBillInventories && (
+            <CCol md={12} className="mb-4">
+              <CCard>
+                <CCardHeader className="d-flex justify-content-between align-items-center">
+                  <strong>Rincian Barang Yang Disewakan</strong>
+                </CCardHeader>
+                <CCardBody>
+                  <div className="table-responsive">
+                    <CTable striped bordered responsive>
+                      <CTableHead>
+                        <CTableRow>
+                          <CTableHeaderCell scope="col">No.</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                         </CTableRow>
-                      ))}
-                    </CTableBody>
-                  </CTable>
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
+                      </CTableHead>
+                      <CTableBody>
+                        {transactionRentBillDetails.map((item, idx) => (
+                          <CTableRow key={idx}>
+                            <CTableDataCell>{idx + 1}.</CTableDataCell>
+                            <CTableDataCell>
+                              {canReadInventory ? (
+                                <>
+                                  <NavLink
+                                    to={`/inventories/${item.inventory.inventoryId}/detail`}
+                                    className="me-2"
+                                  >
+                                    {item.inventory.name}
+                                  </NavLink>
+                                  {item.inventory.condition === 0 ? (
+                                    <CBadge color="primary">BARU</CBadge>
+                                  ) : item.inventory.condition === 1 ? (
+                                    <CBadge color="warning">BEKAS</CBadge>
+                                  ) : (
+                                    <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <a className="me-2">{item.inventory.name}</a>{' '}
+                                  {item.inventory.condition === 0 ? (
+                                    <CBadge color="primary">BARU</CBadge>
+                                  ) : item.inventory.condition === 1 ? (
+                                    <CBadge color="warning">BEKAS</CBadge>
+                                  ) : (
+                                    <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                  )}
+                                </>
+                              )}
+                            </CTableDataCell>
+                            <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  </div>
+                </CCardBody>
+              </CCard>
+            </CCol>
+          )}
         </CRow>
       )}
     </>

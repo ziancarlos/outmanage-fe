@@ -53,7 +53,7 @@ const TransactionRentRoutes = [
     path: '/transactions/rents/:transactionRentId/shipment/:transactionRentShipmentId/detail',
     name: 'Detil Pengiriman Transaksi Penyewaan',
     element: DetailRentShipment,
-    permissions: ['read-transaction-rent-shipment', 'read-transaction-rent-shipment-inventories"'],
+    permissions: ['read-transaction-rent-shipment'],
   },
   {
     path: '/transactions/rents/:transactionRentId/bill/:transactionRentBillId/detail',

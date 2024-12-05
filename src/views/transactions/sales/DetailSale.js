@@ -793,11 +793,32 @@ const DetailSale = () => {
 
                               <CTableDataCell>
                                 {canReadInventory ? (
-                                  <NavLink to={`/inventories/${item.inventory.inventoryId}/detail`}>
-                                    {item.inventory.name}
-                                  </NavLink>
+                                  <>
+                                    <NavLink
+                                      to={`/inventories/${item.inventory.inventoryId}/detail`}
+                                      className="me-2"
+                                    >
+                                      {item.inventory.name}
+                                    </NavLink>
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </>
                                 ) : (
-                                  item.inventory.name
+                                  <>
+                                    <a className="me-2">{item.inventory.name}</a>{' '}
+                                    {item.inventory.condition === 0 ? (
+                                      <CBadge color="primary">BARU</CBadge>
+                                    ) : item.inventory.condition === 1 ? (
+                                      <CBadge color="warning">BEKAS</CBadge>
+                                    ) : (
+                                      <span>{item.inventory.condition}</span> // Fallback for any other condition
+                                    )}
+                                  </>
                                 )}
                               </CTableDataCell>
                               <CTableDataCell>
