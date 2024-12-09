@@ -35,6 +35,7 @@ import TruckNavs from './navs/TruckNavs'
 import SaleNavs from './navs/transactions/SaleNavs'
 import RentNavs from './navs/transactions/RentNavs'
 import SecurityDepositNavs from './navs/SecurityDepositNavs'
+import ReportNavs from './navs/ReportNavs'
 
 const _nav = [
   {
@@ -81,6 +82,8 @@ const _nav = [
   ...SaleNavs,
 
   ...SecurityDepositNavs,
+
+  ...ReportNavs,
 
   ...TruckNavs,
 

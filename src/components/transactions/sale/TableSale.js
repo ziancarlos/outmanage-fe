@@ -47,8 +47,8 @@ function TableSale({
   totalPages,
   handlePageChange,
 }) {
-  function handleDetail(purchaseId) {
-    navigate(`/transactions/sales/${purchaseId}/detail`)
+  function handleDetail(transactionSaleId) {
+    navigate(`/transactions/sales/${transactionSaleId}/detail`)
   }
 
   const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
