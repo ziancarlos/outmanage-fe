@@ -101,8 +101,8 @@ function CreateSaleShipment() {
       )
 
       inventoryOptionsRef.current = response.data.data.map((item) => ({
-        value: item.transactionSaleShipmentId,
-        label: `${item.inventory.name} | ${item.inventory.condition === 0 ? 'BARU' : 'BEKAS'} | Belum Dikirim: ${Number(item.quantity) - Number(item.arrivedQuantity)}`,
+        value: item.transactionSaleHasInventoryId,
+        label: `${item.inventory.name} | ${item.inventory.condition === 0 ? 'BARU' : 'BEKAS'} | Belum Dikirim: ${item.unprocessedQuantity.toLocaleString()}`,
         arrivedQuantity: item.arrivedQuantity,
         quantity: item.quantity,
         inventory: item.inventory,
@@ -153,7 +153,7 @@ function CreateSaleShipment() {
       return [
         ...prev,
         {
-          transactionSaleShipmentId: inventoryValue.value,
+          transactionSaleHasInventoryId: inventoryValue.value,
           inventory: inventoryValue.inventory,
           quantity: quantityValue,
         },
@@ -211,7 +211,7 @@ function CreateSaleShipment() {
 
       const request = {
         items: items.map((item) => ({
-          transactionSaleShipmentId: item.transactionSaleShipmentId,
+          transactionSaleHasInventoryId: item.transactionSaleHasInventoryId,
           quantity: item.quantity,
         })),
         internalNote: internalNoteValue,

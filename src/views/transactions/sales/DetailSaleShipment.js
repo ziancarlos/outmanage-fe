@@ -276,26 +276,22 @@ const DetailSaleShipment = () => {
             <CCard>
               <CCardBody>
                 <CCardTitle>
-                  TSIS{transactionSaleShipment.transactionSaleShipmentId}
+                  TSS{transactionSaleShipment.transactionSaleShipmentId}
                   <CBadge
-                    className="ms-2"
+                    className="me-2"
                     color={
-                      transactionSaleShipment.shipmentStatus === 2
+                      transactionSaleShipment.shipmentStatus === 1
                         ? 'success'
-                        : transactionSaleShipment.shipmentStatus === 1
-                          ? 'warning'
-                          : transactionSaleShipment.shipmentStatus === 0
-                            ? 'danger'
-                            : 'secondary'
+                        : transactionSaleShipment.shipmentStatus === 0
+                          ? 'danger'
+                          : 'secondary'
                     }
                   >
-                    {transactionSaleShipment.shipmentStatus === 2
-                      ? 'SELESAI'
-                      : transactionSaleShipment.shipmentStatus === 1
+                    {transactionSaleShipment.shipmentStatus === 1
+                      ? 'SUDAH DIKIRIM'
+                      : transactionSaleShipment.shipmentStatus === 0
                         ? 'PROSES'
-                        : transactionSaleShipment.shipmentStatus === 0
-                          ? 'BELUM DIKIRIM'
-                          : transactionSaleShipment.shipmentStatus}
+                        : 'UNKNOWN'}
                   </CBadge>
                 </CCardTitle>
               </CCardBody>
@@ -324,12 +320,6 @@ const DetailSaleShipment = () => {
                     ? moment(transactionSaleShipment.shipmentDate).format('MMMM D, YYYY h:mm A')
                     : '-'}
                 </CListGroupItem>
-                <CListGroupItem>
-                  Tanggal Selesai:{' '}
-                  {transactionSaleShipment.completionDate
-                    ? moment(transactionSaleShipment.completionDate).format('MMMM D, YYYY h:mm A')
-                    : '-'}
-                </CListGroupItem>
               </CListGroup>
               {(() => {
                 const { shipmentStatus } = transactionSaleShipment
@@ -339,8 +329,6 @@ const DetailSaleShipment = () => {
                   shipmentStatus === 0 && canDownloadTransactionSaleShipmentDeliveryNote
                 const canMarkAsShipped =
                   shipmentStatus === 0 && canUpdateTransactionSaleShipmentShipped
-                const canMarkAsCompleted =
-                  shipmentStatus === 1 && canUpdateTransactionSaleShipmentCompleted
 
                 // Render buttons conditionally based on permissions
                 const renderDownloadButton = canDownloadNote && (
@@ -369,27 +357,13 @@ const DetailSaleShipment = () => {
                   </CButton>
                 )
 
-                const renderCompletedButton = canMarkAsCompleted && (
-                  <CButton
-                    color="primary"
-                    variant="outline"
-                    onClick={() =>
-                      updateShipmentCompleted(transactionSaleId, transactionSaleShipmentId)
-                    }
-                  >
-                    <FontAwesomeIcon icon={faCheckCircle} className="me-2" /> Selesai
-                  </CButton>
-                )
-
                 // Check if any button should be rendered
-                const shouldRenderFooter =
-                  renderDownloadButton || renderShippedButton || renderCompletedButton
+                const shouldRenderFooter = renderDownloadButton || renderShippedButton
 
                 return shouldRenderFooter ? (
                   <CCardFooter>
                     {renderDownloadButton}
                     {renderShippedButton}
-                    {renderCompletedButton}
                   </CCardFooter>
                 ) : null
               })()}

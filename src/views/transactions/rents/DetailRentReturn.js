@@ -286,7 +286,7 @@ const DetailRentReturn = () => {
                   className="me-1"
                   onClick={() => generateDeliveryNote(transactionRentId, transactionRentReturnId)}
                 >
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Pengantar
+                  <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Pengembalian
                 </CButton>
 
                 {canUpdateTransactionRentReturnCompleted &&

@@ -80,7 +80,12 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const Invoice = React.lazy(() => import('./views/apps/invoicing/Invoice'))
 
 const routes = [
-  { path: '/', exact: true, name: <Translation>{(t) => t('home')}</Translation> },
+  {
+    path: '/',
+    exact: true,
+    name: <Translation>{(t) => t('home')}</Translation>,
+    element: Dashboard,
+  },
   {
     path: '/dashboard',
     name: <Translation>{(t) => t('dashboard')}</Translation>,
@@ -200,6 +205,21 @@ const routes = [
 ]
 
 export default [
+  ...[
+    {
+      path: '/',
+      exact: true,
+      name: <Translation>{(t) => t('home')}</Translation>,
+      permissions: ['read-dashboard'],
+      element: Dashboard,
+    },
+    {
+      path: '/dashboard',
+      name: <Translation>{(t) => t('dashboard')}</Translation>,
+      permissions: ['read-dashboard'],
+      element: Dashboard,
+    },
+  ],
   ...UserRoutes,
   ...AccountRoutes,
   ...RoleRoutes,
@@ -215,5 +235,4 @@ export default [
   ...SecurityDepositRoutes,
   ...TruckRoutes,
   ...ReportRoutes,
-  ...routes,
 ]

@@ -100,6 +100,9 @@ const DetailSale = () => {
   const canCreateTransactionSaleShipment = authorizePermissions.some(
     (perm) => perm.name === 'create-transaction-sale-shipment',
   )
+  const canDownloadTransactionSaleOfferLetter = authorizePermissions.some(
+    (perm) => perm.name === 'download-transaction-sale-offer-letter',
+  )
 
   const { transactionSaleId } = useParams()
 
@@ -711,7 +714,9 @@ const DetailSale = () => {
                     transactionSale.shipmentStatus !== 2
 
                   const canGenerateOfferingLetter =
-                    transactionSale.shipmentStatus === 0 && transactionSale.paymentStatus === 0
+                    canDownloadTransactionSaleOfferLetter &&
+                    transactionSale.shipmentStatus === 0 &&
+                    transactionSale.paymentStatus === 0
 
                   // Render Payment Button
                   const renderPaymentButton = needsPayment && (
@@ -777,11 +782,11 @@ const DetailSale = () => {
                           <CTableRow>
                             <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Barang</CTableHeaderCell>
-                            <CTableHeaderCell scope="col">Kondisi</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
-                            <CTableHeaderCell scope="col">Kuantitas Dipesan</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Kuantitas Diproses</CTableHeaderCell>
+                            <CTableHeaderCell scope="col">Kuantitas Dikirim</CTableHeaderCell>
                           </CTableRow>
                         </CTableHead>
                         <CTableBody>
@@ -821,22 +826,16 @@ const DetailSale = () => {
                                   </>
                                 )}
                               </CTableDataCell>
-                              <CTableDataCell>
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
-                                )}
-                              </CTableDataCell>
                               <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
                               <CTableDataCell>
                                 {formatRupiah(item.pricePerUnit * item.quantity)}
                               </CTableDataCell>
                               <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
                               <CTableDataCell>
-                                {parseInt(item.arrivedQuantity).toLocaleString()}
+                                {parseInt(item.processedQuantity).toLocaleString()}
+                              </CTableDataCell>
+                              <CTableDataCell>
+                                {parseInt(item.shippedQuantity).toLocaleString()}
                               </CTableDataCell>
                             </CTableRow>
                           ))}
@@ -889,22 +888,18 @@ const DetailSale = () => {
                                 <CBadge
                                   className="me-2"
                                   color={
-                                    item.shipmentStatus === 2
+                                    item.shipmentStatus === 1
                                       ? 'success'
-                                      : item.shipmentStatus === 1
-                                        ? 'warning'
-                                        : item.shipmentStatus === 0
-                                          ? 'danger'
-                                          : 'secondary'
+                                      : item.shipmentStatus === 0
+                                        ? 'danger'
+                                        : 'secondary'
                                   }
                                 >
-                                  {item.shipmentStatus === 2
-                                    ? 'SELESAI'
-                                    : item.shipmentStatus === 1
+                                  {item.shipmentStatus === 1
+                                    ? 'SUDAH DIKIRIM'
+                                    : item.shipmentStatus === 0
                                       ? 'PROSES'
-                                      : item.shipmentStatus === 0
-                                        ? 'BELUM DIKIRIM'
-                                        : item.shipmentStatus}
+                                      : 'UNKNOWN'}
                                 </CBadge>
                               </CTableDataCell>
 
