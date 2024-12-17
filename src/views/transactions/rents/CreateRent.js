@@ -429,7 +429,7 @@ const CreateRent = () => {
               )}
 
               <div className="mb-3">
-                <CFormLabel className="fw-bold me-2">Barang Pembelian</CFormLabel>
+                <CFormLabel className="fw-bold me-2">Barang Penyewaan</CFormLabel>
                 <CRow className="align-items-center mb-2">
                   <CCol lg={5} className="mb-2">
                     <CMultiSelect

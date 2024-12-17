@@ -65,7 +65,7 @@ function DetailRolePermissions() {
             <CTable hover responsive striped>
               <CTableHead>
                 <CTableRow>
-                  <CTableHeaderCell>Id Izin</CTableHeaderCell>
+                  <CTableHeaderCell>Id</CTableHeaderCell>
                   <CTableHeaderCell>Nama</CTableHeaderCell>
                   <CTableHeaderCell>Relasi</CTableHeaderCell>
                 </CTableRow>
@@ -73,7 +73,7 @@ function DetailRolePermissions() {
               <CTableBody>
                 {permissions.map((permission) => (
                   <CTableRow key={permission.permissionId}>
-                    <CTableDataCell>{permission.permissionId}</CTableDataCell>
+                    <CTableDataCell>RP{permission.permissionId}</CTableDataCell>
                     <CTableDataCell>{permission.name}</CTableDataCell>
                     <CTableDataCell>
                       <CFormCheck

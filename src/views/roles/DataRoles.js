@@ -91,7 +91,7 @@ function DataRoles() {
                   <CTableBody>
                     {roles.map((role) => (
                       <CTableRow key={role.roleId}>
-                        <CTableDataCell>#{role.roleId}</CTableDataCell>
+                        <CTableDataCell>R{role.roleId}</CTableDataCell>
                         <CTableDataCell>{role.name}</CTableDataCell>
                         {canReadPermissionsWithRelatedByRoleId && (
                           <CTableDataCell>

@@ -46,6 +46,8 @@ function UpdateUser() {
   const [roleValid, setRoleValid] = useState(true)
   const [passwordValid, setPasswordValid] = useState(true)
 
+  const [roleTouched, setRoleTouched] = useState(false)
+
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [updateFormLoading, setUpdateFormLoading] = useState(false)
@@ -250,10 +252,15 @@ function UpdateUser() {
                       autoComplete="off"
                       value={roleValue}
                       disabled={updateFormLoading}
+                      onBlur={() => setRoleTouched(true)}
                       onChange={(e) => setRoleValue(e.target.value)}
-                      className={`${
-                        roleValid && roleValue ? 'is-valid' : ''
-                      } ${roleValid || !roleValue ? '' : 'is-invalid'}`}
+                      className={
+                        roleTouched && (roleValue === '' || !roleValid)
+                          ? 'is-invalid'
+                          : roleValid
+                            ? 'is-valid'
+                            : ''
+                      }
                     >
                       <option value="">Select a role</option>
                       {roles.map((role) => (
@@ -262,11 +269,12 @@ function UpdateUser() {
                         </option>
                       ))}
                     </CFormSelect>
-                    {roleValid && roleValue && (
-                      <div className="valid-feedback">Peran telah dipilih.</div>
-                    )}
-                    {!roleValid && roleValue === '' && (
-                      <div className="invalid-feedback">Silahkan memilih peran.</div>
+                    {roleTouched && (
+                      <div
+                        className={`feedback ${roleValid ? 'valid-feedback' : 'invalid-feedback'}`}
+                      >
+                        {roleValid ? 'Peran telah dipilih.' : 'Silahkan memilih peran.'}
+                      </div>
                     )}
                   </div>
 

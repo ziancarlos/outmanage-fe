@@ -46,7 +46,7 @@ function TableProjectLog({
   const canReadProject = authorizePermissions.some((perm) => perm.name === 'read-project')
 
   return (
-    <CCard className="mb-4">
+    <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <strong>Data Log Proyek</strong>
       </CCardHeader>

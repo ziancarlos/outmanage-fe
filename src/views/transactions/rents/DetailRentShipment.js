@@ -81,6 +81,10 @@ const DetailRentShipment = () => {
     (perm) => perm.name === 'update-transaction-rent-shipment-shipped',
   )
 
+  const canDownloadTransactionRentDeliveryNote = authorizePermissions.some(
+    (perm) => perm.name === 'download-transaction-rent-delivery-note',
+  )
+
   const { transactionRentId, transactionRentShipmentId } = useParams()
 
   const [transactionRentShipment, setTransactionRentShipment] = useState({})
@@ -167,6 +171,7 @@ const DetailRentShipment = () => {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch (e) {
+      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
@@ -278,30 +283,56 @@ const DetailRentShipment = () => {
                     : '-'}
                 </CListGroupItem>
               </CListGroup>
-              <CCardFooter>
-                <CButton
-                  color="success"
-                  variant="outline"
-                  className="me-1"
-                  onClick={() => generateDeliveryNote(transactionRentId, transactionRentShipmentId)}
-                >
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Pengantar
-                </CButton>
+              {(() => {
+                // Permission and status checks
+                const canDownloadDeliveryNote =
+                  transactionRentShipment.shipmentStatus === 0 &&
+                  canDownloadTransactionRentDeliveryNote
 
-                {canUpdateTransactionRentShipmentShipped &&
-                  transactionRentShipment.shipmentStatus === 0 && (
-                    <CButton
-                      color="info"
-                      variant="outline"
-                      className="me-1"
-                      onClick={() =>
-                        updateShipmentShipped(transactionRentId, transactionRentShipmentId)
-                      }
-                    >
-                      <FontAwesomeIcon icon={faTruckFast} className="me-2" /> Dikirim
-                    </CButton>
-                  )}
-              </CCardFooter>
+                const canMarkAsShipped =
+                  transactionRentShipment.shipmentStatus === 0 &&
+                  canUpdateTransactionRentShipmentShipped
+
+                // Render Button Components
+                const renderDownloadButton = canDownloadDeliveryNote && (
+                  <CButton
+                    color="success"
+                    variant="outline"
+                    className="me-1"
+                    onClick={() =>
+                      generateDeliveryNote(transactionRentId, transactionRentShipmentId)
+                    }
+                  >
+                    <FontAwesomeIcon icon={faFileAlt} className="me-2" />
+                    Surat Pengantar
+                  </CButton>
+                )
+
+                const renderMarkAsShippedButton = canMarkAsShipped && (
+                  <CButton
+                    color="info"
+                    variant="outline"
+                    className="me-1"
+                    onClick={() =>
+                      updateShipmentShipped(transactionRentId, transactionRentShipmentId)
+                    }
+                  >
+                    <FontAwesomeIcon icon={faTruckFast} className="me-2" />
+                    Dikirim
+                  </CButton>
+                )
+
+                // Check if any button should be displayed
+                const shouldRenderFooter = renderDownloadButton || renderMarkAsShippedButton
+
+                // Conditionally render footer
+                return shouldRenderFooter ? (
+                  <CCardFooter>
+                    {renderDownloadButton}
+                    {renderMarkAsShippedButton}
+                  </CCardFooter>
+                ) : null
+              })()}
             </CCard>
           </CCol>
 

@@ -80,6 +80,9 @@ const DetailRentReturn = () => {
   const canUpdateTransactionRentReturnCompleted = authorizePermissions.some(
     (perm) => perm.name === 'update-transaction-rent-return-completed',
   )
+  const canDownloadTransactionRentReturnNote = authorizePermissions.some(
+    (perm) => perm.name === 'download-transaction-rent-return-note',
+  )
 
   const { transactionRentId, transactionRentReturnId } = useParams()
 
@@ -151,7 +154,7 @@ const DetailRentReturn = () => {
     setLoading(true)
     try {
       const response = await axiosPrivate.get(
-        `/api/transactions/rents/${transactionRentId}/returns/${transactionRentReturnId}/download-delivery-note`,
+        `/api/transactions/rents/${transactionRentId}/returns/${transactionRentReturnId}/download-return-note`,
         {
           responseType: 'blob', // Ensure the response is treated as a file
         },
@@ -234,7 +237,7 @@ const DetailRentReturn = () => {
             <CCard>
               <CCardBody>
                 <CCardTitle>
-                  TRS{transactionRentReturn.transactionRentReturnId}
+                  TRR{transactionRentReturn.transactionRentReturnId}
                   <CBadge
                     className="me-2"
                     color={
@@ -279,30 +282,53 @@ const DetailRentReturn = () => {
                     : '-'}
                 </CListGroupItem>
               </CListGroup>
-              <CCardFooter>
-                <CButton
-                  color="success"
-                  variant="outline"
-                  className="me-1"
-                  onClick={() => generateDeliveryNote(transactionRentId, transactionRentReturnId)}
-                >
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Pengembalian
-                </CButton>
+              {(() => {
+                // Permission and status checks
+                const canDownloadReturnNote =
+                  transactionRentReturn.shipmentStatus === 0 && canDownloadTransactionRentReturnNote
 
-                {canUpdateTransactionRentReturnCompleted &&
-                  transactionRentReturn.shipmentStatus === 0 && (
-                    <CButton
-                      color="info"
-                      variant="outline"
-                      className="me-1"
-                      onClick={() =>
-                        updateReturnToCompleted(transactionRentId, transactionRentReturnId)
-                      }
-                    >
-                      <FontAwesomeIcon icon={faCheckCircle} className="me-2" /> Selesai
-                    </CButton>
-                  )}
-              </CCardFooter>
+                const canMarkReturnAsCompleted =
+                  transactionRentReturn.shipmentStatus === 0 &&
+                  canUpdateTransactionRentReturnCompleted
+
+                // Render Button Components
+                const renderReturnNoteButton = canDownloadReturnNote && (
+                  <CButton
+                    color="success"
+                    variant="outline"
+                    className="me-1"
+                    onClick={() => generateDeliveryNote(transactionRentId, transactionRentReturnId)}
+                  >
+                    <FontAwesomeIcon icon={faFileAlt} className="me-2" />
+                    Surat Pengembalian
+                  </CButton>
+                )
+
+                const renderMarkAsCompletedButton = canMarkReturnAsCompleted && (
+                  <CButton
+                    color="info"
+                    variant="outline"
+                    className="me-1"
+                    onClick={() =>
+                      updateReturnToCompleted(transactionRentId, transactionRentReturnId)
+                    }
+                  >
+                    <FontAwesomeIcon icon={faCheckCircle} className="me-2" />
+                    Selesai
+                  </CButton>
+                )
+
+                // Check if any button should be displayed
+                const shouldRenderFooter = renderReturnNoteButton || renderMarkAsCompletedButton
+
+                // Conditionally render footer
+                return shouldRenderFooter ? (
+                  <CCardFooter>
+                    {renderReturnNoteButton}
+                    {renderMarkAsCompletedButton}
+                  </CCardFooter>
+                ) : null
+              })()}
             </CCard>
           </CCol>
 

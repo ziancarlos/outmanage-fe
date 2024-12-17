@@ -1,19 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { CSpinner, useDebouncedCallback } from '@coreui/react-pro'
+import { CSpinner } from '@coreui/react-pro'
 import { useLocation, useNavigate } from 'react-router-dom'
-import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-import useLogout from '../../hooks/useLogout'
+import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
+import useLogout from '../../../hooks/useLogout'
 
-import useAuth from '../../hooks/useAuth'
+import useAuth from '../../../hooks/useAuth'
 
-import { formatToISODate } from '../../utils/DateUtils'
-import TablePurchase from '../../components/purchases/TablePurchase'
+import { formatToISODate } from '../../../utils/DateUtils'
+import TableRent from '../../../components/transactions/rent/TableRent'
 
 const deliveryStatusOptions = [
   { label: 'Pilih Status Pengiriman', value: '' },
   { label: 'Sudah Selesai', value: 'SUDAH-SELESAI' },
-  { label: 'Sebagian', value: 'SEBAGIAN' },
-  { label: 'Belum Sampai', value: 'BELUM-SAMPAI' },
+  { label: 'Proses', value: 'PROSES' },
+  { label: 'Belum Dikirim', value: 'BELUM-DIKIRIM' },
+]
+
+const returnedStatusOptions = [
+  { label: 'Pilih Status Pengiriman', value: '' },
+  { label: 'Sudah Dikembalikan', value: 'SUDAH-DIBALIKAN' },
+  { label: 'Proses', value: 'PROSES' },
+  { label: 'Belum Dikembalikan', value: 'BELUM-DIBALIKAN' },
 ]
 
 const paymentStatusOptions = [
@@ -27,11 +34,15 @@ const matchingDeliveryStatus = deliveryStatusOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
+const matchingReturnedStatus = returnedStatusOptions
+  .filter((option) => option.value)
+  .map((option) => option.value)
+
 const matchingPaymentStatus = paymentStatusOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
-const DataPurchase = () => {
+const DataRentCancel = () => {
   const { authorizePermissions } = useAuth()
 
   const axiosPrivate = useAxiosPrivate()
@@ -42,7 +53,7 @@ const DataPurchase = () => {
   const [loading, setLoading] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
 
-  const [purchases, setPurchases] = useState([])
+  const [transactionRents, setTransactionRents] = useState([])
 
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -50,6 +61,7 @@ const DataPurchase = () => {
   const [searchStartDateValue, setSearchStartDateValue] = useState('')
   const [searchEndDateValue, setSearchEndDateValue] = useState('')
   const [searchDeliveryStatusValue, setSearchDeliveryStatusValue] = useState('')
+  const [searchReturnedStatusValue, setSearchReturnedStatusValue] = useState('')
   const [searchPaymentStatusValue, setSearchPaymentStatusValue] = useState('')
 
   const searchParamsRef = useRef()
@@ -58,11 +70,11 @@ const DataPurchase = () => {
 
   async function fetchData(page, searchParams = {}) {
     try {
-      const params = { page: page, size: 5, ...searchParams }
+      const params = { page: page, size: 5, ...searchParams, status: 'BATAL' }
 
-      const response = await axiosPrivate.get('/api/purchases', { params })
+      const response = await axiosPrivate.get('/api/transactions/rents', { params })
 
-      setPurchases(response.data.data)
+      setTransactionRents(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
 
@@ -92,6 +104,7 @@ const DataPurchase = () => {
     setError('')
   }, [
     searchDeliveryStatusValue,
+    searchReturnedStatusValue,
     searchPaymentStatusValue,
     searchStartDateValue,
     searchEndDateValue,
@@ -102,6 +115,7 @@ const DataPurchase = () => {
 
     const queryParams = new URLSearchParams(location.search)
     const deliveryStatusValue = queryParams.get('deliveryStatus')
+    const returnedStatusValue = queryParams.get('returnedStatus')
     const paymentStatusValue = queryParams.get('paymentStatus')
     const startDateParamValue = queryParams.get('startDate')
     const endDateParamValue = queryParams.get('endDate')
@@ -110,6 +124,9 @@ const DataPurchase = () => {
 
     if (matchingDeliveryStatus.includes(deliveryStatusValue)) {
       searchParamsRef.current.deliveryStatus = deliveryStatusValue
+    }
+    if (matchingReturnedStatus.includes(returnedStatusValue)) {
+      searchParamsRef.current.returnedStatus = returnedStatusValue
     }
     if (matchingPaymentStatus.includes(paymentStatusValue)) {
       searchParamsRef.current.paymentStatus = paymentStatusValue
@@ -136,6 +153,9 @@ const DataPurchase = () => {
     if (matchingDeliveryStatus.includes(searchDeliveryStatusValue)) {
       searchParams.deliveryStatus = searchDeliveryStatusValue
     }
+    if (matchingReturnedStatus.includes(searchReturnedStatusValue)) {
+      searchParams.returnedStatus = searchReturnedStatusValue
+    }
 
     if (matchingPaymentStatus.includes(searchPaymentStatusValue)) {
       searchParams.paymentStatus = searchPaymentStatusValue
@@ -155,7 +175,7 @@ const DataPurchase = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/purchases/data`)
+      navigate(`/transactions/rents/data`)
     }
 
     fetchData(1, searchParams).finally(() => setSearchLoading(false))
@@ -163,6 +183,7 @@ const DataPurchase = () => {
 
   function clearInput() {
     setSearchDeliveryStatusValue('')
+    setSearchReturnedStatusValue('')
     setSearchPaymentStatusValue('')
     setSearchStartDateValue('')
     setSearchEndDateValue('')
@@ -175,8 +196,9 @@ const DataPurchase = () => {
           <CSpinner color="primary" variant="grow" />
         </div>
       ) : (
-        <TablePurchase
+        <TableRent
           deliveryStatusOptions={deliveryStatusOptions}
+          returnedStatusOptions={returnedStatusOptions}
           paymentStatusOptions={paymentStatusOptions}
           navigate={navigate}
           authorizePermissions={authorizePermissions}
@@ -185,13 +207,15 @@ const DataPurchase = () => {
           searchLoading={searchLoading}
           searchDeliveryStatusValue={searchDeliveryStatusValue}
           setSearchDeliveryStatusValue={setSearchDeliveryStatusValue}
+          searchReturnedStatusValue={searchReturnedStatusValue}
+          setSearchReturnedStatusValue={setSearchReturnedStatusValue}
           searchPaymentStatusValue={searchPaymentStatusValue}
           setSearchPaymentStatusValue={setSearchPaymentStatusValue}
           searchStartDateValue={searchStartDateValue}
           searchEndDateValue={searchEndDateValue}
           setSearchStartDateValue={setSearchStartDateValue}
           setSearchEndDateValue={setSearchEndDateValue}
-          purchases={purchases}
+          transactionRents={transactionRents}
           page={page}
           totalPages={totalPages}
           handlePageChange={handlePageChange}
@@ -201,4 +225,4 @@ const DataPurchase = () => {
   )
 }
 
-export default DataPurchase
+export default DataRentCancel

@@ -48,6 +48,7 @@ import {
   faTimes,
   faTruck,
   faWallet,
+  faX,
 } from '@fortawesome/free-solid-svg-icons'
 
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -102,6 +103,9 @@ const DetailSale = () => {
   )
   const canDownloadTransactionSaleOfferLetter = authorizePermissions.some(
     (perm) => perm.name === 'download-transaction-sale-offer-letter',
+  )
+  const canDeleteTransactionSale = authorizePermissions.some(
+    (perm) => perm.name === 'delete-transaction-sale',
   )
 
   const { transactionSaleId } = useParams()
@@ -441,6 +445,42 @@ const DetailSale = () => {
     }
   }
 
+  async function handleCancel(e) {
+    e.preventDefault()
+
+    try {
+      setLoading(true)
+
+      await axiosPrivate.delete(`/api/transactions/sales/${transactionSaleId}`)
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Transaksi penjualan berhasil di batalkan.',
+        confirmButtonText: 'OK',
+      })
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401) {
+        navigate('/404', { replace: true })
+      } else if ([400, 404].includes(e.response?.status)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: e.response.data.error,
+          confirmButtonText: 'OK',
+        })
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setLoading(false)
+
+      setRefetch((prev) => !prev)
+    }
+  }
+
   function validatePaymentForm() {
     if (
       checkedPaymentMethodOptions === 'transfer' &&
@@ -705,18 +745,27 @@ const DetailSale = () => {
                   // Define permission and status checks
                   const needsPayment =
                     transactionSale.totalPaid !== transactionSale.grandTotal &&
-                    canCreateTransactionSalePayment
+                    canCreateTransactionSalePayment &&
+                    transactionSale.deletedAt === null
 
                   const canInitiateShipment =
                     canReadTransactionSaleInventories &&
                     canReadTruck &&
                     canCreateTransactionSaleShipment &&
-                    transactionSale.shipmentStatus !== 2
+                    transactionSale.shipmentStatus !== 2 &&
+                    transactionSale.deletedAt === null
 
                   const canGenerateOfferingLetter =
                     canDownloadTransactionSaleOfferLetter &&
                     transactionSale.shipmentStatus === 0 &&
-                    transactionSale.paymentStatus === 0
+                    transactionSale.paymentStatus === 0 &&
+                    transactionSale.deletedAt === null
+
+                  const canCancelSale =
+                    transactionSale.paymentStatus === 0 &&
+                    transactionSale.shipmentStatus === 0 &&
+                    transactionSale.deletedAt === null &&
+                    canDeleteTransactionSale
 
                   // Render Payment Button
                   const renderPaymentButton = needsPayment && (
@@ -747,15 +796,31 @@ const DetailSale = () => {
                     <CButton
                       color="warning"
                       variant="outline"
+                      className="me-1"
                       onClick={() => generateOfferingLetter(transactionSaleId)}
                     >
                       <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Penawaran
                     </CButton>
                   )
 
+                  const renderCancelButton = canCancelSale && (
+                    <CButton
+                      color="danger"
+                      variant="outline"
+                      className="me-1"
+                      onClick={(e) => handleCancel(e)}
+                    >
+                      <FontAwesomeIcon icon={faX} className="me-2" />
+                      Pembatalan
+                    </CButton>
+                  )
+
                   // Check if any button should be rendered
                   const shouldRenderFooter =
-                    renderPaymentButton || renderShipmentButton || renderOfferingLetterButton
+                    renderPaymentButton ||
+                    renderShipmentButton ||
+                    renderOfferingLetterButton ||
+                    renderCancelButton
 
                   // Conditionally render the footer
                   return shouldRenderFooter ? (
@@ -763,6 +828,7 @@ const DetailSale = () => {
                       {renderPaymentButton}
                       {renderShipmentButton}
                       {renderOfferingLetterButton}
+                      {renderCancelButton}
                     </CCardFooter>
                   ) : null
                 })()}

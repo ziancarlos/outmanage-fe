@@ -65,6 +65,7 @@ import {
   faCircleCheck,
   faExclamationCircle,
   faBug,
+  faX,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import useAuth from '../../../hooks/useAuth'
@@ -145,6 +146,9 @@ function DetailRent() {
   )
   const canCreateTransactionRentIssue = authorizePermissions.some(
     (perm) => perm.name === 'create-transaction-rent-issue',
+  )
+  const canDeleteTransactionRent = authorizePermissions.some(
+    (perm) => perm.name === 'delete-transaction-rent',
   )
 
   const { transactionRentId } = useParams()
@@ -271,6 +275,7 @@ function DetailRent() {
       setModalIssueInventoryLoading(false)
     }
   }
+
   useEffect(() => {
     setIssueInventoryError('')
   }, [issuePricePerUnitValue, issueInternalNoteValue, issueTypeValue, issueQuantityValue])
@@ -303,6 +308,42 @@ function DetailRent() {
     setPaymentError('')
     setPaymentSuccess('')
   }, [checkedPaymentMethodOptions, bankValue, accountNumberValue])
+
+  async function handleCancel(e) {
+    e.preventDefault()
+
+    try {
+      setLoading(true)
+
+      await axiosPrivate.delete(`/api/transactions/rents/${transactionRentId}`)
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Transaksi penyewaan berhasil di batalkan.',
+        confirmButtonText: 'OK',
+      })
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401) {
+        navigate('/404', { replace: true })
+      } else if ([400, 404].includes(e.response?.status)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: e.response.data.error,
+          confirmButtonText: 'OK',
+        })
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setLoading(false)
+
+      setRefetch((prev) => !prev)
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -925,9 +966,12 @@ function DetailRent() {
                 {(() => {
                   // Permission and status checks
                   const needsPayment =
-                    transactionRent.paymentStatus !== 2 && canCreateTransactionRentPayment
+                    transactionRent.deletedAt === null &&
+                    transactionRent.paymentStatus !== 2 &&
+                    canCreateTransactionRentPayment
 
                   const canCreateBill =
+                    transactionRent.deletedAt === null &&
                     canCreateTransactionRentBill &&
                     canReadTransactionRentInventories &&
                     transactionRentInventories.some(
@@ -935,6 +979,7 @@ function DetailRent() {
                     )
 
                   const canCreateShipment =
+                    transactionRent.deletedAt === null &&
                     canCreateTransactionRentShipment &&
                     canReadTransactionRentInventories &&
                     transactionRentInventories.some(
@@ -942,11 +987,19 @@ function DetailRent() {
                     )
 
                   const canCreateReturn =
+                    transactionRent.deletedAt === null &&
                     canCreateTransactionRentReturn &&
                     canReadTransactionRentInventories &&
                     transactionRentInventories.some(
                       (inventory) => inventory.availableRentQuantity > 0,
                     )
+
+                  const canCancelRent =
+                    transactionRent.paymentStatus === 0 &&
+                    transactionRent.shipmentStatus === 0 &&
+                    transactionRent.returnStatus === 0 &&
+                    transactionRent.deletedAt === null &&
+                    canDeleteTransactionRent
 
                   // Render Button Components
                   const renderPaymentButton = needsPayment && (
@@ -997,12 +1050,25 @@ function DetailRent() {
                     </CButton>
                   )
 
+                  const renderCancelButton = canCancelRent && (
+                    <CButton
+                      color="danger"
+                      variant="outline"
+                      className="me-1"
+                      onClick={(e) => handleCancel(e)}
+                    >
+                      <FontAwesomeIcon icon={faX} className="me-2" />
+                      Pembatalan
+                    </CButton>
+                  )
+
                   // Check if any button should be displayed
                   const shouldRenderFooter =
                     renderPaymentButton ||
                     renderBillButton ||
                     renderShipmentButton ||
-                    renderReturnButton
+                    renderReturnButton ||
+                    renderCancelButton
 
                   // Conditionally render footer
                   return shouldRenderFooter ? (
@@ -1011,6 +1077,7 @@ function DetailRent() {
                       {renderBillButton}
                       {renderShipmentButton}
                       {renderReturnButton}
+                      {renderCancelButton}
                     </CCardFooter>
                   ) : null
                 })()}
@@ -1038,9 +1105,10 @@ function DetailRent() {
                               <CTableHeaderCell scope="col">Kuantitas Disewa</CTableHeaderCell>
                               <CTableHeaderCell scope="col">Kuantitas Tersedia</CTableHeaderCell>
                               <CTableHeaderCell scope="col">Kuantitas Bermasalah</CTableHeaderCell>
-                              {canCreateTransactionRentIssue && (
-                                <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
-                              )}
+                              {canCreateTransactionRentIssue &&
+                                transactionRent.deletedAt === null && (
+                                  <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                                )}
                             </CTableRow>
                           </CTableHead>
                           <CTableBody>
@@ -1091,20 +1159,21 @@ function DetailRent() {
                                 <CTableDataCell>
                                   {item.issueQuantity.toLocaleString()}
                                 </CTableDataCell>
-                                {canCreateTransactionRentIssue && (
-                                  <CTableDataCell>
-                                    <CButton
-                                      color="danger"
-                                      size="sm"
-                                      className="me-1"
-                                      onClick={() => {
-                                        handleShowModalIssueInventory(item)
-                                      }}
-                                    >
-                                      <FontAwesomeIcon color="white" icon={faExclamationCircle} />
-                                    </CButton>
-                                  </CTableDataCell>
-                                )}
+                                {canCreateTransactionRentIssue &&
+                                  transactionRent.deletedAt === null && (
+                                    <CTableDataCell>
+                                      <CButton
+                                        color="danger"
+                                        size="sm"
+                                        className="me-1"
+                                        onClick={() => {
+                                          handleShowModalIssueInventory(item)
+                                        }}
+                                      >
+                                        <FontAwesomeIcon color="white" icon={faExclamationCircle} />
+                                      </CButton>
+                                    </CTableDataCell>
+                                  )}
                               </CTableRow>
                             ))}
                           </CTableBody>

@@ -48,7 +48,7 @@ function TableProject({
   }
 
   return (
-    <CCard className="mb-4">
+    <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <strong>Data Proyek</strong>
       </CCardHeader>

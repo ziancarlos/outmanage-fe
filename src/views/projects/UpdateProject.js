@@ -225,7 +225,7 @@ function UpdateProject() {
           <CCol>
             <CCard>
               <CCardHeader>
-                <strong>Create Project</strong>
+                <strong>Ubah Proyek</strong>
               </CCardHeader>
 
               <CForm onSubmit={handleSubmit}>
@@ -310,6 +310,7 @@ function UpdateProject() {
                       search="external"
                       virtualScroller
                       loading={clientOptionsLoading}
+                      cleaner={false}
                     />
                     {clientValue && clientValid && (
                       <div className="valid-feedback">Klien valid.</div>

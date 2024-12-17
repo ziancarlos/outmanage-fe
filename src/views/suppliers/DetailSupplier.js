@@ -373,31 +373,33 @@ const DetailSupplier = () => {
           </CCol>
 
           {canReadPurchases && (
-            <TablePurchase
-              deliveryStatusOptions={deliveryStatusOptions}
-              paymentStatusOptions={paymentStatusOptions}
-              navigate={navigate}
-              authorizePermissions={authorizePermissions}
-              error={purchasesError}
-              handleSearch={purchasesHandleSearch}
-              searchLoading={purchasesSearchLoading}
-              searchDeliveryStatusValue={purchasesSearchDeliveryStatusValue}
-              setSearchDeliveryStatusValue={setPurchasesSearchDeliveryStatusValue}
-              searchPaymentStatusValue={purchasesSearchPaymentStatusValue}
-              setSearchPaymentStatusValue={setPurchasesSearchPaymentStatusValue}
-              searchStartDateValue={purchasesSearchStartDateValue}
-              searchEndDateValue={purchasesSearchEndDateValue}
-              setSearchStartDateValue={setPurchasesSearchStartDateValue}
-              setSearchEndDateValue={setPurchasesSearchEndDateValue}
-              purchases={purchases}
-              page={purchasesPage}
-              totalPages={purchasesTotalPages}
-              handlePageChange={purchasesHandlePageChange}
-            />
+            <CCol xs={12} className="mb-3">
+              <TablePurchase
+                deliveryStatusOptions={deliveryStatusOptions}
+                paymentStatusOptions={paymentStatusOptions}
+                navigate={navigate}
+                authorizePermissions={authorizePermissions}
+                error={purchasesError}
+                handleSearch={purchasesHandleSearch}
+                searchLoading={purchasesSearchLoading}
+                searchDeliveryStatusValue={purchasesSearchDeliveryStatusValue}
+                setSearchDeliveryStatusValue={setPurchasesSearchDeliveryStatusValue}
+                searchPaymentStatusValue={purchasesSearchPaymentStatusValue}
+                setSearchPaymentStatusValue={setPurchasesSearchPaymentStatusValue}
+                searchStartDateValue={purchasesSearchStartDateValue}
+                searchEndDateValue={purchasesSearchEndDateValue}
+                setSearchStartDateValue={setPurchasesSearchStartDateValue}
+                setSearchEndDateValue={setPurchasesSearchEndDateValue}
+                purchases={purchases}
+                page={purchasesPage}
+                totalPages={purchasesTotalPages}
+                handlePageChange={purchasesHandlePageChange}
+              />
+            </CCol>
           )}
 
           {canReadSupplierLog && (
-            <CCol xs={12}>
+            <CCol xs={12} className="mb-3">
               <TableSupplierLog
                 title={'Data Log Pemasok'}
                 error={supplierLogsError}

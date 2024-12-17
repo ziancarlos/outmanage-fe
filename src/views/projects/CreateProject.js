@@ -80,6 +80,8 @@ function CreateProject() {
   }, [nameValue, descriptionValue, addressValue])
 
   const fetchClients = async (value) => {
+    if (!value) return
+
     try {
       setClientOptionsLoading(true)
 
@@ -95,6 +97,7 @@ function CreateProject() {
 
       setClientOptions(options)
     } catch (e) {
+      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
@@ -165,6 +168,7 @@ function CreateProject() {
         clearInput()
       })
     } catch (e) {
+      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
@@ -181,10 +185,11 @@ function CreateProject() {
 
   function clearInput() {
     setNameValue('')
+    setClientOptions([])
+    setClientValue('')
     setDescriptionValue('')
     setAddressValue('')
     setError('')
-    setClientValue('')
   }
 
   return (
@@ -266,7 +271,9 @@ function CreateProject() {
                     disabled={loading}
                     multiple={false}
                     onChange={(e) => {
-                      setClientValue(e)
+                      if (e.length < 1) return
+
+                      setClientValue(e || '')
                     }}
                     className={
                       clientValue && clientValid
@@ -280,6 +287,8 @@ function CreateProject() {
                     search="external"
                     virtualScroller
                     loading={clientOptionsLoading}
+                    resetSelectionOnOptionsChange={true}
+                    cleaner={false}
                   />
                   {clientValue && clientValid && <div className="valid-feedback">Klien valid.</div>}
                   {!clientValue && clientValid && (

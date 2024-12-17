@@ -30,7 +30,7 @@ const InventoryNavs = [
       },
       {
         component: CNavItem,
-        name: 'Data Log Barang',
+        name: 'Data Log Inventaris',
         to: '/inventories/log',
         permissions: ['read-inventories-logs'],
       },

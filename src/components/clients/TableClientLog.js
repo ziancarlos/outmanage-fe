@@ -47,7 +47,7 @@ function TableClientLog({
   const canReadClient = authorizePermissions.some((perm) => perm.name === 'read-client')
 
   return (
-    <CCard className="mb-4">
+    <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <strong>Data Log Klien</strong>
       </CCardHeader>
@@ -116,7 +116,7 @@ function TableClientLog({
                 <CTableRow key={idx}>
                   <CTableDataCell>CL{log.clientLogId}</CTableDataCell>
                   <CTableDataCell>
-                    {canReadUser ? (
+                    {canReadClient ? (
                       <NavLink to={`/clients/${log.clientId}/detail`}>{log.client.name}</NavLink>
                     ) : (
                       log.client.name

@@ -27,6 +27,13 @@ const SaleNavs = [
         to: '/transactions/sales/log',
         permissions: ['read-transaction-sales-logs'],
       },
+
+      {
+        component: CNavItem,
+        name: 'Transaksi Penjualan Batal',
+        to: '/transactions/sales/cancel',
+        permissions: ['read-transaction-sales'],
+      },
     ],
   },
 ]

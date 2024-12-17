@@ -56,6 +56,7 @@ import {
   faTimes,
   faTimesCircle,
   faWallet,
+  faX,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { formatRupiah } from '../../utils/CurrencyUtils'
@@ -90,6 +91,7 @@ const DetailPurchase = () => {
   const canCreatePurchaseInventoryDetail = authorizePermissions.some(
     (perm) => perm.name === 'create-purchase-inventory-detail',
   )
+  const canDeletePurchase = authorizePermissions.some((perm) => perm.name === 'delete-purchase')
 
   const canReadSupplier = authorizePermissions.some((perm) => perm.name === 'read-supplier')
   const canReadInventory = authorizePermissions.some((perm) => perm.name === 'read-inventory')
@@ -223,6 +225,42 @@ const DetailPurchase = () => {
       } else {
         navigate('/500')
       }
+    }
+  }
+
+  async function handleCancel(e) {
+    e.preventDefault()
+
+    try {
+      setLoading(true)
+
+      await axiosPrivate.delete(`/api/purchases/${purchaseId}`)
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Pembelian berhasil di batalkan.',
+        confirmButtonText: 'OK',
+      })
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401) {
+        navigate('/404', { replace: true })
+      } else if ([400, 404].includes(e.response?.status)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: e.response.data.error,
+          confirmButtonText: 'OK',
+        })
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setLoading(false)
+
+      setRefetch((prev) => !prev)
     }
   }
 
@@ -631,9 +669,23 @@ const DetailPurchase = () => {
                     </CBadge>
                     <CBadge
                       className="me-2"
-                      color={purchase.deliveryStatus == 1 ? 'success' : 'danger'}
+                      color={
+                        purchase.deliveryStatus === 2
+                          ? 'success'
+                          : purchase.deliveryStatus === 1
+                            ? 'warning'
+                            : purchase.deliveryStatus === 0
+                              ? 'danger'
+                              : 'secondary'
+                      }
                     >
-                      {purchase.deliveryStatus === 1 ? 'SAMPAI' : 'BELUM SAMPAI'}
+                      {purchase.deliveryStatus === 2
+                        ? 'SELESAI'
+                        : purchase.deliveryStatus === 1
+                          ? 'SEBAGIAN'
+                          : purchase.deliveryStatus === 0
+                            ? 'BELUM SAMPAI'
+                            : purchase.deliveryStatus}
                     </CBadge>
                   </CCardTitle>
                 </CCardBody>
@@ -654,17 +706,50 @@ const DetailPurchase = () => {
                   <CListGroupItem>Deskripsi: {purchase.description || '-'}</CListGroupItem>
                 </CListGroup>
 
-                {purchase.paymentStatus != 2 && canCreatePurchasePayment && (
-                  <CCardFooter>
+                {(() => {
+                  // Conditions for the buttons
+                  const canMakePayment =
+                    purchase.paymentStatus !== 2 &&
+                    purchase.deletedAt === null &&
+                    canCreatePurchasePayment
+
+                  const canCancelPurchase =
+                    purchase.paymentStatus === 0 &&
+                    purchase.deliveryStatus === 0 &&
+                    purchase.deletedAt === null &&
+                    canDeletePurchase
+
+                  // Button components
+                  const renderPaymentButton = canMakePayment && (
                     <CButton
                       color="success"
                       variant="outline"
                       onClick={() => setVisibileModalPayment(!visibileModalPayment)}
+                      className="me-1"
                     >
-                      <FontAwesomeIcon icon={faMoneyBill1} className="me-2" /> Pembayaran
+                      <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />
+                      Pembayaran
                     </CButton>
-                  </CCardFooter>
-                )}
+                  )
+
+                  const renderCancelButton = canCancelPurchase && (
+                    <CButton color="danger" variant="outline" onClick={(e) => handleCancel(e)}>
+                      <FontAwesomeIcon icon={faX} className="me-2" />
+                      Pembatalan
+                    </CButton>
+                  )
+
+                  // Check if any button should be displayed
+                  const shouldRenderFooter = renderPaymentButton || renderCancelButton
+
+                  // Conditionally render footer if there are buttons to show
+                  return shouldRenderFooter ? (
+                    <CCardFooter>
+                      {renderPaymentButton}
+                      {renderCancelButton}
+                    </CCardFooter>
+                  ) : null
+                })()}
               </CCard>
             </CCol>
 

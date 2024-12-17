@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { CSpinner, useDebouncedCallback } from '@coreui/react-pro'
 import { useLocation, useNavigate } from 'react-router-dom'
-import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-import useLogout from '../../hooks/useLogout'
+import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
+import useLogout from '../../../hooks/useLogout'
 
-import useAuth from '../../hooks/useAuth'
+import useAuth from '../../../hooks/useAuth'
 
-import { formatToISODate } from '../../utils/DateUtils'
-import TablePurchase from '../../components/purchases/TablePurchase'
+import { formatToISODate } from '../../../utils/DateUtils'
+import TableSale from '../../../components/transactions/sale/TableSale'
 
 const deliveryStatusOptions = [
   { label: 'Pilih Status Pengiriman', value: '' },
   { label: 'Sudah Selesai', value: 'SUDAH-SELESAI' },
-  { label: 'Sebagian', value: 'SEBAGIAN' },
-  { label: 'Belum Sampai', value: 'BELUM-SAMPAI' },
+  { label: 'Proses', value: 'PROSES' },
+  { label: 'Belum Dikirim', value: 'BELUM-DIKIRIM' },
 ]
 
 const paymentStatusOptions = [
@@ -31,7 +31,7 @@ const matchingPaymentStatus = paymentStatusOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
-const DataPurchase = () => {
+const DataSale = () => {
   const { authorizePermissions } = useAuth()
 
   const axiosPrivate = useAxiosPrivate()
@@ -42,7 +42,7 @@ const DataPurchase = () => {
   const [loading, setLoading] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
 
-  const [purchases, setPurchases] = useState([])
+  const [transactionSales, setTransactionSales] = useState([])
 
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -58,11 +58,11 @@ const DataPurchase = () => {
 
   async function fetchData(page, searchParams = {}) {
     try {
-      const params = { page: page, size: 5, ...searchParams }
+      const params = { page: page, size: 5, ...searchParams, status: 'BATAL' }
 
-      const response = await axiosPrivate.get('/api/purchases', { params })
+      const response = await axiosPrivate.get('/api/transactions/sales', { params })
 
-      setPurchases(response.data.data)
+      setTransactionSales(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
 
@@ -155,7 +155,7 @@ const DataPurchase = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/purchases/data`)
+      navigate(`/transactions/sales/data`)
     }
 
     fetchData(1, searchParams).finally(() => setSearchLoading(false))
@@ -175,7 +175,7 @@ const DataPurchase = () => {
           <CSpinner color="primary" variant="grow" />
         </div>
       ) : (
-        <TablePurchase
+        <TableSale
           deliveryStatusOptions={deliveryStatusOptions}
           paymentStatusOptions={paymentStatusOptions}
           navigate={navigate}
@@ -191,7 +191,7 @@ const DataPurchase = () => {
           searchEndDateValue={searchEndDateValue}
           setSearchStartDateValue={setSearchStartDateValue}
           setSearchEndDateValue={setSearchEndDateValue}
-          purchases={purchases}
+          transactionSales={transactionSales}
           page={page}
           totalPages={totalPages}
           handlePageChange={handlePageChange}
@@ -201,4 +201,4 @@ const DataPurchase = () => {
   )
 }
 
-export default DataPurchase
+export default DataSale

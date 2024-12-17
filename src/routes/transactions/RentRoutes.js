@@ -7,6 +7,7 @@ const CreateRentReturn = React.lazy(() => import('../../views/transactions/rents
 const DetailRentReturn = React.lazy(() => import('../../views/transactions/rents/DetailRentReturn'))
 const CreateRentBill = React.lazy(() => import('../../views/transactions/rents/CreateRentBill'))
 const DataRent = React.lazy(() => import('../../views/transactions/rents/DataRent'))
+const DataRentCancel = React.lazy(() => import('../../views/transactions/rents/DataRentCancel'))
 const DetailRent = React.lazy(() => import('../../views/transactions/rents/DetailRent'))
 const DetailRentShipment = React.lazy(
   () => import('../../views/transactions/rents/DetailRentShipment'),
@@ -25,6 +26,12 @@ const TransactionRentRoutes = [
     path: '/transactions/rents/data',
     name: 'Data Transaski Penyewaan',
     element: DataRent,
+    permissions: ['read-transaction-rents'],
+  },
+  {
+    path: '/transactions/rents/cancel',
+    name: 'Data Transaski Penyewaan',
+    element: DataRentCancel,
     permissions: ['read-transaction-rents'],
   },
   {

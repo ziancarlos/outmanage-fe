@@ -48,6 +48,7 @@ import {
   faSave,
   faTimes,
   faWallet,
+  faX,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Swal from 'sweetalert2'
@@ -72,6 +73,9 @@ function DetailOperationalExpense() {
   )
   const canCreateOperationalExpensePayment = authorizePermissions.some(
     (perm) => perm.name === 'create-operational-expense-payment',
+  )
+  const canDeleteOperationalExpense = authorizePermissions.some(
+    (perm) => perm.name === 'delete-operational-expense',
   )
 
   const axiosPrivate = useAxiosPrivate()
@@ -269,6 +273,42 @@ function DetailOperationalExpense() {
       }
     } finally {
       setPaymentLoading(false)
+
+      setRefetch((prev) => !prev)
+    }
+  }
+
+  async function handleCancel(e) {
+    e.preventDefault()
+
+    try {
+      setLoading(true)
+
+      await axiosPrivate.delete(`/api/operational-expenses/${operationalExpenseId}`)
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Pengeluaran operasional berhasil di batalkan.',
+        confirmButtonText: 'OK',
+      })
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if (e.response?.status === 401) {
+        navigate('/404', { replace: true })
+      } else if ([400, 404].includes(e.response?.status)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: e.response.data.error,
+          confirmButtonText: 'OK',
+        })
+      } else {
+        navigate('/500')
+      }
+    } finally {
+      setLoading(false)
 
       setRefetch((prev) => !prev)
     }
@@ -529,19 +569,49 @@ function DetailOperationalExpense() {
                     Deskripsi: {operationalExpense.description || '-'}
                   </CListGroupItem>
                 </CListGroup>
+                {(() => {
+                  // Permission and status checks
+                  const canShowPaymentButton =
+                    operationalExpense.paymentStatus !== 2 &&
+                    canReadOperationalExpensePayments &&
+                    operationalExpense.deletedAt === null
 
-                {operationalExpense.paymentStatus != 2 && canReadOperationalExpensePayments && (
-                  <CCardFooter>
+                  const canShowCancelButton =
+                    canDeleteOperationalExpense &&
+                    operationalExpense.deletedAt === null &&
+                    operationalExpense.paymentStatus === 0
+
+                  // Render button components
+                  const renderPaymentButton = canShowPaymentButton && (
                     <CButton
                       color="success"
                       variant="outline"
+                      className="me-1"
                       onClick={() => setVisibileModalPayment(!visibileModalPayment)}
                     >
                       <FontAwesomeIcon icon={faMoneyBill1} className="me-2" />
                       Pembayaran
                     </CButton>
-                  </CCardFooter>
-                )}
+                  )
+
+                  const renderCancelButton = canShowCancelButton && (
+                    <CButton color="danger" variant="outline" onClick={(e) => handleCancel(e)}>
+                      <FontAwesomeIcon icon={faX} className="me-2" />
+                      Pembatalan
+                    </CButton>
+                  )
+
+                  // Check if any button should be displayed
+                  const shouldRenderFooter = renderPaymentButton || renderCancelButton
+
+                  // Conditionally render footer
+                  return shouldRenderFooter ? (
+                    <CCardFooter>
+                      {renderPaymentButton}
+                      {renderCancelButton}
+                    </CCardFooter>
+                  ) : null
+                })()}
               </CCard>
             </CCol>
           </CRow>

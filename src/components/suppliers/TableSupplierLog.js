@@ -46,7 +46,7 @@ function TableSupplierLog({
   const canReadSupplier = authorizePermissions.some((perm) => perm.name === 'read-supplier')
 
   return (
-    <CCard className="mb-4">
+    <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <strong>Data Log Pemasok</strong>
       </CCardHeader>

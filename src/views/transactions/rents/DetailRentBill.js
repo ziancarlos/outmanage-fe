@@ -149,46 +149,6 @@ const DetailRentBill = () => {
     }
   }
 
-  async function generateDeliveryNote(transactionRentId, transactionRentBillId) {
-    setLoading(true)
-    try {
-      const response = await axiosPrivate.get(
-        `/api/transactions/rents/${transactionRentId}/shipments/${transactionRentBillId}/download-delivery-note`,
-        {
-          responseType: 'blob', // Ensure the response is treated as a file
-        },
-      )
-
-      // Create a URL for the file
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', 'SuratPengantar.pdf')
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (e) {
-      console.log(e)
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if (e.response?.status === 401) {
-        navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal!',
-          text: 'Gagal mendapatkan surat pengantar',
-          confirmButtonText: 'OK',
-        })
-      } else {
-        navigate('/500')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function updateBillToComplete(transactionRentId, transactionRentBillId) {
     setLoading(true)
     try {
@@ -201,7 +161,7 @@ const DetailRentBill = () => {
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
-        text: 'Berhasil mengubah status pengiriman menjadi dikirim',
+        text: 'Berhasil menyelesaikan tagihan.',
         confirmButtonText: 'OK',
       })
     } catch (e) {
@@ -256,15 +216,6 @@ const DetailRentBill = () => {
                 </CListGroupItem>
               </CListGroup>
               <CCardFooter>
-                <CButton
-                  color="success"
-                  variant="outline"
-                  className="me-1"
-                  onClick={() => generateDeliveryNote(transactionRentId, transactionRentBillId)}
-                >
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" /> Surat Tagihan
-                </CButton>
-
                 {canUpdateTransactionRentBillCompleted && !transactionRentBill.endDate && (
                   <CButton
                     color="info"

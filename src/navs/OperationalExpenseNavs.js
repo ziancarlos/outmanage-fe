@@ -31,6 +31,12 @@ const OperationalExpenseNavs = [
         to: '/operational-expenses/log',
         permissions: ['read-operational-expenses-logs'],
       },
+      {
+        component: CNavItem,
+        name: 'Biaya Operasional Batal',
+        to: '/operational-expenses/cancel',
+        permissions: ['read-operational-expenses'],
+      },
     ],
   },
 ]

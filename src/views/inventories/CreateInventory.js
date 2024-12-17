@@ -104,7 +104,7 @@ function CreateInventory() {
       <CCol>
         <CCard>
           <CCardHeader>
-            <strong>Create Item</strong>
+            <strong>Tambah Inventaris</strong>
           </CCardHeader>
           <CForm onSubmit={handleSubmit}>
             <CCardBody>

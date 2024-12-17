@@ -58,7 +58,7 @@ const DataPurchase = () => {
 
   async function fetchData(page, searchParams = {}) {
     try {
-      const params = { page: page, size: 5, ...searchParams }
+      const params = { page: page, size: 5, ...searchParams, status: 'BATAL' }
 
       const response = await axiosPrivate.get('/api/purchases', { params })
 
@@ -155,7 +155,7 @@ const DataPurchase = () => {
       const newParams = new URLSearchParams(searchParams).toString()
       navigate(`${location.pathname}?${newParams}`, { replace: true })
     } else {
-      navigate(`/purchases/data`)
+      navigate(`/purchases/cancel`)
     }
 
     fetchData(1, searchParams).finally(() => setSearchLoading(false))

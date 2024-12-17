@@ -4,6 +4,7 @@ const CreateSaleShipment = React.lazy(
   () => import('../../views/transactions/sales/CreateSaleShipment'),
 )
 const DataSale = React.lazy(() => import('../../views/transactions/sales/DataSale'))
+const DataSaleCancel = React.lazy(() => import('../../views/transactions/sales/DataSaleCancel'))
 const DetailSale = React.lazy(() => import('../../views/transactions/sales/DetailSale'))
 const DataSaleLog = React.lazy(() => import('../../views/transactions/sales/DataSaleLog'))
 const DetailSaleShipment = React.lazy(
@@ -55,6 +56,13 @@ const TransactionSaleRoutes = [
     name: 'Detil Pengiriman Transaski Penjualan',
     element: DetailSaleShipment,
     permissions: ['read-transaction-sale-shipment'],
+  },
+
+  {
+    path: '/transactions/sales/cancel',
+    name: 'Transaski Penjualan Batal',
+    element: DataSaleCancel,
+    permissions: ['read-transaction-sales'],
   },
 ]
 

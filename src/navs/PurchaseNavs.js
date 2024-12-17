@@ -13,7 +13,7 @@ const PurchaseNavs = [
         component: CNavItem,
         name: 'Data Pembelian',
         to: '/purchases/data',
-        permissions: ['read-purchases', 'read-suppliers'],
+        permissions: ['read-purchases'],
       },
       {
         component: CNavItem,
@@ -26,6 +26,12 @@ const PurchaseNavs = [
         name: 'Data Log Pembelian',
         to: '/purchases/log',
         permissions: ['read-purchases-logs'],
+      },
+      {
+        component: CNavItem,
+        name: 'Pembelian Batal',
+        to: '/purchases/cancel',
+        permissions: ['read-purchases'],
       },
     ],
   },

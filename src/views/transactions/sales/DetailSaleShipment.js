@@ -105,8 +105,6 @@ const DetailSaleShipment = () => {
     setLoading(true)
     const fetchPromises = []
 
-    console.log(transactionSaleShipmentId)
-
     fetchPromises.push(fetchTransactionSaleShipment(transactionSaleId, transactionSaleShipmentId))
 
     if (canReadTransactionSaleShipmentDetails) {
@@ -216,40 +214,6 @@ const DetailSaleShipment = () => {
       } else if (e.response?.status === 401) {
         navigate('/404', { replace: true })
       } else if ([400, 404, 409].includes(e.response?.status)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal!',
-          text: e.response.data.error,
-          confirmButtonText: 'OK',
-        })
-      } else {
-        navigate('/500')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function updateShipmentCompleted(transactionSaleId, transactionSaleShipmentId) {
-    setLoading(true)
-    try {
-      const response = await axiosPrivate.patch(
-        `/api/transactions/sales/${transactionSaleId}/shipments/${transactionSaleShipmentId}/completed`,
-      )
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: 'Berhasil mengubah status pengiriman menjadi selesai',
-        confirmButtonText: 'OK',
-      })
-      setRefetch(!refetch)
-    } catch (e) {
-      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-        await logout()
-      } else if (e.response?.status === 401) {
-        navigate('/404', { replace: true })
-      } else if ([400, 404].includes(e.response?.status)) {
         Swal.fire({
           icon: 'error',
           title: 'Gagal!',

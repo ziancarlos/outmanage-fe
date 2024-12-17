@@ -126,7 +126,7 @@ const DataProject = () => {
           <CCol xs={12}>
             <CCard className="mb-4">
               <CCardHeader className="d-flex justify-content-between align-items-center">
-                <strong>Data Proyek</strong>
+                <strong>Data Truk</strong>
               </CCardHeader>
               <CCardBody>
                 {error && (

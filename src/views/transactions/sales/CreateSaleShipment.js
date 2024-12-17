@@ -103,6 +103,7 @@ function CreateSaleShipment() {
       inventoryOptionsRef.current = response.data.data.map((item) => ({
         value: item.transactionSaleHasInventoryId,
         label: `${item.inventory.name} | ${item.inventory.condition === 0 ? 'BARU' : 'BEKAS'} | Belum Dikirim: ${item.unprocessedQuantity.toLocaleString()}`,
+        unprocessedQuantity: item.unprocessedQuantity,
         arrivedQuantity: item.arrivedQuantity,
         quantity: item.quantity,
         inventory: item.inventory,
@@ -141,10 +142,7 @@ function CreateSaleShipment() {
       return
     }
 
-    const undeliveredQuantity =
-      Number(inventoryValue.quantity) - Number(inventoryValue.arrivedQuantity)
-
-    if (undeliveredQuantity < Number(quantityValue)) {
+    if (inventoryValue.unprocessedQuantity < Number(quantityValue)) {
       setError('Jumlah barang yang ingin dikirim melebihi kuantitas yang dipesan')
       return
     }
