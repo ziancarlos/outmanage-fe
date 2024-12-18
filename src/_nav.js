@@ -77,9 +77,9 @@ const _nav = [
 
   ...OperationalExpenseNavs,
 
-  ...RentNavs,
-
   ...SaleNavs,
+
+  ...RentNavs,
 
   ...SecurityDepositNavs,
 

@@ -84,7 +84,8 @@ const typeOptions = [
 
 const issueOptions = [
   { label: 'Pilih tipe isu', value: '' },
-  { label: 'Rusak', value: 'RUSAK' },
+  { label: 'Rusak Dapat Diperbaiki', value: 'RUSAK-DAPAT-DIPERBAIKI' },
+  { label: 'Rusak Tidak Dapat Diperbaiki', value: 'RUSAK-TIDAK-DAPAT-DIPERBAIKI' },
   { label: 'Hilang', value: 'HILANG' },
 ]
 
@@ -238,7 +239,7 @@ function DetailRent() {
       const request = {
         quantity: issueQuantityValue,
         pricePerUnit: issuePricePerUnitValue,
-        typeValue: issueTypeValue,
+        issueType: issueTypeValue,
       }
 
       if (issueInternalNoteValue) {
@@ -1602,7 +1603,11 @@ function DetailRent() {
                               </CTableDataCell>
                               <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
                               <CTableDataCell>
-                                {item.issueType == 0 ? 'RUSAK' : 'HILANG'}
+                                {item.issueType === 0
+                                  ? 'HILANG'
+                                  : item.issueType === 1
+                                    ? 'RUSAK DAPAT DIPERBAIKI'
+                                    : item.issueType === 2 && 'RUSAK TIDAK DAPAT DIPERBAIKI'}
                               </CTableDataCell>
                               <CTableDataCell>{item.internalNote || '-'}</CTableDataCell>
                               <CTableDataCell>{formatRupiah(item.pricePerUnit)}</CTableDataCell>
@@ -1774,7 +1779,9 @@ function DetailRent() {
             >
               <CForm onSubmit={handlePaymentSubmit} noValidate>
                 <CModalHeader>
-                  <CModalTitle id="LiveDemoExampleLabel">Pembayaran Deposit</CModalTitle>
+                  <CModalTitle id="LiveDemoExampleLabel">
+                    Pembayaran Transaksi Penyewaan
+                  </CModalTitle>
                 </CModalHeader>
                 <CModalBody>
                   {paymentError && <CAlert color="danger">{paymentError}</CAlert>}

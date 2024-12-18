@@ -227,7 +227,7 @@ function CreateRentBi() {
           <CCol>
             <CCard>
               <CCardHeader>
-                <strong>Tambah Tagihan Transaksi Penjualan</strong>
+                <strong>Tambah Tagihan Transaksi Penyewaan</strong>
               </CCardHeader>
               <CForm onSubmit={handleSubmit}>
                 <CCardBody>

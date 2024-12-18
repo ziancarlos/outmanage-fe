@@ -215,8 +215,8 @@ const DetailRentBill = () => {
                   Catatan Internal: {transactionRentBill.internalNote || '-'}
                 </CListGroupItem>
               </CListGroup>
-              <CCardFooter>
-                {canUpdateTransactionRentBillCompleted && !transactionRentBill.endDate && (
+              {canUpdateTransactionRentBillCompleted && !transactionRentBill.endDate && (
+                <CCardFooter>
                   <CButton
                     color="info"
                     variant="outline"
@@ -225,8 +225,8 @@ const DetailRentBill = () => {
                   >
                     <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" /> Tutup Tagihan
                   </CButton>
-                )}
-              </CCardFooter>
+                </CCardFooter>
+              )}
             </CCard>
           </CCol>
 

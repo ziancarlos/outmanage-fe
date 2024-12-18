@@ -266,7 +266,7 @@ function CreateRentShipment() {
           <CCol>
             <CCard>
               <CCardHeader>
-                <strong>Tambah Transaksi Penjualan Pengiriman</strong>
+                <strong>Tambah Transaksi Penyewaan Pengiriman</strong>
               </CCardHeader>
               <CForm onSubmit={handleSubmit}>
                 <CCardBody>

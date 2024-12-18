@@ -341,6 +341,24 @@ const Dashboard = () => {
                   }
                 />
               </CCol>
+
+              <CCol sm={12}>
+                <CCard className="mb-4">
+                  <CCardBody>
+                    <div className="d-flex justify-content-between">
+                      <CCardTitle as="h6" className="text-body-secondary text-truncate">
+                        {t('Sisa Deposit Keamanan')}
+                      </CCardTitle>
+                      <div className="bg-danger bg-opacity-25 text-danger rounded p-2 ms-2">
+                        <CIcon icon={cilCreditCard} size="xl" />
+                      </div>
+                    </div>
+                    <div className="fs-4 fw-semibold pb-3">
+                      {formatRupiah(dashboard?.securityDeposit?.securityDepositAmount)}
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCol>
             </CRow>
           </CCol>
         </CRow>
