@@ -88,6 +88,7 @@ const DetailRentReturn = () => {
 
   const [transactionRentReturn, setTransactionRentReturn] = useState({})
   const [transactionRentReturnDetails, setTransactionRentReturnDetails] = useState({})
+  const [transactionRent, setTransactionRent] = useState('')
 
   const location = useLocation()
   const logout = useLogout()
@@ -101,6 +102,7 @@ const DetailRentReturn = () => {
     setLoading(true)
     const fetchPromises = []
 
+    fetchPromises.push(fetchTransactionRent(transactionRentId))
     fetchPromises.push(fetchTransactionRentReturn(transactionRentId, transactionRentReturnId))
 
     if (canReadTransactionRentReturnInventories) {
@@ -112,6 +114,21 @@ const DetailRentReturn = () => {
     Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [refetch])
 
+  async function fetchTransactionRent(transactionRentId) {
+    try {
+      const response = await axiosPrivate.get(`/api/transactions/rents/${transactionRentId}`)
+
+      setTransactionRent(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
   async function fetchTransactionRentReturn(transactionRentId, transactionRentReturnId) {
     try {
       const response = await axiosPrivate.get(
@@ -285,11 +302,14 @@ const DetailRentReturn = () => {
               {(() => {
                 // Permission and status checks
                 const canDownloadReturnNote =
-                  transactionRentReturn.shipmentStatus === 0 && canDownloadTransactionRentReturnNote
+                  transactionRentReturn.shipmentStatus === 0 &&
+                  canDownloadTransactionRentReturnNote &&
+                  transactionRent.deletedAt === null
 
                 const canMarkReturnAsCompleted =
                   transactionRentReturn.shipmentStatus === 0 &&
-                  canUpdateTransactionRentReturnCompleted
+                  canUpdateTransactionRentReturnCompleted &&
+                  transactionRent.deletedAt === null
 
                 // Render Button Components
                 const renderReturnNoteButton = canDownloadReturnNote && (

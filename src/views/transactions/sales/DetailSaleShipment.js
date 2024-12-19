@@ -56,8 +56,6 @@ import useLogout from '../../../hooks/useLogout'
 import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 import useAuth from '../../../hooks/useAuth'
 import Swal from 'sweetalert2'
-import { formatRupiah } from '../../../utils/CurrencyUtils'
-import TableSaleLog from '../../../components/transactions/sale/TableSaleLog'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
@@ -84,14 +82,12 @@ const DetailSaleShipment = () => {
   const canUpdateTransactionSaleShipmentShipped = authorizePermissions.some(
     (perm) => perm.name === 'update-transaction-sale-shipment-shipped',
   )
-  const canUpdateTransactionSaleShipmentCompleted = authorizePermissions.some(
-    (perm) => perm.name === 'update-transaction-sale-shipment-completed',
-  )
 
   const { transactionSaleId, transactionSaleShipmentId } = useParams()
 
   const [transactionSaleShipment, setTransactionSaleShipment] = useState({})
   const [transactionSaleShipmentDetails, setTransactionSaleShipmentDetails] = useState({})
+  const [transactionSale, setTransactionSale] = useState('')
 
   const location = useLocation()
   const logout = useLogout()
@@ -105,6 +101,7 @@ const DetailSaleShipment = () => {
     setLoading(true)
     const fetchPromises = []
 
+    fetchPromises.push(fetchTransactionSale(transactionSaleId))
     fetchPromises.push(fetchTransactionSaleShipment(transactionSaleId, transactionSaleShipmentId))
 
     if (canReadTransactionSaleShipmentDetails) {
@@ -115,6 +112,22 @@ const DetailSaleShipment = () => {
 
     Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [refetch])
+
+  async function fetchTransactionSale(transactionSaleId) {
+    try {
+      const response = await axiosPrivate.get(`/api/transactions/sales/${transactionSaleId}`)
+
+      setTransactionSale(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
 
   async function fetchTransactionSaleShipment(transactionSaleId, transactionSaleShipmentId) {
     try {
@@ -290,9 +303,13 @@ const DetailSaleShipment = () => {
 
                 // Define permission checks
                 const canDownloadNote =
-                  shipmentStatus === 0 && canDownloadTransactionSaleShipmentDeliveryNote
+                  shipmentStatus === 0 &&
+                  canDownloadTransactionSaleShipmentDeliveryNote &&
+                  transactionSale.deletedAt === null
                 const canMarkAsShipped =
-                  shipmentStatus === 0 && canUpdateTransactionSaleShipmentShipped
+                  shipmentStatus === 0 &&
+                  canUpdateTransactionSaleShipmentShipped &&
+                  transactionSale.deletedAt === null
 
                 // Render buttons conditionally based on permissions
                 const renderDownloadButton = canDownloadNote && (

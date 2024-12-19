@@ -86,6 +86,7 @@ const DetailRentBill = () => {
 
   const [transactionRentBill, setTransactionRentShipment] = useState({})
   const [transactionRentBillDetails, setTransactionRentShipmentDetails] = useState({})
+  const [transactionRent, setTransactionRent] = useState('')
 
   const location = useLocation()
   const logout = useLogout()
@@ -99,6 +100,7 @@ const DetailRentBill = () => {
     setLoading(true)
     const fetchPromises = []
 
+    fetchPromises.push(fetchTransactionRent(transactionRentId))
     fetchPromises.push(fetchTransactionRentBill(transactionRentId, transactionRentBillId))
 
     if (canReadRentBillInventories) {
@@ -109,6 +111,22 @@ const DetailRentBill = () => {
 
     Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [refetch])
+
+  async function fetchTransactionRent(transactionRentId) {
+    try {
+      const response = await axiosPrivate.get(`/api/transactions/rents/${transactionRentId}`)
+
+      setTransactionRent(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
 
   async function fetchTransactionRentBill(transactionRentId, transactionRentBillId) {
     try {
@@ -215,18 +233,20 @@ const DetailRentBill = () => {
                   Catatan Internal: {transactionRentBill.internalNote || '-'}
                 </CListGroupItem>
               </CListGroup>
-              {canUpdateTransactionRentBillCompleted && !transactionRentBill.endDate && (
-                <CCardFooter>
-                  <CButton
-                    color="info"
-                    variant="outline"
-                    className="me-1"
-                    onClick={() => updateBillToComplete(transactionRentId, transactionRentBillId)}
-                  >
-                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" /> Tutup Tagihan
-                  </CButton>
-                </CCardFooter>
-              )}
+              {canUpdateTransactionRentBillCompleted &&
+                !transactionRentBill.endDate &&
+                transactionRent.deletedAt === null && (
+                  <CCardFooter>
+                    <CButton
+                      color="info"
+                      variant="outline"
+                      className="me-1"
+                      onClick={() => updateBillToComplete(transactionRentId, transactionRentBillId)}
+                    >
+                      <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" /> Tutup Tagihan
+                    </CButton>
+                  </CCardFooter>
+                )}
             </CCard>
           </CCol>
 

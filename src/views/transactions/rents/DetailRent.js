@@ -260,9 +260,10 @@ function DetailRent() {
 
       setVisibileModalIssueInventory(false)
 
+      handleCloseModalIssueInventory()
+
       setRefetch((prev) => !prev)
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if (e.response?.status === 401) {
@@ -1771,7 +1772,7 @@ function DetailRent() {
             )}
           </CRow>
 
-          {canCreateTransactionRentPayment && (
+          {canCreateTransactionRentPayment && transactionRent.deletedAt === null && (
             <CModal
               visible={visibleModalPayment}
               onClose={() => setVisibleModalPayment(false)}
@@ -1922,7 +1923,7 @@ function DetailRent() {
             </CModal>
           )}
 
-          {canCreateTransactionRentIssue && (
+          {canCreateTransactionRentIssue && transactionRent.deletedAt === null && (
             <CModal
               visible={visibileModalIssueInventory}
               onClose={handleCloseModalIssueInventory}

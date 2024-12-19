@@ -51,6 +51,7 @@ const TransactionRentRoutes = [
     name: 'Tambah Pengiriman Transaski Penyewaan',
     element: CreateRentShipment,
     permissions: [
+      'read-transaction-rent',
       'create-transaction-rent-shipment',
       'read-trucks',
       'read-transaction-rent-inventories',
@@ -60,33 +61,45 @@ const TransactionRentRoutes = [
     path: '/transactions/rents/:transactionRentId/shipment/:transactionRentShipmentId/detail',
     name: 'Detil Pengiriman Transaksi Penyewaan',
     element: DetailRentShipment,
-    permissions: ['read-transaction-rent-shipment'],
+    permissions: ['read-transaction-rent-shipment', 'read-transaction-rent'],
   },
   {
     path: '/transactions/rents/:transactionRentId/bill/:transactionRentBillId/detail',
     name: 'Detil Tagihan Transaksi Penyewaan',
     element: DetailRentBill,
-    permissions: ['read-transaction-rent-bill', 'read-transaction-rent-bill-inventories'],
+    permissions: [
+      'read-transaction-rent-bill',
+      'read-transaction-rent-bill-inventories',
+      'read-transaction-rent',
+    ],
   },
   {
     path: '/transactions/rents/:transactionRentId/bill',
     name: 'Tambah Tagihan Transaksi Penyewaan',
     element: CreateRentBill,
-    permissions: ['create-transaction-rent-bill', 'read-transaction-rent-inventories'],
+    permissions: [
+      'create-transaction-rent-bill',
+      'read-transaction-rent-inventories',
+      'read-transaction-rent',
+    ],
   },
 
   {
     path: '/transactions/rents/:transactionRentId/return',
     name: 'Tambah Pengembalian Transaski Penyewaan',
     element: CreateRentReturn,
-    permissions: ['create-transaction-rent-return', 'read-transaction-rent-inventories'],
+    permissions: [
+      'create-transaction-rent-return',
+      'read-transaction-rent-inventories',
+      'read-transaction-rent',
+    ],
   },
 
   {
     path: '/transactions/rents/:transactionRentId/return/:transactionRentReturnId/detail',
-    name: 'Detail Pengembalian Transaski Penyewaan',
+    name: 'Detil Pengembalian Transaski Penyewaan',
     element: DetailRentReturn,
-    permissions: ['read-transaction-rent-return'],
+    permissions: ['read-transaction-rent-return', 'read-transaction-rent'],
   },
 ]
 

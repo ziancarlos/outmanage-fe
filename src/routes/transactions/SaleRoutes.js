@@ -41,6 +41,8 @@ const TransactionSaleRoutes = [
       'read-trucks',
       'read-transaction-sale-inventories',
       'create-transaction-sale-shipment',
+      ,
+      'read-transaction-sale',
     ],
   },
 
@@ -55,7 +57,7 @@ const TransactionSaleRoutes = [
     path: '/transactions/sales/:transactionSaleId/shipment/:transactionSaleShipmentId/detail',
     name: 'Detil Pengiriman Transaski Penjualan',
     element: DetailSaleShipment,
-    permissions: ['read-transaction-sale-shipment'],
+    permissions: ['read-transaction-sale-shipment', 'read-transaction-sale'],
   },
 
   {

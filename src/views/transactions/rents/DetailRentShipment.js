@@ -89,6 +89,7 @@ const DetailRentShipment = () => {
 
   const [transactionRentShipment, setTransactionRentShipment] = useState({})
   const [transactionRentShipmentDetails, setTransactionRentShipmentDetails] = useState({})
+  const [transactionRent, setTransactionRent] = useState('')
 
   const location = useLocation()
   const logout = useLogout()
@@ -102,6 +103,7 @@ const DetailRentShipment = () => {
     setLoading(true)
     const fetchPromises = []
 
+    fetchPromises.push(fetchTransactionRent(transactionRentId))
     fetchPromises.push(fetchTransactionRentShipment(transactionRentId, transactionRentShipmentId))
 
     if (canReadTransactionRentShipmentInventories) {
@@ -112,6 +114,22 @@ const DetailRentShipment = () => {
 
     Promise.all(fetchPromises).finally(() => setLoading(false))
   }, [refetch])
+
+  async function fetchTransactionRent(transactionRentId) {
+    try {
+      const response = await axiosPrivate.get(`/api/transactions/rents/${transactionRentId}`)
+
+      setTransactionRent(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
 
   async function fetchTransactionRentShipment(transactionRentId, transactionRentShipmentId) {
     try {
@@ -287,11 +305,13 @@ const DetailRentShipment = () => {
                 // Permission and status checks
                 const canDownloadDeliveryNote =
                   transactionRentShipment.shipmentStatus === 0 &&
-                  canDownloadTransactionRentDeliveryNote
+                  canDownloadTransactionRentDeliveryNote &&
+                  transactionRent.deletedAt === null
 
                 const canMarkAsShipped =
                   transactionRentShipment.shipmentStatus === 0 &&
-                  canUpdateTransactionRentShipmentShipped
+                  canUpdateTransactionRentShipmentShipped &&
+                  transactionRent.deletedAt === null
 
                 // Render Button Components
                 const renderDownloadButton = canDownloadDeliveryNote && (

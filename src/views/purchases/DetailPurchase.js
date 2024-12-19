@@ -770,9 +770,8 @@ const DetailPurchase = () => {
                             <CTableHeaderCell scope="col">Total Harga</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Harga Satuan</CTableHeaderCell>
                             <CTableHeaderCell scope="col">Kuantitas Diterima</CTableHeaderCell>
-                            {canCreatePurchaseInventoryDetail && (
-                              <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
-                            )}
+
+                            <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                           </CTableRow>
                         </CTableHead>
                         <CTableBody>
@@ -820,6 +819,7 @@ const DetailPurchase = () => {
                               </CTableDataCell>
                               <CTableDataCell className="d-flex align-middle">
                                 {item.arrivedQuantity != item.quantity &&
+                                purchase.deletedAt === null &&
                                 canCreatePurchaseInventoryDetail ? (
                                   <CButton
                                     color="primary"
@@ -896,15 +896,6 @@ const DetailPurchase = () => {
                                       <span>{item.inventory.condition}</span> // Fallback for any other condition
                                     )}
                                   </>
-                                )}
-                              </CTableDataCell>
-                              <CTableDataCell>
-                                {item.inventory.condition === 0 ? (
-                                  <CBadge color="primary">BARU</CBadge>
-                                ) : item.inventory.condition === 1 ? (
-                                  <CBadge color="warning">BEKAS</CBadge>
-                                ) : (
-                                  <span>{item.inventory.condition}</span> // Fallback for any other condition
                                 )}
                               </CTableDataCell>
 

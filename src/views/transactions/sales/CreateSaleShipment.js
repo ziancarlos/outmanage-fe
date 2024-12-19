@@ -38,6 +38,7 @@ import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 
 function CreateSaleShipment() {
   const { transactionSaleId } = useParams()
+  const [transactionSale, setTransactionSale] = useState('')
 
   const location = useLocation()
   const logout = useLogout()
@@ -66,10 +67,39 @@ function CreateSaleShipment() {
   useEffect(() => {
     setLoading(true)
 
-    Promise.all([fetchTransactionSaleInventories(transactionSaleId), fetchTruckOptions()]).finally(
-      () => setLoading(false),
-    )
+    Promise.all([
+      fetchTransactionSale(transactionSaleId),
+      fetchTransactionSaleInventories(transactionSaleId),
+      fetchTruckOptions(),
+    ]).finally(() => setLoading(false))
+
+    if (transactionSale.deletedAt !== null) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: 'Transaksi pembelian ini sudah dibatalkan.',
+        confirmButtonText: 'OK',
+      })
+
+      navigate(`/transactions/sales/${transactionSaleId}/detail`)
+    }
   }, [])
+
+  async function fetchTransactionSale(transactionSaleId) {
+    try {
+      const response = await axiosPrivate.get(`/api/transactions/sales/${transactionSaleId}`)
+
+      setTransactionSale(response.data.data)
+    } catch (e) {
+      if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
+        await logout()
+      } else if ([400, 401, 404].includes(e.response?.status)) {
+        navigate('/404', { replace: true })
+      } else {
+        navigate('/500')
+      }
+    }
+  }
 
   async function fetchTruckOptions() {
     try {
