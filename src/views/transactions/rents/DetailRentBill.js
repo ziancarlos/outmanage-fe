@@ -134,8 +134,6 @@ const DetailRentBill = () => {
         `/api/transactions/rents/${transactionRentId}/bills/${transactionRentBillId}`,
       )
 
-      console.log(response.data.data)
-
       setTransactionRentShipment(response.data.data)
     } catch (e) {
       console.log(e)

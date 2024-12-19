@@ -38,7 +38,6 @@ import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 
 function CreateSaleShipment() {
   const { transactionSaleId } = useParams()
-  const [transactionSale, setTransactionSale] = useState('')
 
   const location = useLocation()
   const logout = useLogout()
@@ -72,24 +71,22 @@ function CreateSaleShipment() {
       fetchTransactionSaleInventories(transactionSaleId),
       fetchTruckOptions(),
     ]).finally(() => setLoading(false))
-
-    if (transactionSale.deletedAt !== null) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal!',
-        text: 'Transaksi pembelian ini sudah dibatalkan.',
-        confirmButtonText: 'OK',
-      })
-
-      navigate(`/transactions/sales/${transactionSaleId}/detail`)
-    }
   }, [])
 
   async function fetchTransactionSale(transactionSaleId) {
     try {
       const response = await axiosPrivate.get(`/api/transactions/sales/${transactionSaleId}`)
 
-      setTransactionSale(response.data.data)
+      if (response.data.data.deletedAt !== null) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: 'Transaksi pembelian ini sudah dibatalkan.',
+          confirmButtonText: 'OK',
+        })
+
+        navigate(`/transactions/sales/${transactionSaleId}/detail`)
+      }
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()

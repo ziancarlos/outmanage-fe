@@ -38,7 +38,6 @@ import useAxiosPrivate from '../../../hooks/useAxiosPrivate'
 
 function CreateRentBi() {
   const { transactionRentId } = useParams()
-  const [transactionRent, setTransactionRent] = useState('')
 
   const location = useLocation()
   const logout = useLogout()
@@ -68,24 +67,22 @@ function CreateRentBi() {
       fetchTransactionRent(transactionRentId),
       fetchTransactionInventories(transactionRentId),
     ]).finally(() => setLoading(false))
-
-    if (transactionRent.deletedAt !== null) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal!',
-        text: 'Transaksi penyewaan ini sudah dibatalkan.',
-        confirmButtonText: 'OK',
-      })
-
-      navigate(`/transactions/rents/${transactionRentId}/detail`)
-    }
   }, [])
 
   async function fetchTransactionRent(transactionRentId) {
     try {
       const response = await axiosPrivate.get(`/api/transactions/rents/${transactionRentId}`)
 
-      setTransactionRent(response.data.data)
+      if (response.data.data.deletedAt) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: 'Transaksi penyewaan ini sudah dibatalkan.',
+          confirmButtonText: 'OK',
+        })
+
+        navigate(`/transactions/rents/${transactionRentId}/detail`)
+      }
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()

@@ -347,7 +347,7 @@ const Dashboard = () => {
                   <CCardBody>
                     <div className="d-flex justify-content-between">
                       <CCardTitle as="h6" className="text-body-secondary text-truncate">
-                        {t('Sisa Deposit Keamanan')}
+                        {t('Sisa Deposit Yang Ketahan')}
                       </CCardTitle>
                       <div className="bg-danger bg-opacity-25 text-danger rounded p-2 ms-2">
                         <CIcon icon={cilCreditCard} size="xl" />
