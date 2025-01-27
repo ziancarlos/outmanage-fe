@@ -68,11 +68,10 @@ const Login = () => {
 
         setCurrentUser(response.data.data)
 
-        navigate('/dashboard')
+        navigate('/users')
 
         clearInput()
       } catch (e) {
-        console.log(e)
         if (e.response?.status === 400) {
           setErrorValue('Nama pengguna atau kata sandi tidak valid.')
         } else {

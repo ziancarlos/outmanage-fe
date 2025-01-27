@@ -9,12 +9,8 @@ import {
   CSidebarHeader,
   CSidebarToggler,
 } from '@coreui/react-pro'
-import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
-
-import { logo } from 'src/assets/brand/logo'
-import { sygnet } from 'src/assets/brand/sygnet'
 
 // sidebar nav config
 import navigation from '../_nav'
@@ -37,8 +33,8 @@ const AppSidebar = () => {
     >
       <CSidebarHeader className="border-bottom">
         <CSidebarBrand as={NavLink} to="/">
-          <h4 className="sidebar-brand-full">UD. Sahabat Abadi</h4>
-          <h4 className="sidebar-brand-narrow">SA</h4>
+          <h4 className="sidebar-brand-full">OUTMANAGE</h4>
+          <h4 className="sidebar-brand-narrow">OM</h4>
         </CSidebarBrand>
         <CCloseButton
           className="d-lg-none"

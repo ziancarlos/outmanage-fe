@@ -18,6 +18,7 @@ function HasLogin() {
         try {
           await refresh()
         } catch (e) {
+          console.log(e)
           if (e.response?.status === 400 && e.config.url === '/api/auth/refresh') {
             await logout().catch((e) => {
               setCurrentUser({})

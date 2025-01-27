@@ -3,30 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 
 import Swal from 'sweetalert2'
-import {
-  CCard,
-  CCardBody,
-  CCardFooter,
-  CForm,
-  CFormInput,
-  CFormSelect,
-  CSpinner,
-  CAlert,
-  CRow,
-  CCol,
-  CCardHeader,
-  CFormLabel,
-  CBadge,
-  CLoadingButton,
-} from '@coreui/react-pro'
+import { CFormInput, CFormSelect, CSpinner, CRow } from '@coreui/react-pro'
 import useLogout from '../../hooks/useLogout'
-import { faEdit } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
+import FormCardLayout from '../../components/FormCardLayout'
 
 const USERNAME_REGEX = /^[A-z][A-z0-9-_]{3,50}$/
-const EMAIL_REGEX = /^(?=.{1,256}$)(?=.{1,64}@)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/
-const TELEGRAM_CHAT_ID_REGEX = /^(0|[1-9][0-9]*)$/
 
 function UpdateUser() {
   const { userId } = useParams()
@@ -35,15 +18,11 @@ function UpdateUser() {
   const [roles, setRoles] = useState([])
 
   const [usernameValue, setUsernameValue] = useState('')
-  const [emailValue, setEmailValue] = useState('')
-  const [telegramChatIdValue, setTelegramChatIdValue] = useState('')
-  const [roleValue, setRoleValue] = useState('')
+  const [roleIdValue, setRoleIdValue] = useState('')
   const [passwordValue, setPasswordValue] = useState('')
 
   const [usernameValid, setUsernameValid] = useState(true)
-  const [emailValid, setEmailValid] = useState(true)
-  const [telegramChatIdValid, setTelegramChatIdValid] = useState('')
-  const [roleValid, setRoleValid] = useState(true)
+  const [roleIdValid, setRoleIdValid] = useState(true)
   const [passwordValid, setPasswordValid] = useState(true)
 
   const [roleTouched, setRoleTouched] = useState(false)
@@ -59,52 +38,39 @@ function UpdateUser() {
 
   useEffect(() => {
     setLoading(true)
-    Promise.all([fetchRoles(), fetchUser(userId)]).finally(() => {
+
+    Promise.all([fetchRoles(), fetchUser()]).finally(() => {
       setLoading(false)
     })
-  }, [userId, axiosPrivate, navigate])
+  }, [userId])
 
   useEffect(() => {
     setError('')
-  }, [usernameValue, emailValue, passwordValue, roleValue, telegramChatIdValue])
+  }, [usernameValue, passwordValue, roleIdValue])
 
   useEffect(() => {
     setUsernameValid(USERNAME_REGEX.test(usernameValue))
-    setEmailValid(EMAIL_REGEX.test(emailValue))
-    setRoleValid(roleValue !== '')
+    setRoleIdValid(roleIdValue !== '')
     setPasswordValid(PASSWORD_REGEX.test(passwordValue))
-    if (telegramChatIdValue) {
-      setTelegramChatIdValid(TELEGRAM_CHAT_ID_REGEX.test(telegramChatIdValue))
-    } else {
-      setTelegramChatIdValid(true)
-    }
-  }, [usernameValue, emailValue, roleValue, passwordValue, telegramChatIdValue])
+  }, [usernameValue, roleIdValue, passwordValue])
 
   const isFormChanged =
     usernameValue !== initialUser.username ||
-    emailValue !== initialUser.email ||
-    roleValue !== initialUser.role.roleId ||
-    passwordValue !== (initialUser.password || '') ||
-    telegramChatIdValue !== (initialUser.telegramChatId || '')
+    roleIdValue !== initialUser.role.roleId ||
+    passwordValue !== (initialUser.password || '')
 
-  const isFormValid =
-    usernameValid &&
-    emailValid &&
-    (passwordValue === '' || passwordValid) &&
-    roleValid &&
-    (telegramChatIdValue === '' || telegramChatIdValid)
+  function isFormValid() {
+    return !(error || !usernameValid || (!passwordValid && passwordValue !== '') || !isFormChanged)
+  }
 
-  async function fetchUser(userId) {
+  async function fetchUser() {
     try {
-      const userResponse = await axiosPrivate.get(`/api/users/${userId}`)
-      const userData = userResponse.data.data
+      const response = await axiosPrivate.get(`/api/users/${userId}`)
+      const data = response.data.data
 
-      setInitialUser(userData)
-
-      setUsernameValue(userData.username)
-      setEmailValue(userData.email)
-      setRoleValue(userData.role.roleId)
-      setTelegramChatIdValue(userData.telegramChatId || '')
+      setInitialUser(data)
+      setUsernameValue(data.username)
+      setRoleIdValue(data.role.roleId)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -118,9 +84,15 @@ function UpdateUser() {
 
   async function fetchRoles() {
     try {
-      const rolesResponse = await axiosPrivate.get('/api/roles')
+      const response = await axiosPrivate.get('/api/roles')
 
-      setRoles(rolesResponse.data.data)
+      setRoles([
+        { label: 'Pilih Peran', value: '' },
+        ...response.data.data.map((role) => ({
+          label: role.name,
+          value: role.roleId,
+        })),
+      ])
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -136,21 +108,20 @@ function UpdateUser() {
     e.preventDefault()
 
     if (!isFormValid) {
-      return setError('Input tidak valid.')
-    }
-    if (!isFormChanged) {
-      return setError('Tidak melakukan perubahaan.')
+      return setError('Silakan lengkapi semua kolom yang diperlukan dengan benar.')
     }
 
-    setUpdateFormLoading(true)
+    if (!isFormChanged) {
+      return setError('Silakan mengubah kolom yang diperlukan dengan benar.')
+    }
+
+    setLoading(true)
 
     try {
       await axiosPrivate.patch(`/api/users/${userId}`, {
         username: usernameValue,
-        email: emailValue,
         password: passwordValue || null,
-        roleId: roleValue,
-        telegramChatId: telegramChatIdValue || null,
+        roleId: roleIdValue,
       })
 
       Swal.fire({
@@ -159,9 +130,10 @@ function UpdateUser() {
         text: 'Pengguna berhasil diubah.',
         confirmButtonText: 'OK',
       }).then(() => {
-        navigate('/users', { replace: true })
+        navigate('/users/data', { replace: true })
       })
     } catch (e) {
+      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([400, 409].includes(e.response?.status)) {
@@ -172,7 +144,7 @@ function UpdateUser() {
         setError('Terjadi kesalahan, Silahkan coba lagi.')
       }
     } finally {
-      setUpdateFormLoading(false)
+      setLoading(false)
     }
   }
 
@@ -184,176 +156,93 @@ function UpdateUser() {
         </div>
       ) : (
         <CRow>
-          <CCol md={8} sm={7} xs={12}>
-            <CCard>
-              <CCardHeader>
-                <strong>Ubah Pengguna</strong>
-              </CCardHeader>
-              <CForm onSubmit={handleSubmit}>
-                <CCardBody>
-                  {error && <CAlert color="danger">{error}</CAlert>}
+          <FormCardLayout
+            title="Ubah Pengguna"
+            handleSubmit={handleSubmit}
+            error={error}
+            isFormValid={isFormValid}
+          >
+            <div className="mb-3">
+              <CFormInput
+                id="username"
+                type="text"
+                autoComplete="new-username"
+                placeholder="Masukkan username"
+                value={usernameValue}
+                onChange={(e) => setUsernameValue(e.target.value)}
+                disabled={loading}
+                className={
+                  usernameValue && usernameValid
+                    ? 'is-valid'
+                    : usernameValue && !usernameValid
+                      ? 'is-invalid'
+                      : ''
+                }
+                label="Username"
+              />
 
-                  {/* Username field */}
-                  <div className="mb-3">
-                    <CFormInput
-                      type="text"
-                      label="Nama Pengguna"
-                      id="exampleInputUsername"
-                      placeholder="Masukkan nama pengguna"
-                      autoComplete="off"
-                      disabled={updateFormLoading}
-                      value={usernameValue}
-                      onChange={(e) => setUsernameValue(e.target.value)}
-                      className={`${
-                        usernameValid && usernameValue ? 'is-valid' : ''
-                      } ${usernameValid || !usernameValue ? '' : 'is-invalid'}`}
-                    />
-                    {usernameValid && usernameValue && (
-                      <div className="valid-feedback">Nama pengguna valid.</div>
-                    )}
-                    {!usernameValid && usernameValue && (
-                      <div className="invalid-feedback">
-                        Nama pengguna harus berupa alfanumerik dan panjangnya antara 3 hingga 50
-                        karakter.
-                      </div>
-                    )}
-                  </div>
+              {usernameValid && usernameValue && (
+                <div className="valid-feedback">Nama pengguna valid.</div>
+              )}
+              {!usernameValid && usernameValue && (
+                <div className="invalid-feedback">
+                  Nama pengguna harus berupa alfanumerik dan panjangnya antara 3 hingga 50 karakter.
+                </div>
+              )}
+            </div>
 
-                  {/* Email field */}
-                  <div className="mb-3">
-                    <CFormInput
-                      type="email"
-                      label="Alamat Email"
-                      id="exampleInputEmail"
-                      placeholder="Enter email"
-                      autoComplete="off"
-                      disabled={updateFormLoading}
-                      value={emailValue}
-                      onChange={(e) => setEmailValue(e.target.value)}
-                      className={`${
-                        emailValid && emailValue ? 'is-valid' : ''
-                      } ${emailValid || !emailValue ? '' : 'is-invalid'}`}
-                    />
-                    {emailValid && emailValue && (
-                      <div className="valid-feedback">Alamat email valid.</div>
-                    )}
-                    {!emailValid && emailValue && (
-                      <div className="invalid-feedback">
-                        Alamat email yang valid dalam format example@example.com.
-                      </div>
-                    )}
-                  </div>
+            <div className="mb-3">
+              <CFormSelect
+                id="role"
+                value={roleIdValue}
+                onChange={(e) => setRoleIdValue(e.target.value)}
+                onBlur={() => setRoleTouched(true)}
+                options={roles}
+                disabled={loading}
+                className={
+                  roleTouched && (roleIdValue === '' || !roleIdValid)
+                    ? 'is-invalid'
+                    : roleIdValid
+                      ? 'is-valid'
+                      : ''
+                }
+                label="Peran"
+              />
+              {roleTouched && (
+                <div className={`feedback ${roleIdValid ? 'valid-feedback' : 'invalid-feedback'}`}>
+                  {roleIdValid ? 'Peran telah dipilih.' : 'Silahkan memilih peran.'}
+                </div>
+              )}
+            </div>
 
-                  {/* Role field */}
-                  <div className="mb-3">
-                    <CFormSelect
-                      label="Peran"
-                      id="roleSelect"
-                      autoComplete="off"
-                      value={roleValue}
-                      disabled={updateFormLoading}
-                      onBlur={() => setRoleTouched(true)}
-                      onChange={(e) => setRoleValue(e.target.value)}
-                      className={
-                        roleTouched && (roleValue === '' || !roleValid)
-                          ? 'is-invalid'
-                          : roleValid
-                            ? 'is-valid'
-                            : ''
-                      }
-                    >
-                      <option value="">Select a role</option>
-                      {roles.map((role) => (
-                        <option key={role.roleId} value={role.roleId}>
-                          {role.name}
-                        </option>
-                      ))}
-                    </CFormSelect>
-                    {roleTouched && (
-                      <div
-                        className={`feedback ${roleValid ? 'valid-feedback' : 'invalid-feedback'}`}
-                      >
-                        {roleValid ? 'Peran telah dipilih.' : 'Silahkan memilih peran.'}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Password field */}
-                  <div className="mb-3">
-                    <CFormLabel htmlFor="password">
-                      Password <CBadge color="success">Optional</CBadge>
-                    </CFormLabel>
-                    <CFormInput
-                      type="password"
-                      id="exampleInputPassword1"
-                      placeholder="Password"
-                      autoComplete="off"
-                      disabled={updateFormLoading}
-                      value={passwordValue}
-                      onChange={(e) => setPasswordValue(e.target.value)}
-                      className={`${
-                        passwordValid && passwordValue ? 'is-valid' : ''
-                      } ${passwordValid || !passwordValue ? '' : 'is-invalid'}`}
-                    />
-                    {passwordValid && passwordValue && (
-                      <div className="valid-feedback">Kata sandi valid.</div>
-                    )}
-                    {!passwordValid && passwordValue && (
-                      <div className="invalid-feedback">
-                        Kata sandi harus menyertakan huruf besar dan kecil, angka, dan karakter
-                        khusus.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mb-3">
-                    <CFormLabel>
-                      Id Chat Telegram <CBadge color="success">Optional</CBadge>
-                    </CFormLabel>
-
-                    <CFormInput
-                      id="username"
-                      type="text"
-                      autoComplete="new-email"
-                      placeholder="Masukkan telegram chat id"
-                      value={telegramChatIdValue}
-                      onChange={(e) => setTelegramChatIdValue(e.target.value)}
-                      disabled={loading}
-                      className={
-                        telegramChatIdValue && telegramChatIdValid
-                          ? 'is-valid'
-                          : telegramChatIdValue && !telegramChatIdValid
-                            ? 'is-invalid'
-                            : ''
-                      }
-                    />
-
-                    {telegramChatIdValid && telegramChatIdValue && (
-                      <div className="valid-feedback">Id chat telegram valid.</div>
-                    )}
-                    {!telegramChatIdValid && telegramChatIdValue && (
-                      <div className="invalid-feedback">
-                        Id chat telegram tidak valid. Harus berupa angka positif.
-                      </div>
-                    )}
-                  </div>
-                </CCardBody>
-
-                <CCardFooter>
-                  <CLoadingButton
-                    color="info"
-                    type="submit"
-                    loading={updateFormLoading}
-                    disabled={
-                      !isFormValid || !isFormChanged || !!error || updateFormLoading || loading
-                    }
-                  >
-                    <FontAwesomeIcon icon={faEdit} />
-                  </CLoadingButton>
-                </CCardFooter>
-              </CForm>
-            </CCard>
-          </CCol>
+            <div className="mb-3">
+              <CFormInput
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Masukkan kata sandi"
+                disabled={loading}
+                value={passwordValue}
+                onChange={(e) => setPasswordValue(e.target.value)}
+                className={
+                  passwordValue && passwordValid
+                    ? 'is-valid'
+                    : passwordValue && !passwordValid
+                      ? 'is-invalid'
+                      : ''
+                }
+                label="Kata Sandi"
+              />
+              {passwordValid && passwordValue && (
+                <div className="valid-feedback">Kata sandi valid.</div>
+              )}
+              {!passwordValid && passwordValue && (
+                <div className="invalid-feedback">
+                  Kata sandi harus menyertakan huruf besar dan kecil, angka, dan karakter khusus.
+                </div>
+              )}
+            </div>
+          </FormCardLayout>
         </CRow>
       )}
     </>

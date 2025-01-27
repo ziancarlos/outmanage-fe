@@ -1,20 +1,11 @@
 import React from 'react'
 import { Translation } from 'react-i18next'
 import UserRoutes from './routes/UserRoutes'
-import AccountRoutes from './routes/AccountRoutes'
 import RoleRoutes from './routes/RoleRoutes'
-import ClientRoutes from './routes/ClientRoutes'
-import ProjectRoutes from './routes/ProjectRoutes'
-import InventoryRoutes from './routes/InventoryRoutes'
-import SupplierRoutes from './routes/SupplierRoutes'
-import PurchaseRoutes from './routes/PurchaseRoutes'
-import OperationalExpensesRoutes from './routes/OperationalExpensesRoutes'
-import TelegramMessageRoutes from './routes/TelegramMessagesRoutes'
-import TruckRoutes from './routes/TruckRoutes'
-import TransactionSaleRoutes from './routes/transactions/SaleRoutes'
-import TransactionRentRoutes from './routes/transactions/RentRoutes'
-import SecurityDepositRoutes from './routes/SecurityDepositRoutes'
-import ReportRoutes from './routes/ReportRoutes'
+import CustomerRoutes from './routes/CustomerRoutes'
+import ShipmentTypeRoutes from './routes/ShipmentTypeRoutes'
+import ItemRoutes from './routes/ItemRoutes'
+import ShipmentRoutes from './routes/ShipmentRoutes'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -210,29 +201,20 @@ export default [
       path: '/',
       exact: true,
       name: <Translation>{(t) => t('home')}</Translation>,
-      permissions: ['read-dashboard'],
+      permissions: [],
       element: Dashboard,
     },
     {
       path: '/dashboard',
       name: <Translation>{(t) => t('dashboard')}</Translation>,
-      permissions: ['read-dashboard'],
+      permissions: [],
       element: Dashboard,
     },
   ],
   ...UserRoutes,
-  ...AccountRoutes,
   ...RoleRoutes,
-  ...ClientRoutes,
-  ...ProjectRoutes,
-  ...InventoryRoutes,
-  ...SupplierRoutes,
-  ...PurchaseRoutes,
-  ...OperationalExpensesRoutes,
-  ...TelegramMessageRoutes,
-  ...TransactionSaleRoutes,
-  ...TransactionRentRoutes,
-  ...SecurityDepositRoutes,
-  ...TruckRoutes,
-  ...ReportRoutes,
+  ...CustomerRoutes,
+  ...ItemRoutes,
+  ...ShipmentTypeRoutes,
+  ...ShipmentRoutes,
 ]

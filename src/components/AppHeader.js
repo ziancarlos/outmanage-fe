@@ -4,8 +4,6 @@ import classNames from 'classnames'
 import { useTranslation } from 'react-i18next'
 import {
   CContainer,
-  CForm,
-  CFormInput,
   CDropdown,
   CDropdownItem,
   CDropdownMenu,
@@ -13,30 +11,12 @@ import {
   CHeader,
   CHeaderNav,
   CHeaderToggler,
-  CInputGroup,
-  CInputGroupText,
   useColorModes,
 } from '@coreui/react-pro'
 import CIcon from '@coreui/icons-react'
-import {
-  cilContrast,
-  cilApplicationsSettings,
-  cilMenu,
-  cilMoon,
-  cilSearch,
-  cilSun,
-  cilLanguage,
-  cifGb,
-  cifEs,
-  cifPl,
-} from '@coreui/icons'
+import { cilContrast, cilApplicationsSettings, cilMenu, cilMoon, cilSun } from '@coreui/icons'
 
-import {
-  AppHeaderDropdown,
-  AppHeaderDropdownMssg,
-  AppHeaderDropdownNotif,
-  AppHeaderDropdownTasks,
-} from './header/index'
+import { AppHeaderDropdown } from './header/index'
 
 const AppHeader = () => {
   const headerRef = useRef()

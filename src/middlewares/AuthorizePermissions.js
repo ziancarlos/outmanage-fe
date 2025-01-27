@@ -20,6 +20,7 @@ const AuthorizePermissions = () => {
 
     fetchPermissions()
       .catch(async (e) => {
+        console.log(e)
         if (e.response?.status === 400 && e.config.url === '/api/auth/refresh') {
           await logout().finally(() => {
             setLoading(false)
