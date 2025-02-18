@@ -35,7 +35,7 @@ const matchingTypeOptions = typeOptions
 export default function TableLogShipment({
   title = 'Data Log Pengiriman',
   shipmentId = null,
-  size = 4,
+  size = 10,
   authorizePermissions,
   ...props
 }) {
@@ -115,7 +115,6 @@ export default function TableLogShipment({
 
       const response = await axiosPrivate.get('/api/shipments/logs', { params })
 
-      console.log(response.data.data)
       setShipmentsLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)

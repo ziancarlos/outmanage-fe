@@ -13,14 +13,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export default function FormCardLayout({
   title = 'Tambah',
-  handleSubmit,
+  handleSubmit = null,
   error,
   loading,
   isFormValid,
   children,
+  ...props
 }) {
   return (
-    <CCol>
+    <CCol {...props}>
       <CCard>
         <CCardHeader>
           <strong>{title}</strong>

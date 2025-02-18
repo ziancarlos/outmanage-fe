@@ -86,7 +86,6 @@ function TableCustomer({
         size: 10,
         ...(filterRef.current.searchValue && {
           name: filterRef.current.searchValue,
-          initials: filterRef.current.searchValue,
         }),
       }
 
@@ -193,7 +192,6 @@ function TableCustomer({
                   <CTableRow>
                     <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Inisial</CTableHeaderCell>
                     {(canReadCustomer || canUpdateCustomer) && (
                       <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                     )}
@@ -227,7 +225,6 @@ function TableCustomer({
                       <CTableRow key={customer.customerId}>
                         <CTableDataCell>C{customer.customerId}</CTableDataCell>
                         <CTableDataCell>{customer.name}</CTableDataCell>
-                        <CTableDataCell>{customer.initials}</CTableDataCell>
                         <CTableDataCell>{actionButtons}</CTableDataCell>
                       </CTableRow>
                     )

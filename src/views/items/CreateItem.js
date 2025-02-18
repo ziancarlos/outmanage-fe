@@ -17,26 +17,22 @@ export default function CreateItem() {
   const axiosPrivate = useAxiosPrivate()
 
   const [nameValue, setNameValue] = useState('')
-  const [skuValue, setSkuValue] = useState('')
 
   const [nameValid, setNameValid] = useState(false)
-  const [skuValid, setSkuValid] = useState(true) // Set initial value to true because SKU is optional
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     setError('')
-  }, [nameValue, skuValue])
+  }, [nameValue])
 
   useEffect(() => {
     setNameValid(NAME_REGEX.test(nameValue))
-    // SKU is only validated if it's not empty, since it's optional
-    setSkuValid(skuValue === '' || SKU_REGEX.test(skuValue))
-  }, [nameValue, skuValue])
+  }, [nameValue])
 
   function isFormValid() {
-    return !(error || !nameValid || (skuValue && !skuValid)) // SKU can be empty, but if provided, it must be valid
+    return !(error || !nameValid) // SKU can be empty, but if provided, it must be valid
   }
 
   async function handleSubmit(e) {
@@ -51,7 +47,6 @@ export default function CreateItem() {
     try {
       await axiosPrivate.post('/api/items', {
         name: nameValue,
-        stockKeepingUnit: skuValue,
       })
 
       Swal.fire({
@@ -121,28 +116,6 @@ export default function CreateItem() {
               {!nameValid && nameValue && (
                 <div className="invalid-feedback">
                   Nama barang harus berupa alfanumerik dan panjangnya antara 3 hingga 100 karakter.
-                </div>
-              )}
-            </div>
-            <div className="mb-3">
-              <CFormInput
-                id="sku"
-                type="text"
-                autoComplete="new-sku"
-                placeholder="Masukkan sku"
-                value={skuValue}
-                onChange={(e) => setSkuValue(e.target.value.toUpperCase())}
-                disabled={loading}
-                className={
-                  skuValue && skuValid ? 'is-valid' : skuValue && !skuValid ? 'is-invalid' : ''
-                }
-                label="Sku"
-              />
-
-              {skuValid && skuValue && <div className="valid-feedback">Sku valid.</div>}
-              {!skuValid && skuValue && (
-                <div className="invalid-feedback">
-                  Sku harus berupa alfanumerik dan panjangnya antara 2 hingga 30 karakter.
                 </div>
               )}
             </div>

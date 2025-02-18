@@ -16,10 +16,8 @@ export default function UpdateItem() {
   const [initialItem, setInitialItem] = useState({})
 
   const [nameValue, setNameValue] = useState('')
-  const [skuValue, setSkuValue] = useState('')
 
   const [nameValid, setNameValid] = useState(false)
-  const [skuValid, setSkuValid] = useState(false)
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -39,16 +37,15 @@ export default function UpdateItem() {
 
   useEffect(() => {
     setError('')
-  }, [nameValue, skuValue])
+  }, [nameValue])
 
   useEffect(() => {
     setNameValid(NAME_REGEX.test(nameValue))
-    setSkuValid(skuValue === '' || SKU_REGEX.test(skuValue))
-  }, [nameValue, skuValue])
+  }, [nameValue])
 
-  const isFormChanged = nameValue !== initialItem.name || skuValue !== initialItem.stockKeepingUnit
+  const isFormChanged = nameValue !== initialItem.name
   function isFormValid() {
-    return !(error || !nameValid || !skuValid || !isFormChanged)
+    return !(error || !nameValid || !isFormChanged)
   }
 
   async function fetchCustomer() {
@@ -58,7 +55,6 @@ export default function UpdateItem() {
 
       setInitialItem(data)
       setNameValue(data.name)
-      setSkuValue(data.stockKeepingUnit)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -86,7 +82,6 @@ export default function UpdateItem() {
     try {
       await axiosPrivate.patch(`/api/items/${itemId}`, {
         name: nameValue,
-        stockKeepingUnit: skuValue,
       })
 
       Swal.fire({
@@ -145,28 +140,6 @@ export default function UpdateItem() {
               {!nameValid && nameValue && (
                 <div className="invalid-feedback">
                   Nama harus berupa panjang antara 3 hingga 100 karakter.
-                </div>
-              )}
-            </div>
-            <div className="mb-3">
-              <CFormInput
-                id="sku"
-                type="text"
-                autoComplete="new-sku"
-                placeholder="Masukkan sku"
-                value={skuValue}
-                onChange={(e) => setSkuValue(e.target.value)}
-                disabled={loading}
-                className={
-                  skuValue && skuValid ? 'is-valid' : skuValue && !skuValid ? 'is-invalid' : ''
-                }
-                label="Sku"
-              />
-
-              {skuValid && skuValue && <div className="valid-feedback">Sku valid.</div>}
-              {!skuValid && skuValue && (
-                <div className="invalid-feedback">
-                  Sku harus berupa alfanumerik dan panjangnya antara 2 hingga 30 karakter.
                 </div>
               )}
             </div>

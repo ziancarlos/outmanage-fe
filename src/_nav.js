@@ -6,8 +6,10 @@ import { Translation } from 'react-i18next'
 import UserNavs from './navs/UserNavs'
 import RoleNavs from './navs/RoleNavs'
 import CustomerNavs from './navs/CustomerNavs'
-import ShipmentTypeNavs from './navs/ShipmentTypeNavs'
+
 import ItemNavs from './navs/ItemNavs'
+
+import DeliveryOrderNavs from './navs/DeliveryOrderNavs'
 import ShipmentNavs from './navs/ShipmentNavs'
 
 const _nav = [
@@ -26,7 +28,7 @@ const _nav = [
   ...RoleNavs,
   ...CustomerNavs,
   ...ItemNavs,
-  ...ShipmentTypeNavs,
+  ...DeliveryOrderNavs,
   ...ShipmentNavs,
 ]
 

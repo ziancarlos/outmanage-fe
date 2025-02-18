@@ -112,8 +112,6 @@ export default function TableLogUser({
         params.userId = userId
       }
 
-      console.log(params)
-
       const response = await axiosPrivate.get('/api/users/logs', { params })
 
       setUsersLogs(response.data.data)

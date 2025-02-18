@@ -36,7 +36,7 @@ const DetailUser = () => {
   async function fetchUser() {
     try {
       const response = await axiosPrivate.get(`/api/users/${userId}`)
-      console.log(response.data.data)
+
       setUser(response.data.data)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {

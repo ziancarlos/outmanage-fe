@@ -32,6 +32,12 @@ const matchingTypeOptions = typeOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
+const formatToISODate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+}
+
 export default function TableLogItem({
   title = 'Data Log Barang',
   itemId = null,
@@ -61,12 +67,6 @@ export default function TableLogItem({
   const filterRef = useRef({})
 
   const [error, setError] = useState('')
-
-  const formatToISODate = (date) => {
-    if (!date) return ''
-    const d = new Date(date)
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0]
-  }
 
   useEffect(() => {
     setLoading(true)

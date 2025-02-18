@@ -93,8 +93,6 @@ export default function TableLogActivityUser({
       filterRef.current.endDate = parsedParams.endDate
     }
 
-    console.log(parsedParams)
-
     filterRef.current.page = parseInt(parsedParams.page) || 1
     setPage(filterRef.current.page)
 

@@ -9,10 +9,8 @@ import './scss/style.scss'
 import './scss/examples.scss'
 
 import { AuthProvider } from './context/AuthContext'
+import DefaultLayout from './layout/DefaultLayout'
 import HasLogin from './middlewares/HasLogin'
-
-// Containers
-const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
 // Pages
 const Login = React.lazy(() => import('./views/auth/Login'))
@@ -45,24 +43,14 @@ const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Suspense
-          fallback={
-            <div className="pt-3 text-center">
-              <CSpinner color="primary" variant="grow" />
-            </div>
-          }
-        >
-          <Routes>
-            <Route element={<HasLogin />}>
-              <Route exact path="/login" name="Login Page" element={<Login />} />
-            </Route>
-
-            <Route exact path="/404" name="Page 404" element={<Page404 />} />
-            <Route exact path="/500" name="Page 500" element={<Page500 />} />
-
-            <Route path="*" name="Home" element={<DefaultLayout />} />
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route element={<HasLogin />}>
+            <Route exact path="/login" name="Login Page" element={<Login />} />
+          </Route>
+          <Route exact path="/404" name="Page 404" element={<Page404 />} />
+          <Route exact path="/500" name="Page 500" element={<Page500 />} />
+          <Route path="*" name="Home" element={<DefaultLayout />} />
+        </Routes>
       </BrowserRouter>
     </AuthProvider>
   )

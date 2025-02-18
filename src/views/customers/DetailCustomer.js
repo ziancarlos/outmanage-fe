@@ -33,10 +33,8 @@ const DetailCustomer = () => {
     try {
       const response = await axiosPrivate.get(`/api/customers/${customerId}`)
 
-      console.log(response.data.data)
       setCustomer(response.data.data)
     } catch (e) {
-      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([404, 401, 400].includes(e.response?.status)) {

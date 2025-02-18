@@ -16,10 +16,8 @@ function UpdateUser() {
   const [initialCustomer, setInitialCustomer] = useState({})
 
   const [nameValue, setNameValue] = useState('')
-  const [initialsValue, setInitialsValue] = useState('')
 
   const [nameValid, setNameValid] = useState(false)
-  const [initialsValid, setInitialsValid] = useState(false)
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -39,17 +37,15 @@ function UpdateUser() {
 
   useEffect(() => {
     setError('')
-  }, [nameValue, initialsValue])
+  }, [nameValue])
 
   useEffect(() => {
     setNameValid(NAME_REGEX.test(nameValue))
-    setInitialsValid(INITIAL_REGEX.test(initialsValue))
-  }, [nameValue, initialsValue])
+  }, [nameValue])
 
-  const isFormChanged =
-    nameValue !== initialCustomer.name || initialsValue !== initialCustomer.initials
+  const isFormChanged = nameValue !== initialCustomer.name
   function isFormValid() {
-    return !(error || !nameValid || !initialsValid || !isFormChanged)
+    return !(error || !nameValid || !isFormChanged)
   }
 
   async function fetchCustomer() {
@@ -59,7 +55,6 @@ function UpdateUser() {
 
       setInitialCustomer(data)
       setNameValue(data.name)
-      setInitialsValue(data.initials)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -87,7 +82,6 @@ function UpdateUser() {
     try {
       await axiosPrivate.patch(`/api/customers/${customerId}`, {
         name: nameValue,
-        initials: initialsValue,
       })
 
       Swal.fire({
@@ -147,35 +141,6 @@ function UpdateUser() {
               {!nameValid && nameValue && (
                 <div className="invalid-feedback">
                   Nama kustomer harus berupa panjang antara 3 hingga 100 karakter.
-                </div>
-              )}
-            </div>
-            <div className="mb-3">
-              <CFormInput
-                id="initial"
-                type="text"
-                autoComplete="new-initial"
-                placeholder="Masukkan inisial"
-                value={initialsValue}
-                onChange={(e) => setInitialsValue(e.target.value.toUpperCase())}
-                disabled={loading}
-                className={
-                  initialsValue && initialsValid
-                    ? 'is-valid'
-                    : initialsValue && !initialsValid
-                      ? 'is-invalid'
-                      : ''
-                }
-                label="Inisial"
-              />
-
-              {initialsValid && initialsValue && (
-                <div className="valid-feedback">inisial kustomer valid.</div>
-              )}
-              {!initialsValid && initialsValue && (
-                <div className="invalid-feedback">
-                  inisial kustomer harus berupa alfanumerik dan panjangnya antara 2 hingga 50
-                  karakter.
                 </div>
               )}
             </div>

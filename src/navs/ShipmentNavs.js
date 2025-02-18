@@ -7,26 +7,26 @@ const ShipmentNavs = [
     component: CNavGroup,
     name: 'Pengiriman',
     icon: <FontAwesomeIcon icon={faShippingFast} className="nav-icon no-fill-icon" />,
-    permissions: ['read-shipments', 'create-shipment', 'read-shipments-logs'],
+    permissions: [],
     items: [
       {
         component: CNavItem,
         name: 'Data Pengiriman',
         to: '/shipments/data',
-        permissions: ['read-shipments'],
+        permissions: [],
       },
       {
         component: CNavItem,
         name: 'Tambah Pengiriman',
         to: '/shipments/new',
-        permissions: ['create-shipment', 'read-roles'],
+        permissions: [],
       },
 
       {
         component: CNavItem,
         name: 'Data Log Pengiriman',
         to: '/shipments/logs',
-        permissions: ['read-shipments-logs'],
+        permissions: [],
       },
     ],
   },

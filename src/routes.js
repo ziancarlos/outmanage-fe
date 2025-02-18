@@ -3,9 +3,9 @@ import { Translation } from 'react-i18next'
 import UserRoutes from './routes/UserRoutes'
 import RoleRoutes from './routes/RoleRoutes'
 import CustomerRoutes from './routes/CustomerRoutes'
-import ShipmentTypeRoutes from './routes/ShipmentTypeRoutes'
 import ItemRoutes from './routes/ItemRoutes'
 import ShipmentRoutes from './routes/ShipmentRoutes'
+import DeliveryOrderRoutes from './routes/DeliveryOrderRoutes'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -215,6 +215,5 @@ export default [
   ...RoleRoutes,
   ...CustomerRoutes,
   ...ItemRoutes,
-  ...ShipmentTypeRoutes,
-  ...ShipmentRoutes,
+  ...DeliveryOrderRoutes,
 ]

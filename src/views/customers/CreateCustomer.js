@@ -18,25 +18,22 @@ export default function CreateUser() {
   const axiosPrivate = useAxiosPrivate()
 
   const [nameValue, setNameValue] = useState('')
-  const [initialsValue, setInitialsValue] = useState('')
 
   const [nameValid, setNameValid] = useState(false)
-  const [initialsValid, setInitialsValid] = useState(false)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     setError('')
-  }, [nameValue, initialsValue])
+  }, [nameValue])
 
   useEffect(() => {
     setNameValid(NAME_REGEX.test(nameValue))
-    setInitialsValid(INITIAL_REGEX.test(initialsValue))
-  }, [nameValue, initialsValue])
+  }, [nameValue])
 
   function isFormValid() {
-    return !(error || !nameValid || !initialsValid)
+    return !(error || !nameValid)
   }
 
   async function handleSubmit(e) {
@@ -51,7 +48,6 @@ export default function CreateUser() {
     try {
       await axiosPrivate.post('/api/customers', {
         name: nameValue,
-        initials: initialsValue,
       })
 
       Swal.fire({
@@ -81,7 +77,6 @@ export default function CreateUser() {
 
   function clearInput() {
     setNameValue('')
-    setInitialsValue('')
   }
 
   return (
@@ -117,35 +112,6 @@ export default function CreateUser() {
               {!nameValid && nameValue && (
                 <div className="invalid-feedback">
                   Nama kustomer harus berupa alfanumerik dan panjangnya antara 3 hingga 100
-                  karakter.
-                </div>
-              )}
-            </div>
-            <div className="mb-3">
-              <CFormInput
-                id="initials"
-                type="text"
-                autoComplete="new-initials"
-                placeholder="Masukkan inisial"
-                value={initialsValue}
-                onChange={(e) => setInitialsValue(e.target.value.toUpperCase())}
-                disabled={loading}
-                className={
-                  initialsValue && initialsValid
-                    ? 'is-valid'
-                    : initialsValue && !initialsValid
-                      ? 'is-invalid'
-                      : ''
-                }
-                label="Inisial"
-              />
-
-              {initialsValid && initialsValue && (
-                <div className="valid-feedback">Inisial kustomer valid.</div>
-              )}
-              {!initialsValid && initialsValue && (
-                <div className="invalid-feedback">
-                  Inisial kustomer harus berupa alfanumerik dan panjangnya antara 2 hingga 50
                   karakter.
                 </div>
               )}

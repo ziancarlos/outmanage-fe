@@ -21,27 +21,28 @@ import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import TableFilterLayout from '../TableFilterLayout'
 import TableCardLayout from '../TableCardLayout'
 import moment from 'moment'
-import JSONPretty from 'react-json-pretty'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
+  { label: 'DELETE', value: 'DELETE' },
 ]
 const matchingTypeOptions = typeOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
-export default function TableLogShipmentType({
-  title = 'Data Log Tipe Pengiriman',
-  shipmentTypeId = null,
-  size = 4,
+export default function TableLogDeliveryOrder({
+  title = 'Data Log DO',
+  deliveryOrderId = null,
+  size = 10,
   authorizePermissions,
   ...props
 }) {
-  const canReadShipmentType = authorizePermissions.some(
-    (perm) => perm.name === 'read-shipment-type',
+  const canReadDeliveryOrder = authorizePermissions.some(
+    (perm) => perm.name === 'read-delivery-order',
   )
+
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
 
   const location = useLocation()
@@ -49,7 +50,7 @@ export default function TableLogShipmentType({
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
 
-  const [shipmentTypesLogs, setShipmentTypesLogs] = useState([])
+  const [deliveryOrderLogs, setDeliveryOrderLogs] = useState([])
 
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -74,7 +75,7 @@ export default function TableLogShipmentType({
     setLoading(true)
 
     const searchParams = new URLSearchParams(location.search)
-    const queryParams = searchParams.get('shipmentTypesLogs')
+    const queryParams = searchParams.get('deliveryOrderLogs')
 
     let parsedParams = {}
 
@@ -99,27 +100,27 @@ export default function TableLogShipmentType({
     filterRef.current.page = parseInt(parsedParams.page) || 1
     setPage(filterRef.current.page)
 
-    fetchShipmentType(filterRef.current).finally(() => {
+    fetchCustomer(filterRef.current).finally(() => {
       setLoading(false)
     })
   }, [refetch])
 
-  async function fetchShipmentType() {
+  async function fetchCustomer() {
     try {
       const params = {
         size,
         ...filterRef.current,
       }
 
-      if (shipmentTypeId) {
-        params.shipmentTypeId = shipmentTypeId
+      if (deliveryOrderId) {
+        params.deliveryOrderId = deliveryOrderId
       }
 
       console.log(params)
 
-      const response = await axiosPrivate.get('/api/shipment-types/logs', { params })
+      const response = await axiosPrivate.get('/api/delivery-orders/logs', { params })
 
-      setShipmentTypesLogs(response.data.data)
+      setDeliveryOrderLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
     } catch (e) {
@@ -141,7 +142,7 @@ export default function TableLogShipmentType({
       setPage(filterRef.current.page)
 
       const newParams = new URLSearchParams(location.search)
-      newParams.set('shipmentTypesLogs', JSON.stringify(filterRef.current))
+      newParams.set('deliveryOrderLogs', JSON.stringify(filterRef.current))
       navigate(`${location.pathname}?${newParams}`, { replace: true })
 
       setRefetch((val) => !val)
@@ -170,9 +171,9 @@ export default function TableLogShipmentType({
     const newParams = new URLSearchParams(location.search)
 
     if (Object.keys(filterRef.current).length > 0) {
-      newParams.set('shipmentTypesLogs', JSON.stringify(filterRef.current))
+      newParams.set('deliveryOrderLogs', JSON.stringify(filterRef.current))
     } else {
-      newParams.delete('shipmentTypesLogs')
+      newParams.delete('deliveryOrderLogs')
     }
 
     navigate(`${location.pathname}?${newParams}`, { replace: true })
@@ -233,27 +234,25 @@ export default function TableLogShipmentType({
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Tipe Pengiriman</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">DO</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Tipe Perubahaan</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Nilai Baru</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Perubahaan</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Tanggal Perubahaan</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {shipmentTypesLogs.map((log) => {
-                    console.log(log.shipmentType.shipmentTypeId)
-                    const shipmentType = canReadShipmentType ? (
-                      log.shipmentType?.shipmentTypeId ? (
-                        <NavLink to={`/shipment-types/${log.shipmentType.shipmentTypeId}/detail`}>
-                          {log.shipmentType.name}
+                  {deliveryOrderLogs.map((log) => {
+                    const deliveryOrderId = canReadDeliveryOrder ? (
+                      log.deliveryOrderId ? (
+                        <NavLink to={`/delivery-orders/${log.deliveryOrderId}/detail`}>
+                          DO{log.deliveryOrderId}
                         </NavLink>
                       ) : (
                         '-'
                       )
-                    ) : log.shipmentType.shipmentTypeId ? (
-                      log.shipmentType.name
+                    ) : log.deliveryOrderId ? (
+                      'DO' + log.deliveryOrderId
                     ) : (
                       '-'
                     )
@@ -273,26 +272,11 @@ export default function TableLogShipmentType({
                     )
 
                     return (
-                      <CTableRow key={log.shipmentTypeLogId}>
-                        <CTableDataCell>STL{log.shipmentTypeLogId}</CTableDataCell>
-                        <CTableDataCell>{shipmentType}</CTableDataCell>
+                      <CTableRow key={log.deliveryOrderIdLogId}>
+                        <CTableDataCell>DOL{log.deliveryOrderLogId}</CTableDataCell>
+                        <CTableDataCell>{deliveryOrderId}</CTableDataCell>
                         <CTableDataCell>{log.changeType}</CTableDataCell>
-                        <CTableDataCell>
-                          {log.oldValue ? (
-                            <JSONPretty
-                              data={log.oldValue}
-                              theme={{ main: 'monospace', key: 'red', value: 'green' }}
-                            />
-                          ) : (
-                            '-'
-                          )}
-                        </CTableDataCell>
-                        <CTableDataCell>
-                          <JSONPretty
-                            data={log.newValue}
-                            theme={{ main: 'monospace', key: 'red', value: 'green' }}
-                          />
-                        </CTableDataCell>
+                        <CTableDataCell>{log.details}</CTableDataCell>
                         <CTableDataCell>{username}</CTableDataCell>
                         <CTableDataCell>
                           {moment(log.createdAt).format('MMMM D, YYYY h:mm A')}

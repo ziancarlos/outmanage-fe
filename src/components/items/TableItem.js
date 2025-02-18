@@ -86,7 +86,6 @@ export default function TableItem({
         size: 10,
         ...(filterRef.current.searchValue && {
           name: filterRef.current.searchValue,
-          stockKeepingUnit: filterRef.current.searchValue,
         }),
       }
 
@@ -194,7 +193,6 @@ export default function TableItem({
                   <CTableRow>
                     <CTableHeaderCell scope="col">Id</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">SKU</CTableHeaderCell>
                     {(canReadItem || canUpdateItem) && (
                       <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
                     )}
@@ -224,7 +222,6 @@ export default function TableItem({
                       <CTableRow key={item.itemId}>
                         <CTableDataCell>I{item.itemId}</CTableDataCell>
                         <CTableDataCell>{item.name}</CTableDataCell>
-                        <CTableDataCell>{item.stockKeepingUnit}</CTableDataCell>
                         <CTableDataCell>{actionButtons}</CTableDataCell>
                       </CTableRow>
                     )
