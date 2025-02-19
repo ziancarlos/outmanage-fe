@@ -17,32 +17,35 @@ import {
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import useLogout from '../../hooks/useLogout'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-
+import Swal from 'sweetalert2'
 import TableFilterLayout from '../TableFilterLayout'
 import TableCardLayout from '../TableCardLayout'
+import JSONPretty from 'react-json-pretty'
 import moment from 'moment'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
-  { label: 'DELETE', value: 'DELETE' },
 ]
 const matchingTypeOptions = typeOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
-export default function TableLogDeliveryOrder({
-  title = 'Data Log DO',
-  deliveryOrderId = null,
-  size = 10,
+const formatToISODate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+}
+
+export default function TableLogFleet({
+  title = 'Data Log Armada',
+  fleetId = null,
+  size = 4,
   authorizePermissions,
   ...props
 }) {
-  const canReadDeliveryOrder = authorizePermissions.some(
-    (perm) => perm.name === 'read-delivery-order',
-  )
-
+  const canReadFleet = authorizePermissions.some((perm) => perm.name === 'read-fleet')
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
 
   const location = useLocation()
@@ -50,7 +53,7 @@ export default function TableLogDeliveryOrder({
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
 
-  const [deliveryOrderLogs, setDeliveryOrderLogs] = useState([])
+  const [fleetsLogs, setFleetLogs] = useState([])
 
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -65,17 +68,11 @@ export default function TableLogDeliveryOrder({
 
   const [error, setError] = useState('')
 
-  const formatToISODate = (date) => {
-    if (!date) return ''
-    const d = new Date(date)
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0]
-  }
-
   useEffect(() => {
     setLoading(true)
 
     const searchParams = new URLSearchParams(location.search)
-    const queryParams = searchParams.get('deliveryOrderLogs')
+    const queryParams = searchParams.get('fleetsLogs')
 
     let parsedParams = {}
 
@@ -100,25 +97,25 @@ export default function TableLogDeliveryOrder({
     filterRef.current.page = parseInt(parsedParams.page) || 1
     setPage(filterRef.current.page)
 
-    fetchCustomer(filterRef.current).finally(() => {
+    fetchFleet(filterRef.current).finally(() => {
       setLoading(false)
     })
   }, [refetch])
 
-  async function fetchCustomer() {
+  async function fetchFleet() {
     try {
       const params = {
         size,
         ...filterRef.current,
       }
 
-      if (deliveryOrderId) {
-        params.deliveryOrderId = deliveryOrderId
+      if (fleetId) {
+        params.fleetId = fleetId
       }
 
-      const response = await axiosPrivate.get('/api/delivery-orders/logs', { params })
+      const response = await axiosPrivate.get('/api/fleets/logs', { params })
 
-      setDeliveryOrderLogs(response.data.data)
+      setFleetLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
     } catch (e) {
@@ -140,7 +137,7 @@ export default function TableLogDeliveryOrder({
       setPage(filterRef.current.page)
 
       const newParams = new URLSearchParams(location.search)
-      newParams.set('deliveryOrderLogs', JSON.stringify(filterRef.current))
+      newParams.set('fleetsLogs', JSON.stringify(filterRef.current))
       navigate(`${location.pathname}?${newParams}`, { replace: true })
 
       setRefetch((val) => !val)
@@ -169,9 +166,9 @@ export default function TableLogDeliveryOrder({
     const newParams = new URLSearchParams(location.search)
 
     if (Object.keys(filterRef.current).length > 0) {
-      newParams.set('deliveryOrderLogs', JSON.stringify(filterRef.current))
+      newParams.set('fleetsLogs', JSON.stringify(filterRef.current))
     } else {
-      newParams.delete('deliveryOrderLogs')
+      newParams.delete('fleetsLogs')
     }
 
     navigate(`${location.pathname}?${newParams}`, { replace: true })
@@ -232,25 +229,26 @@ export default function TableLogDeliveryOrder({
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">DO</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Armada</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Tipe Perubahaan</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Perubahaan</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Nilai Baru</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Tanggal Perubahaan</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {deliveryOrderLogs.map((log, index) => {
-                    const deliveryOrderId = canReadDeliveryOrder ? (
-                      log.deliveryOrderId ? (
-                        <NavLink to={`/delivery-orders/${log.deliveryOrderId}/detail`}>
-                          DO{log.deliveryOrderId}
+                  {fleetsLogs.map((log) => {
+                    const fleet = canReadFleet ? (
+                      log.fleet?.fleetId ? (
+                        <NavLink to={`/fleets/${log.fleet.fleetId}/detail`}>
+                          {log.fleet.fleetId}
                         </NavLink>
                       ) : (
                         '-'
                       )
-                    ) : log.deliveryOrderId ? (
-                      'DO' + log.deliveryOrderId
+                    ) : log.fleet.fleetId ? (
+                      log.fleet.fleetId
                     ) : (
                       '-'
                     )
@@ -270,11 +268,26 @@ export default function TableLogDeliveryOrder({
                     )
 
                     return (
-                      <CTableRow key={index}>
-                        <CTableDataCell>DOL{log.deliveryOrderLogId}</CTableDataCell>
-                        <CTableDataCell>{deliveryOrderId}</CTableDataCell>
+                      <CTableRow key={log.fleetLogId}>
+                        <CTableDataCell>FL{log.fleetLogId}</CTableDataCell>
+                        <CTableDataCell>{fleet}</CTableDataCell>
                         <CTableDataCell>{log.changeType}</CTableDataCell>
-                        <CTableDataCell>{log.details}</CTableDataCell>
+                        <CTableDataCell>
+                          {log.oldValue ? (
+                            <JSONPretty
+                              data={log.oldValue}
+                              theme={{ main: 'monospace', key: 'red', value: 'green' }}
+                            />
+                          ) : (
+                            '-'
+                          )}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <JSONPretty
+                            data={log.newValue}
+                            theme={{ main: 'monospace', key: 'red', value: 'green' }}
+                          />
+                        </CTableDataCell>
                         <CTableDataCell>{username}</CTableDataCell>
                         <CTableDataCell>
                           {moment(log.createdAt).format('MMMM D, YYYY h:mm A')}

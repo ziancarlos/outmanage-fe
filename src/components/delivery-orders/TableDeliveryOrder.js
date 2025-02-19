@@ -44,6 +44,8 @@ const matchingStatusOptions = statusOptions
 
 export default function TableDeliveryOrder({
   title = 'Data DO',
+  customerId = null,
+  size = 10,
   authorizePermissions,
   endpoint = '/api/delivery-orders',
   ...props
@@ -125,10 +127,11 @@ export default function TableDeliveryOrder({
     try {
       const params = {
         page: filterRef.current.page,
-        size: 10,
-        ...(filterRef.current.customerId && {
-          customerId: filterRef.current.customerId,
-        }),
+        size: size,
+        ...(filterRef.current.customerId ||
+          (customerId && {
+            customerId: filterRef.current.customerId || customerId,
+          })),
         ...(filterRef.current.status && {
           status: filterRef.current.status,
         }),
@@ -241,7 +244,7 @@ export default function TableDeliveryOrder({
             handlePageChange={handlePageChange}
           >
             <TableFilterLayout handleSearch={handleSearch} loading={loading}>
-              {canReadCustomers && (
+              {canReadCustomers && !customerId && (
                 <CCol xs={12} md={6} className="mb-2">
                   <SelectCustomer
                     label={'Kustomer'}
@@ -265,7 +268,7 @@ export default function TableDeliveryOrder({
                 />
               </CCol>
 
-              <CCol xs={12} md={canReadCustomers ? 12 : 6} className="mb-2">
+              <CCol xs={12} md={canReadCustomers && !customerId ? 12 : 6} className="mb-2">
                 <CFormLabel htmlFor="starDateInput">Tanggal</CFormLabel>
                 <CDateRangePicker
                   placeholder={['Tanggal Mulai', 'Tanggal Selesai']}
@@ -320,10 +323,7 @@ export default function TableDeliveryOrder({
                         <CTableDataCell>DO{deliveryOrder.deliveryOrderId}</CTableDataCell>
                         <CTableDataCell>
                           {canReadCustomer ? (
-                            <NavLink
-                              to={`/customers/${deliveryOrder.customer.customerId}/detail`}
-                              className="text-decoration-none"
-                            >
+                            <NavLink to={`/customers/${deliveryOrder.customer.customerId}/detail`}>
                               {deliveryOrder.customer.name}
                             </NavLink>
                           ) : (

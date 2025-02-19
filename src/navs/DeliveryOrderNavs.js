@@ -13,20 +13,20 @@ const DeliveryOrderNavs = [
         component: CNavItem,
         name: 'Data DO',
         to: '/delivery-orders/data',
-        permissions: [],
+        permissions: ['read-delivery-orders'],
       },
       {
         component: CNavItem,
         name: 'Tambah DO',
         to: '/delivery-orders/new',
-        permissions: [],
+        permissions: ['create-delivery-order', 'read-customers', 'read-items'],
       },
 
       {
         component: CNavItem,
         name: 'Data Log DO',
         to: '/delivery-orders/logs',
-        permissions: [],
+        permissions: ['read-delivery-orders-logs'],
       },
     ],
   },

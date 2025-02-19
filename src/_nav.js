@@ -11,6 +11,7 @@ import ItemNavs from './navs/ItemNavs'
 
 import DeliveryOrderNavs from './navs/DeliveryOrderNavs'
 import ShipmentNavs from './navs/ShipmentNavs'
+import FleetNavs from './navs/FleetNavs'
 
 const _nav = [
   {
@@ -30,6 +31,7 @@ const _nav = [
   ...ItemNavs,
   ...DeliveryOrderNavs,
   ...ShipmentNavs,
+  ...FleetNavs,
 ]
 
 export default _nav

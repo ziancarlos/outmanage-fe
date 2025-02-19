@@ -104,7 +104,9 @@ const Login = () => {
 
                   <CForm onSubmit={handleSubmit} noValidate>
                     <h1>Login</h1>
-                    <p className="text-body-secondary">Sistem Informasi UD. Sahabat Abadi</p>
+                    <p className="text-body-secondary">
+                      Sistem Informasi Mengelola Pengeluaran Barang
+                    </p>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />

@@ -7,34 +7,32 @@ import { DetailCardLayout } from '../../components/DetailCardLayout'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import useLogout from '../../hooks/useLogout'
 import useAuth from '../../hooks/useAuth'
+import TableLogFleet from '../../components/fleets/TableLogFleet'
 
-import TableLogCustomer from '../../components/customers/TableLogCustomer'
-import TableDeliveryOrder from '../../components/delivery-orders/TableDeliveryOrder'
-
-const DetailCustomer = () => {
-  const { customerId } = useParams()
+export default function DetailFleet() {
+  const { fleetId } = useParams()
   const { authorizePermissions } = useAuth()
 
   const axiosPrivate = useAxiosPrivate()
   const logout = useLogout()
   const navigate = useNavigate()
 
-  const [customer, setCustomer] = useState({})
+  const [fleet, setFleets] = useState({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
 
-    fetchCustomer().finally(() => {
+    fetchFleet().finally(() => {
       setLoading(false)
     })
   }, [])
 
-  async function fetchCustomer() {
+  async function fetchFleet() {
     try {
-      const response = await axiosPrivate.get(`/api/customers/${customerId}`)
+      const response = await axiosPrivate.get(`/api/fleets/${fleetId}`)
 
-      setCustomer(response.data.data)
+      setFleets(response.data.data)
     } catch (e) {
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
@@ -55,24 +53,16 @@ const DetailCustomer = () => {
           </div>
         ) : (
           <>
-            <DetailCardLayout title={`C${customer.customerId}`} className="mb-3">
-              <CListGroupItem>Nama: {customer.name}</CListGroupItem>
-              <CListGroupItem>Inisial: {customer.initials}</CListGroupItem>
+            <DetailCardLayout title={`F${fleet.fleetId}`} className="mb-3">
+              <CListGroupItem>Model: {fleet.model}</CListGroupItem>
+              <CListGroupItem>Nomor Polisi: {fleet.licensePlate}</CListGroupItem>
             </DetailCardLayout>
 
-            <TableDeliveryOrder
-              className="mb-3"
-              customerId={customer.customerId}
-              xs={12}
-              size={5}
-              authorizePermissions={authorizePermissions}
-            />
-
-            <TableLogCustomer
+            <TableLogFleet
               xs={12}
               size={3}
               authorizePermissions={authorizePermissions}
-              customerId={customer.customerId}
+              fleetId={fleet.fleetId}
             />
           </>
         )}
@@ -80,5 +70,3 @@ const DetailCustomer = () => {
     </>
   )
 }
-
-export default DetailCustomer

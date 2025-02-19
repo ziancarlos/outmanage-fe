@@ -76,11 +76,6 @@ export default function CreateItem() {
 
   function clearInput() {
     setNameValue('')
-    setSkuValue('')
-  }
-
-  function toTitleCase(str) {
-    return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase())
   }
 
   return (
@@ -104,7 +99,7 @@ export default function CreateItem() {
                 autoComplete="new-name"
                 placeholder="Masukkan nama"
                 value={nameValue}
-                onChange={(e) => setNameValue(toTitleCase(e.target.value))}
+                onChange={(e) => setNameValue(e.target.value.toUpperCase())}
                 disabled={loading}
                 className={
                   nameValue && nameValid ? 'is-valid' : nameValue && !nameValid ? 'is-invalid' : ''

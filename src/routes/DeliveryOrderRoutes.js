@@ -24,13 +24,13 @@ const DeliveryOrderRoutes = [
     path: '/delivery-orders/new',
     name: 'Tambah DO',
     element: CreateDeliveryOrder,
-    permissions: ['create-delivery-order'],
+    permissions: ['create-delivery-order', 'read-customers', 'read-items'],
   },
   {
     path: '/delivery-orders/:deliveryOrderId/edit',
     name: 'Ubah DO',
     element: UpdateDeliveryOrder,
-    permissions: ['update-delivery-order'],
+    permissions: ['update-delivery-order', 'read-customers', 'read-items'],
   },
   {
     path: '/delivery-orders/:deliveryOrderId/detail',

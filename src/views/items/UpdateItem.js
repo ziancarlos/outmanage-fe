@@ -30,7 +30,7 @@ export default function UpdateItem() {
   useEffect(() => {
     setLoading(true)
 
-    fetchCustomer().finally(() => {
+    fetchItem().finally(() => {
       setLoading(false)
     })
   }, [itemId])
@@ -48,7 +48,7 @@ export default function UpdateItem() {
     return !(error || !nameValid || !isFormChanged)
   }
 
-  async function fetchCustomer() {
+  async function fetchItem() {
     try {
       const response = await axiosPrivate.get(`/api/items/${itemId}`)
       const data = response.data.data

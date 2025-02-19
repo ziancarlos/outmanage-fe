@@ -6,6 +6,8 @@ import CustomerRoutes from './routes/CustomerRoutes'
 import ItemRoutes from './routes/ItemRoutes'
 import ShipmentRoutes from './routes/ShipmentRoutes'
 import DeliveryOrderRoutes from './routes/DeliveryOrderRoutes'
+import FleetNavs from './navs/FleetNavs'
+import FleetRoutes from './routes/FleetRoutes'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -216,4 +218,5 @@ export default [
   ...CustomerRoutes,
   ...ItemRoutes,
   ...DeliveryOrderRoutes,
+  ...FleetRoutes,
 ]

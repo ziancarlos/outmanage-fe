@@ -21,28 +21,31 @@ import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import TableFilterLayout from '../TableFilterLayout'
 import TableCardLayout from '../TableCardLayout'
 import moment from 'moment'
+import JSONPretty from 'react-json-pretty'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
   { label: 'CREATE', value: 'CREATE' },
   { label: 'UPDATE', value: 'UPDATE' },
-  { label: 'DELETE', value: 'DELETE' },
 ]
 const matchingTypeOptions = typeOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
-export default function TableLogDeliveryOrder({
-  title = 'Data Log DO',
-  deliveryOrderId = null,
-  size = 10,
+const formatToISODate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+}
+
+export default function TableLogItem({
+  title = 'Data Log Barang',
+  itemId = null,
+  size = 4,
   authorizePermissions,
   ...props
 }) {
-  const canReadDeliveryOrder = authorizePermissions.some(
-    (perm) => perm.name === 'read-delivery-order',
-  )
-
+  const canReadItem = authorizePermissions.some((perm) => perm.name === 'read-item')
   const canReadUser = authorizePermissions.some((perm) => perm.name === 'read-user')
 
   const location = useLocation()
@@ -50,7 +53,7 @@ export default function TableLogDeliveryOrder({
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
 
-  const [deliveryOrderLogs, setDeliveryOrderLogs] = useState([])
+  const [itemsLogs, setItemsLogs] = useState([])
 
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -65,17 +68,11 @@ export default function TableLogDeliveryOrder({
 
   const [error, setError] = useState('')
 
-  const formatToISODate = (date) => {
-    if (!date) return ''
-    const d = new Date(date)
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0]
-  }
-
   useEffect(() => {
     setLoading(true)
 
     const searchParams = new URLSearchParams(location.search)
-    const queryParams = searchParams.get('deliveryOrderLogs')
+    const queryParams = searchParams.get('itemsLogs')
 
     let parsedParams = {}
 
@@ -100,25 +97,25 @@ export default function TableLogDeliveryOrder({
     filterRef.current.page = parseInt(parsedParams.page) || 1
     setPage(filterRef.current.page)
 
-    fetchCustomer(filterRef.current).finally(() => {
+    fetchItem(filterRef.current).finally(() => {
       setLoading(false)
     })
   }, [refetch])
 
-  async function fetchCustomer() {
+  async function fetchItem() {
     try {
       const params = {
         size,
         ...filterRef.current,
       }
 
-      if (deliveryOrderId) {
-        params.deliveryOrderId = deliveryOrderId
+      if (itemId) {
+        params.itemId = itemId
       }
 
-      const response = await axiosPrivate.get('/api/delivery-orders/logs', { params })
+      const response = await axiosPrivate.get('/api/items/logs', { params })
 
-      setDeliveryOrderLogs(response.data.data)
+      setItemsLogs(response.data.data)
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
     } catch (e) {
@@ -140,7 +137,7 @@ export default function TableLogDeliveryOrder({
       setPage(filterRef.current.page)
 
       const newParams = new URLSearchParams(location.search)
-      newParams.set('deliveryOrderLogs', JSON.stringify(filterRef.current))
+      newParams.set('itemsLogs', JSON.stringify(filterRef.current))
       navigate(`${location.pathname}?${newParams}`, { replace: true })
 
       setRefetch((val) => !val)
@@ -169,9 +166,9 @@ export default function TableLogDeliveryOrder({
     const newParams = new URLSearchParams(location.search)
 
     if (Object.keys(filterRef.current).length > 0) {
-      newParams.set('deliveryOrderLogs', JSON.stringify(filterRef.current))
+      newParams.set('itemsLogs', JSON.stringify(filterRef.current))
     } else {
-      newParams.delete('deliveryOrderLogs')
+      newParams.delete('itemsLogs')
     }
 
     navigate(`${location.pathname}?${newParams}`, { replace: true })
@@ -232,25 +229,24 @@ export default function TableLogDeliveryOrder({
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">DO</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Kustomer</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Tipe Perubahaan</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Perubahaan</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Nilai Lama</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Nilai Baru</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Penanggung Jawab</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Tanggal Perubahaan</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {deliveryOrderLogs.map((log, index) => {
-                    const deliveryOrderId = canReadDeliveryOrder ? (
-                      log.deliveryOrderId ? (
-                        <NavLink to={`/delivery-orders/${log.deliveryOrderId}/detail`}>
-                          DO{log.deliveryOrderId}
-                        </NavLink>
+                  {itemsLogs.map((log) => {
+                    const item = canReadItem ? (
+                      log.item?.itemId ? (
+                        <NavLink to={`/items/${log.item.itemId}/detail`}>{log.item.name}</NavLink>
                       ) : (
                         '-'
                       )
-                    ) : log.deliveryOrderId ? (
-                      'DO' + log.deliveryOrderId
+                    ) : log.item.itemId ? (
+                      log.item.name
                     ) : (
                       '-'
                     )
@@ -270,11 +266,26 @@ export default function TableLogDeliveryOrder({
                     )
 
                     return (
-                      <CTableRow key={index}>
-                        <CTableDataCell>DOL{log.deliveryOrderLogId}</CTableDataCell>
-                        <CTableDataCell>{deliveryOrderId}</CTableDataCell>
+                      <CTableRow key={log.itemLogId}>
+                        <CTableDataCell>CL{log.itemLogId}</CTableDataCell>
+                        <CTableDataCell>{item}</CTableDataCell>
                         <CTableDataCell>{log.changeType}</CTableDataCell>
-                        <CTableDataCell>{log.details}</CTableDataCell>
+                        <CTableDataCell>
+                          {log.oldValue ? (
+                            <JSONPretty
+                              data={log.oldValue}
+                              theme={{ main: 'monospace', key: 'red', value: 'green' }}
+                            />
+                          ) : (
+                            '-'
+                          )}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <JSONPretty
+                            data={log.newValue}
+                            theme={{ main: 'monospace', key: 'red', value: 'green' }}
+                          />
+                        </CTableDataCell>
                         <CTableDataCell>{username}</CTableDataCell>
                         <CTableDataCell>
                           {moment(log.createdAt).format('MMMM D, YYYY h:mm A')}
