@@ -18,7 +18,6 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useLogout from '../../hooks/useLogout'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-import useAuth from '../../hooks/useAuth'
 import Swal from 'sweetalert2'
 import FormCardLayout from '../../components/FormCardLayout'
 import SelectCustomer from '../../components/customers/SelectCustomer'
@@ -184,194 +183,185 @@ export default function CreateDeliveryOrder() {
 
   return (
     <>
-      {loading ? (
-        <div className="pt-3 text-center">
-          <CSpinner color="primary" variant="grow" />
-        </div>
-      ) : (
-        <CRow>
-          <FormCardLayout
-            title="Tambah DO"
-            handleSubmit={handleSubmit}
-            error={error}
-            isFormValid={isFormValid}
-          >
-            <div className="mb-3">
-              <SelectCustomer
-                label={'Kustomer'}
+      <CRow>
+        <FormCardLayout
+          title="Tambah DO"
+          handleSubmit={handleSubmit}
+          error={error}
+          isFormValid={isFormValid}
+        >
+          <div className="mb-3">
+            <SelectCustomer
+              label={'Kustomer'}
+              formLoading={loading}
+              navigate={navigate}
+              customerValue={customerValue}
+              setCustomerValue={setCustomerValue}
+              axiosPrivate={axiosPrivate}
+              resetSelectionOnOptionsChange={false}
+              className={
+                customerValue && customerValid
+                  ? 'is-valid'
+                  : customerValue && !customerValid
+                    ? 'is-invalid'
+                    : ''
+              }
+            />
+
+            {customerValid && customerValue && (
+              <div className="valid-feedback">Kustomer valid.</div>
+            )}
+            {!customerValid && customerValue && (
+              <div className="invalid-feedback">Kustomer tidak valid.</div>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <CFormLabel className="fw-bold">
+              Alamat <CBadge color="warning">Opsional</CBadge>
+            </CFormLabel>
+            <CFormTextarea
+              rows={2}
+              placeholder="Masukkan alamat"
+              disabled={loading}
+              value={addressValue}
+              onChange={(e) => setAddressValue(e.target.value)}
+              className={
+                addressValue && addressValid
+                  ? 'is-valid'
+                  : addressValue && !addressValid
+                    ? 'is-invalid'
+                    : ''
+              }
+            />
+            {addressValid && addressValue && <div className="valid-feedback">Alamat valid.</div>}
+            {!addressValid && addressValue && (
+              <div className="invalid-feedback">
+                Alamat harus berupa alfanumerik dan panjangnya antara 3 hingga 60.000 karakter.
+              </div>
+            )}
+          </div>
+
+          <CRow className="mb-2">
+            <CFormLabel>Tambah Barang DO</CFormLabel>
+            <CCol lg={6} className="mb-2">
+              <SelectItem
                 formLoading={loading}
                 navigate={navigate}
-                customerValue={customerValue}
-                setCustomerValue={setCustomerValue}
+                itemValue={itemValue}
+                setItemValue={setItemValue}
                 axiosPrivate={axiosPrivate}
                 className={
-                  customerValue && customerValid
+                  itemValue && itemValid ? 'is-valid' : itemValue && !itemValid ? 'is-invalid' : ''
+                }
+              />
+
+              {itemValid && itemValue && <div className="valid-feedback">Barang valid.</div>}
+              {!itemValid && itemValue && (
+                <div className="invalid-feedback">Barang tidak valid.</div>
+              )}
+            </CCol>
+
+            <CCol lg={4} className="mb-2">
+              <CFormInput
+                inputMode="numeric"
+                placeholder="Kuantitas"
+                min={1}
+                disabled={loading}
+                value={quantityValue.toLocaleString()}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9.-]+/g, '') // Clean the input
+                  const numberValue = Number(value) // Convert to number
+
+                  if (!isNaN(numberValue)) {
+                    setQuantityValue(numberValue) // Update the state with the number
+                  }
+                }}
+                className={
+                  quantityValue && quantityValid
                     ? 'is-valid'
-                    : customerValue && !customerValid
+                    : quantityValue && !quantityValid
                       ? 'is-invalid'
                       : ''
                 }
               />
 
-              {customerValid && customerValue && (
+              {!!quantityValid && !!quantityValue && (
                 <div className="valid-feedback">Kustomer valid.</div>
               )}
-              {!customerValid && customerValue && (
+              {!quantityValid && !!quantityValue && (
                 <div className="invalid-feedback">Kustomer tidak valid.</div>
               )}
-            </div>
+            </CCol>
 
-            <div className="mb-3">
-              <CFormLabel className="fw-bold">
-                Alamat <CBadge color="warning">Opsional</CBadge>
-              </CFormLabel>
-              <CFormTextarea
-                rows={2}
-                placeholder="Masukkan alamat"
-                disabled={loading}
-                value={addressValue}
-                onChange={(e) => setAddressValue(e.target.value)}
-                className={
-                  addressValue && addressValid
-                    ? 'is-valid'
-                    : addressValue && !addressValid
-                      ? 'is-invalid'
-                      : ''
-                }
-              />
-              {addressValid && addressValue && <div className="valid-feedback">Alamat valid.</div>}
-              {!addressValid && addressValue && (
-                <div className="invalid-feedback">
-                  Alamat harus berupa alfanumerik dan panjangnya antara 3 hingga 60.000 karakter.
-                </div>
-              )}
-            </div>
+            <CCol lg={2}>
+              <CButton color="primary" onClick={handleAddItem} disabled={loading}>
+                <FontAwesomeIcon icon={faPlus} />
+              </CButton>
+            </CCol>
+          </CRow>
 
-            <CRow className="mb-2">
-              <CFormLabel>Tambah Barang DO</CFormLabel>
-              <CCol lg={6} className="mb-2">
-                <SelectItem
-                  formLoading={loading}
-                  navigate={navigate}
-                  itemValue={itemValue}
-                  setItemValue={setItemValue}
-                  axiosPrivate={axiosPrivate}
-                  className={
-                    itemValue && itemValid
-                      ? 'is-valid'
-                      : itemValue && !itemValid
-                        ? 'is-invalid'
-                        : ''
-                  }
-                />
-
-                {itemValid && itemValue && <div className="valid-feedback">Barang valid.</div>}
-                {!itemValid && itemValue && (
-                  <div className="invalid-feedback">Barang tidak valid.</div>
-                )}
-              </CCol>
-
-              <CCol lg={4} className="mb-2">
-                <CFormInput
-                  inputmode="numeric"
-                  placeholder="Kuantitas"
-                  min={1}
-                  disabled={loading}
-                  value={quantityValue.toLocaleString()}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9.-]+/g, '') // Clean the input
-                    const numberValue = Number(value) // Convert to number
-
-                    if (!isNaN(numberValue)) {
-                      setQuantityValue(numberValue) // Update the state with the number
-                    }
-                  }}
-                  className={
-                    quantityValue && quantityValid
-                      ? 'is-valid'
-                      : quantityValue && !quantityValid
-                        ? 'is-invalid'
-                        : ''
-                  }
-                />
-
-                {!!quantityValid && !!quantityValue && (
-                  <div className="valid-feedback">Kustomer valid.</div>
-                )}
-                {!quantityValid && !!quantityValue && (
-                  <div className="invalid-feedback">Kustomer tidak valid.</div>
-                )}
-              </CCol>
-
-              <CCol lg={2}>
-                <CButton color="primary" onClick={handleAddItem}>
-                  <FontAwesomeIcon icon={faPlus} />
-                </CButton>
-              </CCol>
-            </CRow>
-
-            <div className="mb-3">
-              <div className="table-responsive">
-                <CTable striped bordered responsive>
-                  <CTableHead>
-                    <CTableRow>
-                      <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+          <div className="mb-3">
+            <div className="table-responsive">
+              <CTable striped bordered responsive>
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell scope="col">Nama</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Kuantitas</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {items.map((item, index) => (
+                    <CTableRow key={index}>
+                      <CTableDataCell>{item.item.label}</CTableDataCell>
+                      <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
+                      <CTableDataCell>
+                        <CButton
+                          color="danger"
+                          className="me-2"
+                          onClick={() => handleRemoveItem(index)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </CButton>
+                      </CTableDataCell>
                     </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {items.map((item, index) => (
-                      <CTableRow key={index}>
-                        <CTableDataCell>{item.item.label}</CTableDataCell>
-                        <CTableDataCell>{item.quantity.toLocaleString()}</CTableDataCell>
-                        <CTableDataCell>
-                          <CButton
-                            color="danger"
-                            className="me-2"
-                            onClick={() => handleRemoveItem(index)}
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </CButton>
-                        </CTableDataCell>
-                      </CTableRow>
-                    ))}
-                  </CTableBody>
-                </CTable>
-              </div>
+                  ))}
+                </CTableBody>
+              </CTable>
             </div>
+          </div>
 
-            <div className="mb-3">
-              <CFormLabel className="fw-bold">
-                Catatan Internal <CBadge color="warning">Opsional</CBadge>
-              </CFormLabel>
-              <CFormTextarea
-                rows={2}
-                placeholder="Masukkan catatan internal"
-                disabled={loading}
-                value={internalNotesValue}
-                onChange={(e) => setInternalNotesValue(e.target.value)}
-                className={
-                  internalNotesValue && internalNotesValid
-                    ? 'is-valid'
-                    : internalNotesValue && !internalNotesValid
-                      ? 'is-invalid'
-                      : ''
-                }
-              />
-              {internalNotesValid && internalNotesValue && (
-                <div className="valid-feedback">Catatan internal valid.</div>
-              )}
-              {!internalNotesValid && internalNotesValue && (
-                <div className="invalid-feedback">
-                  Catatan internal harus berupa alfanumerik dan panjangnya antara 3 hingga 60.000
-                  karakter.
-                </div>
-              )}
-            </div>
-          </FormCardLayout>
-        </CRow>
-      )}
+          <div className="mb-3">
+            <CFormLabel className="fw-bold">
+              Catatan Internal <CBadge color="warning">Opsional</CBadge>
+            </CFormLabel>
+            <CFormTextarea
+              rows={2}
+              placeholder="Masukkan catatan internal"
+              disabled={loading}
+              value={internalNotesValue}
+              onChange={(e) => setInternalNotesValue(e.target.value)}
+              className={
+                internalNotesValue && internalNotesValid
+                  ? 'is-valid'
+                  : internalNotesValue && !internalNotesValid
+                    ? 'is-invalid'
+                    : ''
+              }
+            />
+            {internalNotesValid && internalNotesValue && (
+              <div className="valid-feedback">Catatan internal valid.</div>
+            )}
+            {!internalNotesValid && internalNotesValue && (
+              <div className="invalid-feedback">
+                Catatan internal harus berupa alfanumerik dan panjangnya antara 3 hingga 60.000
+                karakter.
+              </div>
+            )}
+          </div>
+        </FormCardLayout>
+      </CRow>
     </>
   )
 }

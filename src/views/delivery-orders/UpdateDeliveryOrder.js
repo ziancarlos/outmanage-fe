@@ -18,7 +18,6 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import useLogout from '../../hooks/useLogout'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
-import useAuth from '../../hooks/useAuth'
 import Swal from 'sweetalert2'
 import FormCardLayout from '../../components/FormCardLayout'
 import SelectCustomer from '../../components/customers/SelectCustomer'
@@ -71,8 +70,8 @@ export default function CreateDeliveryOrder() {
 
       setInitialDeliveryOrder(data)
       setCustomerValue({ value: data.customer.customerId, label: data.customer.name })
-      setAddressValue(data.address)
-      setInternalNotesValue(data.internalNotes)
+      setAddressValue(data.address || '')
+      setInternalNotesValue(data.internalNotes || '')
       setItems(
         data.deliveryOrderItems.map(({ item, orderedQuantity }) => {
           return {
@@ -97,7 +96,7 @@ export default function CreateDeliveryOrder() {
 
   useEffect(() => {
     setError('')
-  }, [customerValue, addressValue, internalNotesValue, items])
+  }, [addressValue, internalNotesValue, items])
   useEffect(() => {
     setCustomerValid(NUM_REGEX.test(customerValue.value))
   }, [customerValue])

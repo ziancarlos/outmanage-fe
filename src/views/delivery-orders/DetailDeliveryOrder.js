@@ -42,12 +42,12 @@ const DetailDeliveryOrder = () => {
   useEffect(() => {
     setLoading(true)
 
-    fetchCustomer().finally(() => {
+    fetchDeliveryOrder().finally(() => {
       setLoading(false)
     })
   }, [])
 
-  async function fetchCustomer() {
+  async function fetchDeliveryOrder() {
     try {
       const response = await axiosPrivate.get(`/api/delivery-orders/${deliveryOrderId}`)
 
@@ -172,7 +172,7 @@ const DetailDeliveryOrder = () => {
               </CCard>
             </CCol>
 
-            <CCol xs={12} className="mb-3">
+            {/* <CCol xs={12} className="mb-3">
               <CCard>
                 <CCardHeader className="d-flex justify-content-between align-items-center">
                   <strong>{'Data Pengiriman'}</strong>
@@ -189,20 +189,7 @@ const DetailDeliveryOrder = () => {
                       </CTableHead>
                       <CTableBody>
                         {deliveryOrder.shipmentDeliveryOrder.map((sdo, index) => {
-                          const item = canReadItem ? (
-                            doi.item.itemId ? (
-                              <NavLink to={`/delivery-orders/${doi.item.itemId}/detail`}>
-                                {doi.item.name}
-                              </NavLink>
-                            ) : (
-                              '-'
-                            )
-                          ) : doi.item.itemId ? (
-                            doi.item.name
-                          ) : (
-                            '-'
-                          )
-                          return (
+                            return (
                             <CTableRow key={index}>
                               <CTableDataCell>SDO{sdo.shipmentDeliveryOrderId}</CTableDataCell>
                               <CTableDataCell>S{sdo.shipment.shipmentId}</CTableDataCell>
@@ -221,7 +208,7 @@ const DetailDeliveryOrder = () => {
                   </div>
                 </CCardBody>
               </CCard>
-            </CCol>
+            </CCol> */}
 
             <TableLogDeliveryOrder
               deliveryOrderId={deliveryOrderId}

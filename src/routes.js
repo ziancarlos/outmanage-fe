@@ -219,4 +219,5 @@ export default [
   ...ItemRoutes,
   ...DeliveryOrderRoutes,
   ...FleetRoutes,
+  ...ShipmentRoutes,
 ]

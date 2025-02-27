@@ -21,7 +21,6 @@ import useAxiosPrivate from '../../hooks/useAxiosPrivate'
 import TableFilterLayout from '../TableFilterLayout'
 import TableCardLayout from '../TableCardLayout'
 import moment from 'moment'
-import JSONPretty from 'react-json-pretty'
 
 const typeOptions = [
   { label: 'Select Type', value: '' },
@@ -119,6 +118,7 @@ export default function TableLogShipment({
       setTotalPages(response.data.paging.totalPage)
       setPage(response.data.paging.page)
     } catch (e) {
+      console.log(e)
       if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
         await logout()
       } else if ([404, 400].includes(e.response?.status)) {
@@ -239,15 +239,15 @@ export default function TableLogShipment({
                 <CTableBody>
                   {shipmentsLogs.map((log) => {
                     const shipment = canReadShipment ? (
-                      log.shipment?.shipmentId ? (
-                        <NavLink to={`/shipments/${log.shipment.shipmentId}/detail`}>
-                          S{log.shipment.shipmentId}
+                      log.shipmentId ? (
+                        <NavLink to={`/shipments/${log.shipmentId}/detail`}>
+                          S{log.shipmentId}
                         </NavLink>
                       ) : (
                         '-'
                       )
-                    ) : log.shipment.shipmentId ? (
-                      S + log.shipment.shipmentId
+                    ) : log.shipmentId ? (
+                      S + log.shipmentId
                     ) : (
                       '-'
                     )

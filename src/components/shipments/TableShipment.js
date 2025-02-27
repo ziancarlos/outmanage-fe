@@ -17,7 +17,7 @@ import {
   useDebouncedCallback,
 } from '@coreui/react-pro'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faTrash, faEye, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { faEye } from '@fortawesome/free-solid-svg-icons'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import useLogout from '../../hooks/useLogout'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate'
@@ -26,27 +26,24 @@ import TableCardLayout from '../TableCardLayout'
 
 const statusOptions = [
   { label: 'Pilih Status', value: '' },
-  { label: 'Belum Diproses', value: 'UNPROCESSED' },
-  { label: 'Proses', value: 'PROCESSED' },
-  { label: 'Selesai', value: 'COMPLETED' },
+  { label: 'Pending', value: 'PENDING' },
+  { label: 'Selesai', value: 'SELESAI' },
 ]
 
 const matchingStatusOptions = statusOptions
   .filter((option) => option.value)
   .map((option) => option.value)
 
-function getStatusColor(status) {
-  switch (status) {
-    case 'UNPROCESSED':
-      return 'danger' // Red
-    case 'PROCESSED':
-      return 'warning' // Yellow
-    case 'COMPLETED':
-      return 'success' // Green
-    default:
-      return 'secondary' // Default color
-  }
-}
+const shipmentTypeOptions = [
+  { label: 'Pilih Status', value: '' },
+  { label: 'Antar', value: 'ANTAR' },
+  { label: 'Jemput', value: 'JEMPUT' },
+  { label: 'Belum Ditentukan', value: 'BELUM-DITENTUKAN' },
+]
+
+const matchingShipmentTypeOptions = shipmentTypeOptions
+  .filter((option) => option.value)
+  .map((option) => option.value)
 
 function TableShipment({
   title = 'Data Pengiriman',
@@ -55,11 +52,7 @@ function TableShipment({
   ...props
 }) {
   const canReadShipment = authorizePermissions.some((perm) => perm.name === 'read-shipment')
-  const canReadShipmentType = authorizePermissions.some(
-    (perm) => perm.name === 'read-shipment-type',
-  )
-  const canReadCustomer = authorizePermissions.some((perm) => perm.name === 'read-customer')
-  const canUpdateShipment = authorizePermissions.some((perm) => perm.name === 'update-shipment')
+  const canReadFleet = authorizePermissions.some((perm) => perm.name === 'read-fleet')
 
   const location = useLocation()
   const logout = useLogout()
@@ -71,14 +64,9 @@ function TableShipment({
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
-  const [fetchShipmentTypesLoading, setFetchShipmentTypesLoading] = useState(false)
-  const [fetchCustomerLoading, setFetchCustomerLoading] = useState(false)
 
-  const [customerOptions, setCustomerOptions] = useState([])
-  const [shipmentTypesOptions, setShipmentTypesOptions] = useState([])
-
-  const [customerValue, setCustomerValue] = useState('')
   const [shipmentTypeValue, setShipmentTypeValue] = useState('')
+  const [licensePlateValue, setLicensePlateValue] = useState('')
   const [statusValue, setStatusValue] = useState('')
 
   const [refetch, setRefetch] = useState(false)
@@ -102,16 +90,16 @@ function TableShipment({
       }
     }
 
-    if (parsedParams.customerId) {
-      filterRef.current.customerId = parsedParams.customerId
-    }
-
-    if (parsedParams.shipmentTypeId) {
-      filterRef.current.shipmentTypeId = parsedParams.shipmentTypeId
+    if (matchingShipmentTypeOptions.includes(shipmentTypeValue)) {
+      filterRef.current.shipmentType = parsedParams.shipmentType
     }
 
     if (matchingStatusOptions.includes(parsedParams.statusValue)) {
-      filterRef.current.statusValue = parsedParams.statusValue
+      filterRef.current.status = parsedParams.statusValue
+    }
+
+    if (parsedParams.licensePlate) {
+      filterRef.current.licensePlate = parsedParams.licensePlate
     }
 
     filterRef.current.page = parseInt(parsedParams.page) || 1
@@ -124,93 +112,21 @@ function TableShipment({
 
   useEffect(() => {
     setError('')
-  }, [shipmentTypeValue, statusValue, customerValue])
-
-  const fetchShipmentType = async (value) => {
-    if (!value) return
-
-    setFetchShipmentTypesLoading(true)
-
-    try {
-      try {
-        const params = value ? { name: value, page: 1, size: 5 } : { page: 1, size: 5 }
-        const response = await axiosPrivate.get('/api/shipment-types', { params })
-        const options = response.data.data.map((shipmentType) => ({
-          value: shipmentType.shipmentTypeId,
-          label: `${shipmentType.name}`,
-        }))
-
-        setShipmentTypesOptions(options)
-      } catch (e) {
-        if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-          await logout()
-        } else if (e.response?.status === 401) {
-          navigate('/404', { replace: true })
-        } else if ([400].includes(e.response?.status)) {
-          setError(e.response?.data.error)
-        } else {
-          navigate('/500')
-        }
-      }
-    } finally {
-      setFetchShipmentTypesLoading(false)
-    }
-  }
-
-  const debouncedFetchShipmentType = useDebouncedCallback((value) => {
-    fetchShipmentType(value)
-  }, 300)
-
-  const fetchCustomer = async (value) => {
-    if (!value) return
-
-    setFetchCustomerLoading(true)
-
-    try {
-      try {
-        const params = value
-          ? { name: value, initials: value, page: 1, size: 5 }
-          : { page: 1, size: 5 }
-        const response = await axiosPrivate.get('/api/customers', { params })
-        const options = response.data.data.map((customer) => ({
-          value: customer.customerId,
-          label: `${customer.name} | ${customer.initials}`,
-        }))
-
-        setCustomerOptions(options)
-      } catch (e) {
-        if (e?.config?.url === '/api/auth/refresh' && e.response?.status === 400) {
-          await logout()
-        } else if (e.response?.status === 401) {
-          navigate('/404', { replace: true })
-        } else if ([400].includes(e.response?.status)) {
-          setError(e.response?.data.error)
-        } else {
-          navigate('/500')
-        }
-      }
-    } finally {
-      setFetchCustomerLoading(false)
-    }
-  }
-
-  const debouncedFetchCustomer = useDebouncedCallback((value) => {
-    fetchCustomer(value)
-  }, 300)
+  }, [shipmentTypeValue, statusValue, licensePlateValue])
 
   async function fethShipments() {
     try {
       const params = {
         page: filterRef.current.page,
         size: 10,
-        ...(filterRef.current.customerId && {
-          customerId: filterRef.current.customerId,
+        ...(filterRef.current.shipmentType && {
+          shipmentType: filterRef.current.shipmentType,
         }),
-        ...(filterRef.current.shipmentTypeId && {
-          shipmentTypeId: filterRef.current.shipmentTypeId,
+        ...(filterRef.current.status && {
+          status: filterRef.current.status,
         }),
-        ...(filterRef.current.statusValue && {
-          status: filterRef.current.statusValue,
+        ...(filterRef.current.licensePlateValue && {
+          licensePlate: filterRef.current.licensePlateValue,
         }),
       }
 
@@ -252,15 +168,16 @@ function TableShipment({
 
     filterRef.current.page = 1
 
-    if (customerValue) {
-      filterRef.current.customerId = customerValue.value
+    if (matchingShipmentTypeOptions.includes(shipmentTypeValue)) {
+      filterRef.current.shipmentType = shipmentTypeValue
     }
 
-    if (shipmentTypeValue) {
-      filterRef.current.shipmentTypeId = shipmentTypeValue.value
-    }
     if (matchingStatusOptions.includes(statusValue)) {
-      filterRef.current.statusValue = statusValue
+      filterRef.current.status = statusValue
+    }
+
+    if (licensePlateValue) {
+      filterRef.current.licensePlate = licensePlateValue
     }
 
     const newParams = new URLSearchParams(location.search)
@@ -282,16 +199,10 @@ function TableShipment({
     navigate(`/shipments/${shipmentId}/detail`)
   }
 
-  function handleUpdate(shipmentId) {
-    navigate(`/shipments/${shipmentId}/edit`)
-  }
-
   function clearSearchInput() {
-    setCustomerValue('')
-    setCustomerOptions([])
     setShipmentTypeValue('')
-    setShipmentTypesOptions([])
     setStatusValue('')
+    setLicensePlateValue('')
   }
 
   return (
@@ -310,47 +221,33 @@ function TableShipment({
             handlePageChange={handlePageChange}
           >
             <TableFilterLayout handleSearch={handleSearch} loading={loading}>
-              <CCol lg={5} className="mb-2">
-                <CMultiSelect
-                  options={customerOptions}
-                  loading={fetchCustomerLoading}
-                  onFilterChange={debouncedFetchCustomer}
-                  onShow={fetchCustomer}
+              <CCol lg={4} className="mb-2">
+                <CFormInput
+                  id="status"
+                  value={licensePlateValue}
+                  placeholder="Masukkan nomor polisi..."
+                  label={'Nomor Polisi'}
+                  onChange={(e) => setLicensePlateValue(e.target.value)}
                   disabled={loading}
-                  multiple={false}
-                  resetSelectionOnOptionsChange={true}
-                  cleaner={false}
-                  placeholder="Silahkan memilih kustomer"
-                  label={'Kustomer'}
-                  onChange={(e) => {
-                    setCustomerValue(e[0])
-                  }}
                 />
               </CCol>
               <CCol lg={4} className="mb-2">
-                <CMultiSelect
-                  options={shipmentTypesOptions}
-                  loading={fetchShipmentTypesLoading}
-                  onFilterChange={debouncedFetchShipmentType}
-                  onShow={fetchShipmentType}
-                  disabled={loading}
-                  multiple={false}
-                  resetSelectionOnOptionsChange={true}
-                  cleaner={false}
-                  label={'Tipe Pengiriman'}
-                  placeholder="Silahkan memilih tipe pengiriman"
-                  onChange={(e) => {
-                    setShipmentTypeValue(e[0])
-                  }}
-                />
-              </CCol>
-              <CCol lg={3} className="mb-2">
                 <CFormSelect
                   id="status"
                   value={statusValue}
                   label={'Status Pengiriman'}
                   onChange={(e) => setStatusValue(e.target.value)}
                   options={statusOptions}
+                  disabled={loading}
+                />
+              </CCol>
+              <CCol lg={4} className="mb-2">
+                <CFormSelect
+                  id="status"
+                  value={shipmentTypeValue}
+                  label={'Tipe Pengiriman'}
+                  onChange={(e) => setShipmentTypeValue(e.target.value)}
+                  options={shipmentTypeOptions}
                   disabled={loading}
                 />
               </CCol>
@@ -361,33 +258,14 @@ function TableShipment({
                 <CTableHead>
                   <CTableRow>
                     <CTableHeaderCell scope="col">Id</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Kustomer</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Tipe Pengiriman</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Plat Nomor</CTableHeaderCell>
+                    <CTableHeaderCell scope="col">Tipe</CTableHeaderCell>
                     <CTableHeaderCell scope="col">Status</CTableHeaderCell>
-                    {(canReadShipment || canUpdateShipment) && (
-                      <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>
-                    )}
+                    {canReadShipment && <CTableHeaderCell scope="col">Aksi</CTableHeaderCell>}
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
                   {shipments.map((shipment) => {
-                    const shipmentType = canReadShipmentType ? (
-                      <NavLink
-                        to={`/shipment-types/${shipment.shipmentType.shipmentTypeId}/detail`}
-                      >
-                        {shipment.shipmentType.name}
-                      </NavLink>
-                    ) : (
-                      shipment.shipmentType.name
-                    )
-                    const customer = canReadCustomer ? (
-                      <NavLink to={`/customers/${shipment.customer.customerId}/detail`}>
-                        {shipment.customer.name}
-                      </NavLink>
-                    ) : (
-                      shipment.customer.name
-                    )
-
                     const actionButtons = (
                       <>
                         {canReadShipment && (
@@ -399,17 +277,8 @@ function TableShipment({
                             <FontAwesomeIcon icon={faEye} />
                           </CButton>
                         )}
-                        {canUpdateShipment && (
-                          <button
-                            className="btn btn-warning btn-sm"
-                            onClick={() => handleUpdate(shipment.shipmentId)}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </button>
-                        )}
                       </>
                     )
-
                     return (
                       <CTableRow key={shipment.shipmentId}>
                         <CTableDataCell>
@@ -421,17 +290,39 @@ function TableShipment({
                             `S${shipment.shipmentId}`
                           )}
                         </CTableDataCell>
-                        <CTableDataCell>{customer}</CTableDataCell>
-                        <CTableDataCell>{shipmentType}</CTableDataCell>
+
                         <CTableDataCell>
-                          <CBadge color={getStatusColor(shipment.status)}>
-                            {shipment.status === 'UNPROCESSED'
-                              ? 'Belum Diproses'
-                              : shipment.status === 'PROCESSED'
-                                ? 'Proses'
-                                : shipment.status === 'COMPLETED'
-                                  ? 'Selesai'
-                                  : shipment.status}
+                          {!!shipment.licensePlate ? (
+                            shipment.licensePlate
+                          ) : !!shipment.fleet?.fleetId ? (
+                            canReadFleet ? (
+                              <NavLink to={`/fleets/${shipment.fleet.fleetId}/detail`}>
+                                {shipment.fleet.licensePlate}
+                              </NavLink>
+                            ) : (
+                              shipment.fleet.licensePlate
+                            )
+                          ) : (
+                            '-'
+                          )}
+                        </CTableDataCell>
+
+                        <CTableDataCell>
+                          <CBadge
+                            color={
+                              shipment.shipmentType === 'JEMPUT'
+                                ? 'primary'
+                                : shipment.shipmentType === 'ANTAR'
+                                  ? 'success'
+                                  : 'secondary'
+                            }
+                          >
+                            {shipment.shipmentType}
+                          </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color={shipment.status === 'SELESAI' ? 'success' : 'warning'}>
+                            {shipment.status}
                           </CBadge>
                         </CTableDataCell>
 
